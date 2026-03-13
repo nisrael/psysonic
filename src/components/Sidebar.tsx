@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { version as appVersion } from '../../package.json';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -74,17 +75,15 @@ export default function Sidebar({
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const { getVersion } = await import('@tauri-apps/api/app');
-        const current = await getVersion();
         const res = await fetch('https://api.github.com/repos/Psychotoxical/psysonic/releases/latest');
         if (!res.ok) return;
         const data = await res.json();
         const tag: string = data.tag_name ?? '';
-        if (!cancelled && tag && isNewer(tag, current)) {
+        if (!cancelled && tag && isNewer(tag, appVersion)) {
           setLatestVersion(tag.startsWith('v') ? tag : `v${tag}`);
         }
       } catch {
-        // network unavailable or not running in Tauri — silently skip
+        // network unavailable — silently skip
       }
     }, 1500);
     return () => { cancelled = true; clearTimeout(timer); };

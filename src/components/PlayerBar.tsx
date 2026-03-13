@@ -16,7 +16,7 @@ function formatTime(seconds: number): string {
 
 export default function PlayerBar() {
   const { t } = useTranslation();
-  const { currentTrack, isPlaying, progress, currentTime, volume, togglePlay, next, previous, seek, setVolume, isQueueVisible, toggleQueue, stop, toggleRepeat, repeatMode, toggleFullscreen } = usePlayerStore();
+  const { currentTrack, isPlaying, progress, buffered, currentTime, volume, togglePlay, next, previous, seek, setVolume, isQueueVisible, toggleQueue, stop, toggleRepeat, repeatMode, toggleFullscreen } = usePlayerStore();
 
   const duration = currentTrack?.duration ?? 0;
   const coverSrc = useMemo(() => currentTrack?.coverArt ? buildCoverArtUrl(currentTrack.coverArt, 128) : '', [currentTrack?.coverArt]);
@@ -30,8 +30,10 @@ export default function PlayerBar() {
     setVolume(parseFloat(e.target.value));
   }, [setVolume]);
 
+  const pct = progress * 100;
+  const buf = Math.max(pct, buffered * 100);
   const progressStyle = {
-    background: `linear-gradient(to right, var(--ctp-mauve) ${progress * 100}%, var(--ctp-surface2) ${progress * 100}%)`,
+    background: `linear-gradient(to right, var(--ctp-mauve) ${pct}%, var(--ctp-overlay0) ${pct}%, var(--ctp-overlay0) ${buf}%, var(--ctp-surface2) ${buf}%)`,
   };
 
   const volumeStyle = {

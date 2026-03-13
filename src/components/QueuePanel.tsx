@@ -253,7 +253,7 @@ export default function QueuePanel() {
         <div className="queue-current-track">
           <div className="queue-current-cover">
             {currentTrack.coverArt ? (
-              <img src={buildCoverArtUrl(currentTrack.coverArt, 400)} alt="" loading="eager" />
+              <img src={buildCoverArtUrl(currentTrack.coverArt, 128)} alt="" loading="eager" />
             ) : (
               <div className="fallback"><Music size={32} /></div>
             )}

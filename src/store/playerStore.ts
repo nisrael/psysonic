@@ -26,6 +26,7 @@ interface PlayerState {
   queueIndex: number;
   isPlaying: boolean;
   progress: number; // 0–1
+  buffered: number; // 0–1
   currentTime: number;
   volume: number;
   howl: Howl | null;
@@ -76,15 +77,31 @@ interface PlayerState {
 
 let progressInterval: ReturnType<typeof setInterval> | null = null;
 let seekDebounce: ReturnType<typeof setTimeout> | null = null;
-// Blocks progress interval from overwriting the UI position while GStreamer
-// processes a seek on the HTTP pipeline (can take several hundred ms on Linux).
-let isSeeking = false;
+let gstSeeking = false;           // true while GStreamer is processing a seek
+let pendingSeekTime: number | null = null; // queue at most one seek
+let gstSeekWatchdog: ReturnType<typeof setTimeout> | null = null; // safety release if onseek never fires
+let hangRecoveryPos: number | null = null; // set before a recovery playTrack call so onplay seeks here
+let gaplessPrewarmedId: string | null = null; // track id whose prefetched Howl has been silently pre-started
+let hangLastTime = -1;            // last observed currentTime for hang detection
+let hangStallTime = 0;            // Date.now() when currentTime last moved
 
 function clearProgress() {
   if (progressInterval) {
     clearInterval(progressInterval);
     progressInterval = null;
   }
+}
+
+function armGstWatchdog(cb: () => void) {
+  if (gstSeekWatchdog) clearTimeout(gstSeekWatchdog);
+  gstSeekWatchdog = setTimeout(() => {
+    gstSeekWatchdog = null;
+    cb();
+  }, 2000);
+}
+
+function disarmGstWatchdog() {
+  if (gstSeekWatchdog) { clearTimeout(gstSeekWatchdog); gstSeekWatchdog = null; }
 }
 
 // Helper to debounce or fire queue syncs
@@ -110,6 +127,7 @@ export const usePlayerStore = create<PlayerState>()(
       queueIndex: 0,
       isPlaying: false,
       progress: 0,
+      buffered: 0,
       currentTime: 0,
       volume: 0.8,
       howl: null,
@@ -140,7 +158,7 @@ export const usePlayerStore = create<PlayerState>()(
     get().howl?.stop();
     get().howl?.seek(0);
     clearProgress();
-    set({ isPlaying: false, progress: 0, currentTime: 0 });
+    set({ isPlaying: false, progress: 0, buffered: 0, currentTime: 0 });
   },
 
   playTrack: (track, queue) => {
@@ -149,64 +167,147 @@ export const usePlayerStore = create<PlayerState>()(
     state.howl?.unload();
     clearProgress();
     if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; }
-    isSeeking = false;
+    disarmGstWatchdog();
+    gstSeeking = false;
+    pendingSeekTime = null;
+    hangLastTime = -1;
+    hangStallTime = 0;
+    gaplessPrewarmedId = null;
 
     const newQueue = queue ?? state.queue;
     const idx = newQueue.findIndex(t => t.id === track.id);
 
-    const url = buildStreamUrl(track.id);
-    const howl = new Howl({
-      src: [url],
-      html5: true,
-      volume: state.volume,
-      onplay: () => {
-        set({ isPlaying: true });
-        // Subsonic / Navidrome Now Playing
-        reportNowPlaying(track.id);
+    // Reuse a prefetched Howl if available — it's already connected and buffering
+    const prefetchMap = state.prefetched;
+    let howl: Howl;
+    let gaplessHandoff = false;
+    if (prefetchMap.has(track.id)) {
+      howl = prefetchMap.get(track.id)!;
+      prefetchMap.delete(track.id);
+      set({ prefetched: new Map(prefetchMap) });
+      if (howl.playing()) {
+        // Gapless: pipeline already running — pause, seek to 0, then play
+        gaplessHandoff = true;
+        howl.pause();
+        hangRecoveryPos = 0; // onplay will seek to position 0
+      }
+      howl.volume(state.volume);
+    } else {
+      howl = new Howl({ src: [buildStreamUrl(track.id)], html5: true, volume: state.volume });
+    }
 
-        set({ scrobbled: false });
-        progressInterval = setInterval(() => {
-          const h = get().howl;
-          if (!h) return;
-          // Skip position updates while a seek is in flight — GStreamer may
-          // still report the old position and would overwrite the UI value.
-          if (isSeeking) return;
-          const cur = typeof h.seek() === 'number' ? h.seek() as number : 0;
-          const dur = h.duration() || 1;
-          const prog = cur / dur;
+    howl.on('play', () => {
+      set({ isPlaying: true });
+      reportNowPlaying(track.id);
+
+      // If recovering from a pipeline hang, seek to the saved position
+      if (hangRecoveryPos !== null) {
+        const pos = hangRecoveryPos;
+        hangRecoveryPos = null;
+        gstSeeking = true;
+        armGstWatchdog(() => { gstSeeking = false; pendingSeekTime = null; });
+        setTimeout(() => { howl.seek(pos); }, 50);
+      }
+
+      set({ scrobbled: false });
+      hangStallTime = Date.now();
+      hangLastTime = -1;
+
+      progressInterval = setInterval(() => {
+        const h = get().howl;
+        if (!h) return;
+        const s = h.seek();
+        const cur = typeof s === 'number' ? s : 0;
+        const dur = h.duration() || 1;
+        const prog = cur / dur;
+
+        // Read buffered ranges from the underlying <audio> element
+        const audioNode = (h as any)._sounds?.[0]?._node as HTMLAudioElement | undefined;
+        if (audioNode?.buffered && audioNode.duration > 0) {
+          let totalBuf = 0;
+          for (let i = 0; i < audioNode.buffered.length; i++) {
+            totalBuf += audioNode.buffered.end(i) - audioNode.buffered.start(i);
+          }
+          set({ currentTime: cur, progress: prog, buffered: Math.min(1, totalBuf / audioNode.duration) });
+        } else {
           set({ currentTime: cur, progress: prog });
+        }
 
-          // Scrobble at 50%
-          if (prog >= 0.5 && !get().scrobbled) {
-            set({ scrobbled: true });
-            const { scrobblingEnabled } = useAuthStore.getState();
-            if (scrobblingEnabled) {
-              scrobbleSong(track.id, Date.now());
+        // Hang detection: if playing but currentTime hasn't moved in 5s, recover
+        if (Math.abs(cur - hangLastTime) > 0.05) {
+          hangLastTime = cur;
+          hangStallTime = Date.now();
+        } else if (get().isPlaying && Date.now() - hangStallTime > 5000) {
+          const { currentTrack: ct, queue: q } = get();
+          if (ct) {
+            hangRecoveryPos = cur;
+            hangStallTime = Date.now(); // prevent re-trigger while recovering
+            get().playTrack(ct, q);
+          }
+          return;
+        }
+
+          // Gapless pre-warm: start next track's Howl silently ~1s before end
+          if (!gaplessPrewarmedId && dur > 2 && dur - cur < 1.0) {
+            const { queue: q, queueIndex: qi, repeatMode: rm, prefetched: pf } = get();
+            const nextIdx = qi + 1;
+            const nextTrack = nextIdx < q.length ? q[nextIdx]
+              : (rm === 'all' && q.length > 0 ? q[0] : null);
+            if (nextTrack && pf.has(nextTrack.id)) {
+              const nh = pf.get(nextTrack.id)!;
+              if (!nh.playing()) { nh.volume(0); nh.play(); gaplessPrewarmedId = nextTrack.id; }
             }
           }
-        }, 500);
 
-        // Prefetch next 3
-        get().prefetchUpcoming(idx + 1, newQueue);
-      },
-      onend: () => {
-        clearProgress();
-        set({ isPlaying: false, progress: 0, currentTime: 0 });
-        const { repeatMode, currentTrack, queue } = get();
-        if (repeatMode === 'one' && currentTrack) {
-          get().playTrack(currentTrack, queue);
-        } else {
-          get().next();
+        // Scrobble at 50%
+        if (prog >= 0.5 && !get().scrobbled) {
+          set({ scrobbled: true });
+          const { scrobblingEnabled } = useAuthStore.getState();
+          if (scrobblingEnabled) scrobbleSong(track.id, Date.now());
         }
-      },
-      onstop: () => {
-        clearProgress();
-        set({ isPlaying: false });
-      },
+      }, 500);
+
+      // Prefetch next 3
+      get().prefetchUpcoming(idx + 1, newQueue);
     });
 
-    howl.play();
-    set({ currentTrack: track, queue: newQueue, queueIndex: idx >= 0 ? idx : 0, howl, progress: 0, currentTime: 0 });
+    howl.on('end', () => {
+      clearProgress();
+      set({ isPlaying: false, progress: 0, buffered: 0, currentTime: 0 });
+      const { repeatMode, currentTrack, queue } = get();
+      if (repeatMode === 'one' && currentTrack) {
+        get().playTrack(currentTrack, queue);
+      } else {
+        get().next();
+      }
+    });
+
+    howl.on('stop', () => {
+      clearProgress();
+      set({ isPlaying: false });
+    });
+
+    howl.on('seek', () => {
+      disarmGstWatchdog();
+      gstSeeking = false;
+      hangLastTime = -1;
+      hangStallTime = Date.now();
+      if (pendingSeekTime !== null) {
+        const t = pendingSeekTime;
+        pendingSeekTime = null;
+        gstSeeking = true;
+        armGstWatchdog(() => {
+          gstSeeking = false;
+          pendingSeekTime = null;
+          const { currentTrack: ct, queue: q } = get();
+          if (ct) { hangRecoveryPos = t; get().playTrack(ct, q); }
+        });
+        get().howl?.seek(t);
+      }
+    });
+
+    howl.play(); // for gapless: resumes from paused state, onplay fires and seeks to 0 via hangRecoveryPos
+    set({ currentTrack: track, queue: newQueue, queueIndex: idx >= 0 ? idx : 0, howl, progress: 0, buffered: 0, currentTime: 0 });
     syncQueueToServer(newQueue, track, 0);
   },
 
@@ -217,8 +318,14 @@ export const usePlayerStore = create<PlayerState>()(
   },
 
   resume: () => {
-    const { howl, currentTrack } = get();
-    if (!howl || !currentTrack) return;
+    const { howl, currentTrack, queue, currentTime } = get();
+    if (!currentTrack) return;
+    if (!howl) {
+      // Cold start from restored state (e.g. app relaunch) — resume from saved position
+      if (currentTime > 0) hangRecoveryPos = currentTime;
+      get().playTrack(currentTrack, queue);
+      return;
+    }
     howl.play();
     set({ isPlaying: true });
   },
@@ -253,28 +360,24 @@ export const usePlayerStore = create<PlayerState>()(
     const { howl, currentTrack } = get();
     if (!howl || !currentTrack) return;
     const time = progress * (howl.duration() || currentTrack.duration);
-    // Update UI immediately and block interval from overwriting it.
     set({ progress, currentTime: time });
-    isSeeking = true;
-    // Debounce so rapid slider drags collapse into one seek.
     if (seekDebounce) clearTimeout(seekDebounce);
     seekDebounce = setTimeout(() => {
-      const h = get().howl;
-      if (!h) { isSeeking = false; seekDebounce = null; return; }
-      // GStreamer HTTP pipelines require the element to be paused before a
-      // seek is accepted reliably. Seek while playing can silently fail on
-      // Linux (tested on Mint + CachyOS), leaving the pipeline at the old
-      // position on the next seek.
-      const wasPlaying = h.playing();
-      if (wasPlaying) h.pause();
-      h.seek(time);
-      // Resume after GStreamer has had time to flush and re-buffer.
-      seekDebounce = setTimeout(() => {
-        const h2 = get().howl;
-        if (h2 && wasPlaying) h2.play();
-        isSeeking = false;
-        seekDebounce = null;
-      }, 300);
+      seekDebounce = null;
+      if (gstSeeking) {
+        // GStreamer busy — queue this position; onseek will send it when ready
+        pendingSeekTime = time;
+        return;
+      }
+      gstSeeking = true;
+      const seekTarget = time;
+      armGstWatchdog(() => {
+        gstSeeking = false;
+        pendingSeekTime = null;
+        const { currentTrack: ct, queue: q } = get();
+        if (ct) { hangRecoveryPos = seekTarget; get().playTrack(ct, q); }
+      });
+      get().howl?.seek(time);
     }, 100);
   },
 
@@ -299,7 +402,7 @@ export const usePlayerStore = create<PlayerState>()(
   clearQueue: () => {
     get().howl?.unload();
     clearProgress();
-    set({ queue: [], queueIndex: 0, currentTrack: null, isPlaying: false, progress: 0, currentTime: 0, howl: null });
+    set({ queue: [], queueIndex: 0, currentTrack: null, isPlaying: false, progress: 0, buffered: 0, currentTime: 0, howl: null });
     syncQueueToServer([], null, 0);
   },
 

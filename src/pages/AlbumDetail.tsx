@@ -110,6 +110,7 @@ export default function AlbumDetail() {
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [isStarred, setIsStarred] = useState(false);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
+  const [hoveredSongId, setHoveredSongId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -405,6 +406,8 @@ export default function AlbumDetail() {
                 <div
                   key={song.id}
                   className={`track-row${hasVariousArtists ? ' track-row-va' : ''}`}
+                  onMouseEnter={() => setHoveredSongId(song.id)}
+                  onMouseLeave={() => setHoveredSongId(null)}
                   onDoubleClick={() => handlePlaySong(song)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -427,7 +430,15 @@ export default function AlbumDetail() {
                     e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'song', track }));
                   }}
                 >
-                  <div className="track-num" style={{ textAlign: 'center' }}>{song.track ?? i + 1}</div>
+                  <div
+                    className="track-num"
+                    style={{ textAlign: 'center', cursor: hoveredSongId === song.id ? 'pointer' : 'default', color: hoveredSongId === song.id ? 'var(--accent)' : undefined }}
+                    onClick={() => handlePlaySong(song)}
+                  >
+                    {hoveredSongId === song.id
+                      ? <Play size={13} fill="currentColor" />
+                      : (song.track ?? i + 1)}
+                  </div>
                   <div className="track-info">
                     <span className="track-title" data-tooltip={song.title}>{song.title}</span>
                   </div>

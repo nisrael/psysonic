@@ -184,9 +184,15 @@ function TauriEventBridge() {
   const previous = usePlayerStore(s => s.previous);
   const { minimizeToTray } = useAuthStore();
 
-  // Spacebar → play/pause (ignore when focus is in an input)
+  // Spacebar → play/pause, F11 → window fullscreen
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'F11') {
+        e.preventDefault();
+        const win = getCurrentWindow();
+        win.isFullscreen().then(fs => win.setFullscreen(!fs));
+        return;
+      }
       if (e.code !== 'Space') return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;

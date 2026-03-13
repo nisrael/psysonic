@@ -52,6 +52,7 @@ const FsBg = memo(function FsBg({ url }: { url: string }) {
 // ─── Progress bar (isolated — re-renders every tick) ──────────────────────────
 const FsProgress = memo(function FsProgress({ duration }: { duration: number }) {
   const progress    = usePlayerStore(s => s.progress);
+  const buffered    = usePlayerStore(s => s.buffered);
   const currentTime = usePlayerStore(s => s.currentTime);
   const seek        = usePlayerStore(s => s.seek);
 
@@ -59,6 +60,9 @@ const FsProgress = memo(function FsProgress({ duration }: { duration: number }) 
     (e: React.ChangeEvent<HTMLInputElement>) => seek(parseFloat(e.target.value)),
     [seek]
   );
+
+  const pct = progress * 100;
+  const buf = Math.max(pct, buffered * 100);
 
   return (
     <div className="fs-progress-wrap">
@@ -68,7 +72,10 @@ const FsProgress = memo(function FsProgress({ duration }: { duration: number }) 
           type="range" min={0} max={1} step={0.001}
           value={progress}
           onChange={handleSeek}
-          style={{ '--pct': `${progress * 100}%` } as React.CSSProperties}
+          style={{
+            '--pct': `${pct}%`,
+            '--buf': `${buf}%`,
+          } as React.CSSProperties}
           aria-label="progress"
         />
       </div>
