@@ -16,6 +16,11 @@ Psysonic is a beautiful desktop music player built completely from the ground up
 
 Designed specifically for users hosting their own music via Navidrome or other Subsonic API servers, Psysonic aims to be the best way to interact with your personal library.
 
+● Known Limitations
+
+  - Linux (drag & drop cursor feedback): Due to a WebKitGTK limitation, the drag cursor does not reflect the drop operation type — it may appear as a "forbidden" symbol or show no
+  indicator at all, depending on the desktop environment. Drag and drop itself works correctly.
+
 ![Psysonic Screenshot](public/screenshot.png)
 
 ## ✨ Features
