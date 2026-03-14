@@ -30,7 +30,6 @@ interface PlayerState {
   currentTime: number;
   volume: number;
   howl: Howl | null;
-  prefetched: Map<string, Howl>;
   scrobbled: boolean;
 
   // Actions
@@ -46,8 +45,7 @@ interface PlayerState {
   setProgress: (t: number, duration: number) => void;
   enqueue: (tracks: Track[]) => void;
   clearQueue: () => void;
-  prefetchUpcoming: (fromIndex: number, queue: Track[]) => void;
-  
+
   isQueueVisible: boolean;
   toggleQueue: () => void;
 
@@ -81,7 +79,6 @@ let gstSeeking = false;           // true while GStreamer is processing a seek
 let pendingSeekTime: number | null = null; // queue at most one seek
 let gstSeekWatchdog: ReturnType<typeof setTimeout> | null = null; // safety release if onseek never fires
 let hangRecoveryPos: number | null = null; // set before a recovery playTrack call so onplay seeks here
-let gaplessPrewarmedId: string | null = null; // track id whose prefetched Howl has been silently pre-started
 let hangLastTime = -1;            // last observed currentTime for hang detection
 let hangStallTime = 0;            // Date.now() when currentTime last moved
 
@@ -131,7 +128,6 @@ export const usePlayerStore = create<PlayerState>()(
       currentTime: 0,
       volume: 0.8,
       howl: null,
-      prefetched: new Map(),
       scrobbled: false,
       isQueueVisible: true,
       isFullscreenOpen: false,
@@ -172,29 +168,11 @@ export const usePlayerStore = create<PlayerState>()(
     pendingSeekTime = null;
     hangLastTime = -1;
     hangStallTime = 0;
-    gaplessPrewarmedId = null;
 
     const newQueue = queue ?? state.queue;
     const idx = newQueue.findIndex(t => t.id === track.id);
 
-    // Reuse a prefetched Howl if available — it's already connected and buffering
-    const prefetchMap = state.prefetched;
-    let howl: Howl;
-    let gaplessHandoff = false;
-    if (prefetchMap.has(track.id)) {
-      howl = prefetchMap.get(track.id)!;
-      prefetchMap.delete(track.id);
-      set({ prefetched: new Map(prefetchMap) });
-      if (howl.playing()) {
-        // Gapless: pipeline already running — pause, seek to 0, then play
-        gaplessHandoff = true;
-        howl.pause();
-        hangRecoveryPos = 0; // onplay will seek to position 0
-      }
-      howl.volume(state.volume);
-    } else {
-      howl = new Howl({ src: [buildStreamUrl(track.id)], html5: true, volume: state.volume });
-    }
+    const howl = new Howl({ src: [buildStreamUrl(track.id)], html5: true, volume: state.volume });
 
     howl.on('play', () => {
       set({ isPlaying: true });
@@ -247,18 +225,6 @@ export const usePlayerStore = create<PlayerState>()(
           return;
         }
 
-          // Gapless pre-warm: start next track's Howl silently ~1s before end
-          if (!gaplessPrewarmedId && dur > 2 && dur - cur < 1.0) {
-            const { queue: q, queueIndex: qi, repeatMode: rm, prefetched: pf } = get();
-            const nextIdx = qi + 1;
-            const nextTrack = nextIdx < q.length ? q[nextIdx]
-              : (rm === 'all' && q.length > 0 ? q[0] : null);
-            if (nextTrack && pf.has(nextTrack.id)) {
-              const nh = pf.get(nextTrack.id)!;
-              if (!nh.playing()) { nh.volume(0); nh.play(); gaplessPrewarmedId = nextTrack.id; }
-            }
-          }
-
         // Scrobble at 50%
         if (prog >= 0.5 && !get().scrobbled) {
           set({ scrobbled: true });
@@ -267,8 +233,6 @@ export const usePlayerStore = create<PlayerState>()(
         }
       }, 500);
 
-      // Prefetch next 3
-      get().prefetchUpcoming(idx + 1, newQueue);
     });
 
     howl.on('end', () => {
@@ -406,23 +370,6 @@ export const usePlayerStore = create<PlayerState>()(
     syncQueueToServer([], null, 0);
   },
 
-  // Internal: prefetch next N tracks
-  prefetchUpcoming: (fromIndex: number, queue: Track[]) => {
-    const { prefetched } = get();
-    // Unload and clear old prefetches to prevent memory leaks
-    prefetched.forEach((h, id) => {
-      h.unload();
-    });
-    prefetched.clear();
-
-    const toFetch = queue.slice(fromIndex, fromIndex + 3);
-    toFetch.forEach(track => {
-      const url = buildStreamUrl(track.id);
-      const h = new Howl({ src: [url], html5: true, preload: true, autoplay: false });
-      prefetched.set(track.id, h);
-    });
-    set({ prefetched: new Map(prefetched) });
-  },
   // Playlist management
   reorderQueue: (startIndex: number, endIndex: number) => {
     const { queue, queueIndex, currentTrack } = get();

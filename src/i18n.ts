@@ -44,6 +44,9 @@ const enTranslation = {
     albums: 'Albums',
     songs: 'Songs',
     clearLabel: 'Clear search',
+    title: 'Search',
+    resultsFor: 'Results for "{{query}}"',
+    album: 'Album',
   },
   nowPlaying: {
     tooltip: 'Who is listening?',
@@ -402,6 +405,9 @@ const deTranslation = {
     albums: 'Alben',
     songs: 'Songs',
     clearLabel: 'Suche leeren',
+    title: 'Suche',
+    resultsFor: 'Ergebnisse für „{{query}}"',
+    album: 'Album',
   },
   nowPlaying: {
     tooltip: 'Wer hört was?',

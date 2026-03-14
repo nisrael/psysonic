@@ -14,9 +14,9 @@ jobs:
       release_id: ${{ steps.create-release.outputs.result }}
       package_version: ${{ steps.get-version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: lts/*
       - name: get version
@@ -56,9 +56,9 @@ jobs:
             args: ''
     runs-on: ${{ matrix.settings.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: lts/*
       - name: install Rust stable
@@ -80,7 +80,7 @@ jobs:
       contents: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: install dependencies
         run: |
@@ -97,7 +97,7 @@ jobs:
           chmod +x /usr/local/bin/linuxdeploy-plugin-gstreamer.sh
 
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: lts/*
 

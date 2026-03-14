@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.11] - 2026-03-14
+
+### Added
+- **Search Results Page**: Pressing Enter in the search bar now navigates to a dedicated full search results page showing artists, albums, and songs with proper column layout and headers.
+
+### Fixed
+- **Search Results Column Alignment**: Artist and album columns in the search results song list are now correctly aligned with their column headers.
+- **Search Results Header Alignment**: Fixed column header labels not aligning with song row content (root cause: `auto`-width Format column was sized independently per grid row).
+
+### Changed
+- **Gapless Playback removed**: Removed the experimental gapless playback feature. It caused intermittent song skipping and beginning cutoffs and was not reliable enough to ship. Standard sequential playback is used instead.
+
+### Known Issues
+- **Seeking**: Seeking may occasionally be unreliable, particularly on Linux/GStreamer. Being actively investigated.
+- **Queue drag & drop (macOS / Windows)**: Queue reordering via drag & drop may not always work correctly on macOS and Windows. Being actively worked on.
+
 ## [1.0.10] - 2026-03-14
 
 ### Added

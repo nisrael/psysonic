@@ -23,7 +23,7 @@ const navItems = [
 ];
 
 function isNewer(latest: string, current: string): boolean {
-  const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number);
+  const parse = (v: string) => v.replace(/^[^0-9]*/, '').split('.').map(Number);
   const [lMaj, lMin, lPat] = parse(latest);
   const [cMaj, cMin, cPat] = parse(current);
   if (lMaj !== cMaj) return lMaj > cMaj;

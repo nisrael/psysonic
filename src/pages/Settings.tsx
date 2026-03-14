@@ -374,7 +374,7 @@ export default function Settings() {
                 Psysonic
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                {t('settings.aboutVersion')} 1.0.10
+                {t('settings.aboutVersion')} 1.0.11
               </div>
             </div>
           </div>

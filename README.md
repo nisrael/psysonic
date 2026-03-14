@@ -35,6 +35,8 @@ Designed specifically for users hosting their own music via Navidrome or other S
 
 ## ● Known Limitations
 
+- **Seeking (all platforms)**: Seeking may occasionally be unreliable — especially on Linux/GStreamer. This is a known issue currently being worked on.
+- **Queue drag & drop (macOS / Windows)**: Queue reordering via drag & drop is being actively worked on and may not always behave correctly on macOS and Windows.
 - **Linux (drag & drop cursor feedback)**: Due to a WebKitGTK limitation, the drag cursor does not reflect the drop operation type — it may appear as a "forbidden" symbol or show no indicator at all, depending on the desktop environment. Drag and drop itself works correctly.
 
 ## 📥 Installation

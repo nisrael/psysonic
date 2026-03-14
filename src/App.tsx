@@ -23,6 +23,7 @@ import Statistics from './pages/Statistics';
 import Playlists from './pages/Playlists';
 import Help from './pages/Help';
 import RandomAlbums from './pages/RandomAlbums';
+import SearchResults from './pages/SearchResults';
 import FullscreenPlayer from './components/FullscreenPlayer';
 import ContextMenu from './components/ContextMenu';
 import { useAuthStore } from './store/authStore';
@@ -137,6 +138,7 @@ function AppShell() {
             <Route path="/random-mix" element={<RandomMix />} />
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/label/:name" element={<LabelAlbums />} />
+            <Route path="/search" element={<SearchResults />} />
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />

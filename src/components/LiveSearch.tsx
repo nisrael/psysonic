@@ -69,6 +69,12 @@ export default function LiveSearch() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => results && setOpen(true)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && query.trim()) {
+              setOpen(false);
+              navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+            }
+          }}
           aria-autocomplete="list"
           aria-controls="search-results"
           aria-expanded={open}
