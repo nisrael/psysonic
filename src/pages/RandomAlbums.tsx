@@ -11,38 +11,38 @@ export default function RandomAlbums() {
   const { t } = useTranslation();
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
   const [loading, setLoading] = useState(true);
-  const [renderKey, setRenderKey] = useState(0);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const loadingRef = useRef(false);
+
+  const clearTimers = () => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; }
+  };
 
   const load = useCallback(async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
     try {
       const data = await getAlbumList('random', ALBUM_COUNT);
       setAlbums(data);
-      setRenderKey(k => k + 1);
     } catch (e) {
       console.error(e);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
   }, []);
 
   const startCycle = useCallback(() => {
-    // Clear existing timers
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (progressRef.current) clearInterval(progressRef.current);
-
-    // Reset progress bar
+    clearTimers();
     setProgress(0);
     const startTime = Date.now();
     progressRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      setProgress(Math.min((elapsed / INTERVAL_MS) * 100, 100));
+      setProgress(Math.min((Date.now() - startTime) / INTERVAL_MS * 100, 100));
     }, 100);
-
-    // Auto-refresh
     timerRef.current = setInterval(() => {
       load().then(() => startCycle());
     }, INTERVAL_MS);
@@ -50,13 +50,11 @@ export default function RandomAlbums() {
 
   useEffect(() => {
     load().then(() => startCycle());
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (progressRef.current) clearInterval(progressRef.current);
-    };
+    return clearTimers;
   }, [load, startCycle]);
 
   const handleManualRefresh = () => {
+    clearTimers();
     load().then(() => startCycle());
   };
 
@@ -85,7 +83,7 @@ export default function RandomAlbums() {
           <div className="spinner" />
         </div>
       ) : (
-        <div className="album-grid-wrap animate-fade-in" key={renderKey}>
+        <div className="album-grid-wrap">
           {albums.map(a => <AlbumCard key={a.id} album={a} />)}
         </div>
       )}

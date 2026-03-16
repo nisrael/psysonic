@@ -1,26 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { getAlbumList, getGenres, SubsonicAlbum, SubsonicGenre } from '../api/subsonic';
+import { getAlbumList, getArtists, getGenres, SubsonicAlbum, SubsonicGenre } from '../api/subsonic';
 import AlbumRow from '../components/AlbumRow';
-import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Statistics() {
   const { t } = useTranslation();
+  const [recent, setRecent] = useState<SubsonicAlbum[]>([]);
   const [frequent, setFrequent] = useState<SubsonicAlbum[]>([]);
   const [highest, setHighest] = useState<SubsonicAlbum[]>([]);
   const [genres, setGenres] = useState<SubsonicGenre[]>([]);
+  const [artistCount, setArtistCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
+      getAlbumList('recent', 20).catch(() => []),
       getAlbumList('frequent', 12).catch(() => []),
       getAlbumList('highest', 12).catch(() => []),
-      getGenres().catch(() => [])
-    ]).then(([f, h, g]) => {
-      setFrequent(f);
-      setHighest(h);
-      // Sort genres by album count or song count
-      setGenres(g.sort((a, b) => b.songCount - a.songCount).slice(0, 20)); // Top 20 genres
+      getGenres().catch(() => []),
+      getArtists().catch(() => []),
+    ]).then(([rc, fr, hi, g, a]) => {
+      setRecent(rc);
+      setFrequent(fr);
+      setHighest(hi);
+      setGenres(g.sort((a, b) => b.songCount - a.songCount).slice(0, 20));
+      setArtistCount(a.length);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -33,29 +37,44 @@ export default function Statistics() {
     try {
       const more = await getAlbumList(type, 12, currentList.length);
       const newItems = more.filter(m => !currentList.find(c => c.id === m.id));
-      if (newItems.length > 0) {
-        setter(prev => [...prev, ...newItems]);
-      }
+      if (newItems.length > 0) setter(prev => [...prev, ...newItems]);
     } catch (e) {
       console.error('Failed to load more', e);
     }
   };
 
+  const totalSongs = genres.reduce((acc, g) => acc + g.songCount, 0);
+  const totalAlbums = genres.reduce((acc, g) => acc + g.albumCount, 0);
   const maxGenreCount = Math.max(...genres.map(g => g.songCount), 1);
+
+  const stats = [
+    { label: t('statistics.statArtists'), value: artistCount },
+    { label: t('statistics.statAlbums'), value: totalAlbums || null },
+    { label: t('statistics.statSongs'), value: totalSongs || null },
+    { label: t('statistics.statGenres'), value: genres.length || null },
+  ];
 
   return (
     <div className="content-body animate-fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <BarChart3 size={32} style={{ color: 'var(--accent)' }} />
-        <h1 className="page-title" style={{ margin: 0 }}>{t('statistics.title')}</h1>
-      </div>
+      <h1 className="page-title">{t('statistics.title')}</h1>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
-          <div className="spinner" />
-        </div>
+        <div className="loading-center"><div className="spinner" /></div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+        <div className="stats-page">
+
+          <div className="stats-overview">
+            {stats.map(s => (
+              <div key={s.label} className="stats-card">
+                <span className="stats-card-value">{s.value?.toLocaleString() ?? '—'}</span>
+                <span className="stats-card-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {recent.length > 0 && (
+            <AlbumRow title={t('statistics.recentlyPlayed')} albums={recent} />
+          )}
 
           <AlbumRow
             title={t('statistics.mostPlayed')}
@@ -72,36 +91,29 @@ export default function Statistics() {
           />
 
           {genres.length > 0 && (
-            <div>
-              <div className="section-title">
-                <h2>{t('statistics.genreDistribution')}</h2>
-              </div>
-
-              <div style={{ display: 'grid', gap: '1rem', background: 'var(--surface0)', padding: '1.5rem', borderRadius: '12px' }}>
-                {genres.map(genre => {
-                  const percentage = (genre.songCount / maxGenreCount) * 100;
-                  return (
-                    <div key={genre.value} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text)' }}>
-                        <span>{genre.value}</span>
-                        <span style={{ color: 'var(--subtext0)' }}>{genre.songCount} Songs</span>
-                      </div>
-                      <div style={{ width: '100%', height: '8px', background: 'var(--surface2)', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div
-                          style={{
-                            width: `${percentage}%`,
-                            height: '100%',
-                            background: 'var(--accent)',
-                            borderRadius: '4px',
-                            transition: 'width 1s ease-out'
-                          }}
-                        />
-                      </div>
+            <section>
+              <h2 className="section-title">{t('statistics.genreDistribution')}</h2>
+              <div className="genre-chart">
+                {genres.map(genre => (
+                  <div key={genre.value} className="genre-row">
+                    <div className="genre-row-header">
+                      <span className="genre-name">{genre.value}</span>
+                      <span className="genre-counts">
+                        {t('statistics.genreSongs', { count: genre.songCount })}
+                        {' · '}
+                        {t('statistics.genreAlbums', { count: genre.albumCount })}
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="genre-bar-track">
+                      <div
+                        className="genre-bar-fill"
+                        style={{ width: `${(genre.songCount / maxGenreCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </section>
           )}
 
         </div>

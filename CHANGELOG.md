@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-16
+
+### Added
+
+#### Statistics Page — Upgraded
+- **Library overview**: Four stat cards at the top showing total Artists, Albums, Songs, and Genres — counts derived from the library in parallel.
+- **Recently Played**: Horizontal scroll row showing the last played albums with cover art.
+- **Most Played**: Ranked list of the most frequently played tracks.
+- **Highest Rated**: List of top-rated tracks by user star rating.
+- **Genre Chart**: Visual bar chart of the top genres by song and album count.
+
+#### Playlists Page — Redesigned
+- Replaced the card grid with a clean list layout.
+- **Sort buttons**: Sort by Name, Tracks, or Duration — click again to toggle ascending/descending.
+- **Filter input**: Live search across playlist names.
+- Play and delete buttons appear on row hover.
+
+#### Favorites — Songs Section Upgraded
+- Tracks now display in a full tracklist layout matching Album Detail: separate `#`, Title, Artist, and Duration columns with a header row.
+- Artist name is clickable and navigates to the artist page.
+- Right-click context menu on any track (Go to Album, Add to Queue, etc.).
+- **"Add all to queue"** button (`btn btn-surface`) next to the section title.
+
+#### Context Menu — Go to Album
+- New **Go to Album** option (`Disc3` icon) added for `song` and `queue-item` context menu types.
+- Only shown when the song has a known `albumId`.
+
+#### Queue Panel — Meta Box
+- Now shows: **Title** (no link) → **Artist** (linked to artist page) → **Album** (linked to album page).
+- Removed year display and the old title→album link.
+
+#### Random Mix — Hover Persistence
+- Track row stays highlighted while its context menu is open via `.context-active` CSS class.
+- Highlight is cleared automatically when the context menu closes.
+
+#### Artist Cards — Redesigned
+- `ArtistCardLocal` now matches `AlbumCard` exactly: no padding, full-width square cover via `aspect-ratio: 1`, name and meta below.
+- Uses `CachedImage` with `coverArtCacheKey` for proper IndexedDB caching.
+- Same `flex: 0 0 clamp(140px, 15vw, 180px)` sizing as album cards — artist cards are no longer oversized.
+
+### Fixed
+
+#### Random Albums — Cover Loading & Manual Refresh
+- **Removed `renderKey`**: The album grid was fully remounted on every refresh, restarting all 30 IndexedDB image lookups from scratch. Grid is now stable — only data changes, images stay cached.
+- **`loadingRef` guard**: Prevents concurrent fetch calls if the auto-cycle timer fires during a manual refresh.
+- **Timer race condition**: Manual refresh now calls `clearTimers()` before `load()`, eliminating the race where the auto-cycle timer fired mid-load.
+
+#### Favorites — Artist Navigation
+- Arrow nav buttons in the Artists section now use the same CSS classes as the Albums section (`album-row-section`, `album-row-header`, `album-row-nav`) — consistent styling across both rows.
+
+### Changed
+- **AlbumDetail** refactored into a thin orchestrator. Logic extracted into `AlbumHeader` (`src/components/AlbumHeader.tsx`) and `AlbumTrackList` (`src/components/AlbumTrackList.tsx`).
+- **German i18n**: "Queue" consistently translated as "Warteschlange" throughout — `queue.shuffle`, `favorites.enqueueAll`.
+
 ## [1.3.0] - 2026-03-15
 
 ### Added

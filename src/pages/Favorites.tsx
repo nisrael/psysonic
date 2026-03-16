@@ -3,7 +3,8 @@ import AlbumRow from '../components/AlbumRow';
 import ArtistRow from '../components/ArtistRow';
 import { getStarred, SubsonicAlbum, SubsonicArtist, SubsonicSong } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
-import { Play } from 'lucide-react';
+import { Play, ListPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 export default function Favorites() {
@@ -13,7 +14,9 @@ export default function Favorites() {
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { playTrack } = usePlayerStore();
+  const { playTrack, enqueue } = usePlayerStore();
+  const openContextMenu = usePlayerStore(s => s.openContextMenu);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getStarred()
@@ -56,44 +59,68 @@ export default function Favorites() {
 
           {songs.length > 0 && (
             <section className="album-row-section">
-              <div className="album-row-header" style={{ marginBottom: '1rem' }}>
-                <h2 className="section-title" style={{ marginBottom: 0 }}>{t('favorites.songs')}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                <h2 className="section-title" style={{ margin: 0 }}>{t('favorites.songs')}</h2>
+                <button
+                  className="btn btn-surface"
+                  onClick={() => {
+                    const tracks = songs.map(s => ({
+                      id: s.id, title: s.title, artist: s.artist, album: s.album,
+                      albumId: s.albumId, artistId: s.artistId, duration: s.duration, coverArt: s.coverArt,
+                      track: s.track, year: s.year, bitRate: s.bitRate, suffix: s.suffix, userRating: s.userRating,
+                    }));
+                    enqueue(tracks);
+                  }}
+                >
+                  <ListPlus size={15} />
+                  {t('favorites.enqueueAll')}
+                </button>
               </div>
               <div className="tracklist" style={{ padding: 0 }}>
-                {songs.map((song) => (
-                  <div
-                    key={song.id}
-                    className="track-row"
-                    style={{ gridTemplateColumns: '36px 1fr 60px' }}
-                    onDoubleClick={() => playTrack(song, songs)}
-                    role="row"
-                    draggable
-                    onDragStart={e => {
-                      e.dataTransfer.effectAllowed = 'copy';
-                      const track = {
-                        id: song.id, title: song.title, artist: song.artist, album: song.album,
-                        albumId: song.albumId, artistId: song.artistId, duration: song.duration, coverArt: song.coverArt, track: song.track,
-                        year: song.year, bitRate: song.bitRate, suffix: song.suffix, userRating: song.userRating,
-                      };
-                      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'song', track }));
-                    }}
-                  >
-                    <button
-                      className="btn btn-ghost"
-                      style={{ padding: 4 }}
-                      onClick={(e) => { e.stopPropagation(); playTrack(song, songs); }}
+                <div className="tracklist-header tracklist-va">
+                  <div className="col-center">#</div>
+                  <div>{t('albumDetail.trackTitle')}</div>
+                  <div>{t('albumDetail.trackArtist')}</div>
+                  <div className="col-center">{t('albumDetail.trackDuration')}</div>
+                </div>
+                {songs.map((song, i) => {
+                  const track = {
+                    id: song.id, title: song.title, artist: song.artist, album: song.album,
+                    albumId: song.albumId, artistId: song.artistId, duration: song.duration, coverArt: song.coverArt,
+                    track: song.track, year: song.year, bitRate: song.bitRate, suffix: song.suffix, userRating: song.userRating,
+                  };
+                  return (
+                    <div
+                      key={song.id}
+                      className="track-row track-row-va"
+                      onDoubleClick={() => playTrack(song, songs)}
+                      onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, track, 'song'); }}
+                      role="row"
+                      draggable
+                      onDragStart={e => {
+                        e.dataTransfer.effectAllowed = 'copy';
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'song', track }));
+                      }}
                     >
-                      <Play size={14} fill="currentColor" />
-                    </button>
-                    <div className="track-info">
-                      <span className="track-title" title={song.title}>{song.title}</span>
-                      <span className="track-artist">{song.artist}</span>
+                      <div className="track-num col-center" onClick={() => playTrack(song, songs)} style={{ cursor: 'pointer' }}>
+                        {i + 1}
+                      </div>
+                      <div className="track-info">
+                        <span className="track-title" data-tooltip={song.title}>{song.title}</span>
+                      </div>
+                      <div className="track-artist-cell">
+                        <span
+                          className="track-artist"
+                          style={{ cursor: song.artistId ? 'pointer' : 'default' }}
+                          onClick={() => song.artistId && navigate(`/artist/${song.artistId}`)}
+                        >{song.artist}</span>
+                      </div>
+                      <div className="track-duration">
+                        {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                      </div>
                     </div>
-                    <span className="track-duration" style={{ textAlign: 'right' }}>
-                      {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}

@@ -286,18 +286,18 @@ export default function QueuePanel() {
             )}
           </div>
           <div className="queue-current-info">
-            <h3
-              className="truncate"
-              data-tooltip={currentTrack.title}
-              style={{ cursor: currentTrack.albumId ? 'pointer' : 'default' }}
-              onClick={() => currentTrack.albumId && navigate(`/album/${currentTrack.albumId}`)}
-            >{currentTrack.title}</h3>
-            {currentTrack.year && <div className="queue-current-sub">{currentTrack.year}</div>}
+            <h3 className="truncate" data-tooltip={currentTrack.title}>{currentTrack.title}</h3>
+            <div
+              className="queue-current-sub truncate"
+              data-tooltip={currentTrack.artist}
+              style={{ cursor: currentTrack.artistId ? 'pointer' : 'default' }}
+              onClick={() => currentTrack.artistId && navigate(`/artist/${currentTrack.artistId}`)}
+            >{currentTrack.artist}</div>
             <div
               className="queue-current-sub truncate"
               data-tooltip={currentTrack.album}
-              style={{ cursor: currentTrack.artistId ? 'pointer' : 'default' }}
-              onClick={() => currentTrack.artistId && navigate(`/artist/${currentTrack.artistId}`)}
+              style={{ cursor: currentTrack.albumId ? 'pointer' : 'default' }}
+              onClick={() => currentTrack.albumId && navigate(`/album/${currentTrack.albumId}`)}
             >{currentTrack.album}</div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>

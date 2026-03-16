@@ -42,6 +42,9 @@ export default function RandomMix() {
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [loading, setLoading] = useState(true);
   const playTrack = usePlayerStore(s => s.playTrack);
+  const openContextMenu = usePlayerStore(s => s.openContextMenu);
+  const contextMenuOpen = usePlayerStore(s => s.contextMenu.isOpen);
+  const [contextMenuSongId, setContextMenuSongId] = useState<string | null>(null);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
   const { excludeAudiobooks, setExcludeAudiobooks, customGenreBlacklist, setCustomGenreBlacklist } = useAuthStore();
   const [addedGenre, setAddedGenre] = useState<string | null>(null);
@@ -68,6 +71,10 @@ export default function RandomMix() {
       })
       .catch(() => setLoading(false));
   };
+
+  useEffect(() => {
+    if (!contextMenuOpen) setContextMenuSongId(null);
+  }, [contextMenuOpen]);
 
   useEffect(() => {
     fetchSongs();
@@ -314,8 +321,9 @@ export default function RandomMix() {
                 <span style={{ textAlign: 'right' }}>{t('randomMix.trackDuration')}</span>
               </div>
               {genreMixSongs.map(song => (
-                <div key={song.id} className="track-row" style={{ gridTemplateColumns: '36px 1fr 1fr 1fr 120px 80px' }}
+                <div key={song.id} className={`track-row${contextMenuSongId === song.id ? ' context-active' : ''}`} style={{ gridTemplateColumns: '36px 1fr 1fr 1fr 120px 80px' }}
                   onDoubleClick={() => playTrack(song, genreMixSongs)} role="row" draggable
+                  onContextMenu={e => { e.preventDefault(); setContextMenuSongId(song.id); openContextMenu(e.clientX, e.clientY, { id: song.id, title: song.title, artist: song.artist, album: song.album, albumId: song.albumId, artistId: song.artistId, duration: song.duration, coverArt: song.coverArt, track: song.track, year: song.year, bitRate: song.bitRate, suffix: song.suffix, userRating: song.userRating }, 'song'); }}
                   onDragStart={e => {
                     e.dataTransfer.effectAllowed = 'copy';
                     e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'song', track: { id: song.id, title: song.title, artist: song.artist, album: song.album, albumId: song.albumId, artistId: song.artistId, duration: song.duration, coverArt: song.coverArt, track: song.track, year: song.year, bitRate: song.bitRate, suffix: song.suffix, userRating: song.userRating } }));
@@ -357,11 +365,17 @@ export default function RandomMix() {
           {filteredSongs.map((song) => (
             <div
               key={song.id}
-              className="track-row"
+              className={`track-row${contextMenuSongId === song.id ? ' context-active' : ''}`}
               style={{ gridTemplateColumns: '36px 1fr 1fr 1fr 120px 60px 80px' }}
               onDoubleClick={() => playTrack(song, filteredSongs)}
               role="row"
               draggable
+              onContextMenu={e => {
+                e.preventDefault();
+                const track = { id: song.id, title: song.title, artist: song.artist, album: song.album, albumId: song.albumId, artistId: song.artistId, duration: song.duration, coverArt: song.coverArt, track: song.track, year: song.year, bitRate: song.bitRate, suffix: song.suffix, userRating: song.userRating };
+                setContextMenuSongId(song.id);
+                openContextMenu(e.clientX, e.clientY, track, 'song');
+              }}
               onDragStart={e => {
                 e.dataTransfer.effectAllowed = 'copy';
                 const track = {

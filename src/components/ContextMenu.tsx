@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Star, Download, ChevronRight, User } from 'lucide-react';
+import { Play, ListPlus, Radio, Star, Download, ChevronRight, User, Disc3 } from 'lucide-react';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { SubsonicAlbum, SubsonicArtist, star, unstar, getSimilarSongs2, getTopSongs, buildDownloadUrl, getAlbum } from '../api/subsonic';
 import { useNavigate } from 'react-router-dom';
@@ -146,6 +146,11 @@ export default function ContextMenu() {
                 </div>
               )}
               <div className="context-menu-divider" />
+              {song.albumId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/album/${song.albumId}`))}>
+                  <Disc3 size={14} /> {t('contextMenu.openAlbum')}
+                </div>
+              )}
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artist, song.artist))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
@@ -205,6 +210,11 @@ export default function ContextMenu() {
                 {t('contextMenu.removeFromQueue')}
               </div>
               <div className="context-menu-divider" />
+              {song.albumId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/album/${song.albumId}`))}>
+                  <Disc3 size={14} /> {t('contextMenu.openAlbum')}
+                </div>
+              )}
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artist, song.artist))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>

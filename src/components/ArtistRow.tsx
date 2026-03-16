@@ -59,10 +59,10 @@ export default function ArtistRow({ title, artists, moreLink, moreText, onLoadMo
   if (artists.length === 0) return null;
 
   return (
-    <section className="artist-row-section">
-      <div className="artist-row-header">
+    <section className="album-row-section">
+      <div className="album-row-header">
         <h2 className="section-title" style={{ marginBottom: 0 }}>{title}</h2>
-        <div className="artist-row-nav">
+        <div className="album-row-nav">
           <button 
             className={`nav-btn ${!showLeft ? 'disabled' : ''}`} 
             onClick={() => scroll('left')}

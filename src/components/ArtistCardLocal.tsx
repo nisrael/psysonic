@@ -1,7 +1,8 @@
 import React from 'react';
-import { SubsonicArtist, buildCoverArtUrl } from '../api/subsonic';
+import { SubsonicArtist, buildCoverArtUrl, coverArtCacheKey } from '../api/subsonic';
 import { useNavigate } from 'react-router-dom';
 import { Users } from 'lucide-react';
+import CachedImage from './CachedImage';
 
 interface Props {
   artist: SubsonicArtist;
@@ -12,16 +13,14 @@ export default function ArtistCardLocal({ artist }: Props) {
   const coverId = artist.coverArt || artist.id;
 
   return (
-    <div 
-      className="artist-card"
-      onClick={() => navigate(`/artist/${artist.id}`)}
-    >
-      <div className="artist-card-avatar" style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className="artist-card" onClick={() => navigate(`/artist/${artist.id}`)}>
+      <div className="artist-card-avatar">
         {coverId ? (
-          <img 
-            src={buildCoverArtUrl(coverId, 200)} 
+          <CachedImage
+            src={buildCoverArtUrl(coverId, 300)}
+            cacheKey={coverArtCacheKey(coverId, 300)}
             alt={artist.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
               e.currentTarget.parentElement?.classList.add('fallback-visible');
@@ -31,14 +30,14 @@ export default function ArtistCardLocal({ artist }: Props) {
           <Users size={32} color="var(--text-muted)" />
         )}
       </div>
-      <div className="artist-card-name" data-tooltip={artist.name}>
-        {artist.name}
+      <div className="artist-card-info">
+        <span className="artist-card-name" data-tooltip={artist.name}>{artist.name}</span>
+        {typeof artist.albumCount === 'number' && (
+          <span className="artist-card-meta">
+            {artist.albumCount} {artist.albumCount === 1 ? 'Album' : 'Alben'}
+          </span>
+        )}
       </div>
-      {typeof artist.albumCount === 'number' && (
-        <div className="artist-card-meta">
-          {artist.albumCount} {artist.albumCount === 1 ? 'Album' : 'Alben'}
-        </div>
-      )}
     </div>
   );
 }
