@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-03-22
+
+### Added
+
+- **SVG Logo**: The Psysonic wordmark is now an inline SVG with a theme-adaptive gradient (`--accent` → `--ctp-blue`), matching the app's visual identity across all 47 themes. The collapsed sidebar shows a standalone P-icon with the same gradient.
+- **Player Bar — Marquee**: Song title and artist name scroll smoothly when the text overflows the fixed-width track info area, pause briefly, then jump back and repeat.
+- **Player Bar — Volume Tooltip**: A floating percentage label appears above the volume slider on hover and updates live while dragging.
+
+### Changed
+
+- **Sidebar — Collapse button**: Moved from the brand header to a small circular hover-tab on the right edge of the sidebar. Hidden until you hover over the sidebar, keeping the logo area uncluttered.
+- **Player Bar — Layout**: Track info area is now a fixed 320 px width. Waveform section has increased margins on both sides for better visual separation between controls, waveform, and volume.
+- **Settings**: Server tab is now the default when opening Settings.
+- **Crossfade**: Experimental badge removed — considered stable.
+- **Help page**: Added entries for Lyrics, Configurable Keybindings, and Font Picker. Theme count corrected to 47 themes across 7 groups.
+
+### Fixed
+
+- **Global shortcuts — double-fire**: Pressing a global shortcut (e.g. `Ctrl+Alt+→`) was triggering the action twice. Root cause: `on_shortcut()` in `tauri_plugin_global_shortcut` accumulates handlers per shortcut across JS HMR reloads. Fixed with a Rust-side `ShortcutMap` state that makes `register_global_shortcut` idempotent.
+- **W98 theme**: Comprehensive contrast fixes across all interactive elements — hover states, buttons, queue items, settings panels, and toggles now use silver-grey (`#e0e0e0`) text on navy (`#000080`) backgrounds.
+- **Help page**: Removed orphaned translation key that was rendering as raw text under the Playback section.
+
+### Beta
+
+- **Global Shortcuts** (Settings → Global Shortcuts): System-wide keyboard shortcuts that trigger playback actions while Psysonic is in the background. Functional on all platforms, but edge cases with certain key combinations or OS-level conflicts may still occur.
+
+---
+
 ## [1.12.0] - 2026-03-22
 
 ### Added

@@ -41,6 +41,7 @@ import { useThemeStore } from './store/themeStore';
 import { useFontStore } from './store/fontStore';
 import { useEqStore } from './store/eqStore';
 import { useKeybindingsStore } from './store/keybindingsStore';
+import { useGlobalShortcutsStore } from './store/globalShortcutsStore';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, servers, activeServerId } = useAuthStore();
@@ -214,6 +215,9 @@ function TauriEventBridge() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Global shortcuts use modifier combos — skip in-app bindings for those
+      // (X11 GrabModeAsync delivers the key to both the grabber and the focused WebView)
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
 
       const { bindings } = useKeybindingsStore.getState();
       const { togglePlay, next, previous, setVolume, seek, toggleQueue, toggleFullscreen } = usePlayerStore.getState();
@@ -254,27 +258,41 @@ function TauriEventBridge() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const unlisten: Array<() => void> = [];
 
-    listen('media:play-pause', () => togglePlay()).then(u => unlisten.push(u));
-    listen('media:next', () => next()).then(u => unlisten.push(u));
-    listen('media:prev', () => previous()).then(u => unlisten.push(u));
-    listen('tray:play-pause', () => togglePlay()).then(u => unlisten.push(u));
-    listen('tray:next', () => next()).then(u => unlisten.push(u));
-
-    // Handle close → minimize to tray if enabled (Tauri 2 approach)
-    const win = getCurrentWindow();
-    win.onCloseRequested(async (event) => {
-      if (minimizeToTray) {
-        event.preventDefault();
-        await win.hide();
-      } else {
-        // If not minimizing to tray, we want to exit the app completely
-        await invoke('exit_app');
+    const setup = async () => {
+      const handlers: Array<[string, () => void]> = [
+        ['media:play-pause', () => togglePlay()],
+        ['media:next',       () => next()],
+        ['media:prev',       () => previous()],
+        ['media:volume-up',   () => { const s = usePlayerStore.getState(); s.setVolume(Math.min(1, s.volume + 0.05)); }],
+        ['media:volume-down', () => { const s = usePlayerStore.getState(); s.setVolume(Math.max(0, s.volume - 0.05)); }],
+        ['tray:play-pause',  () => togglePlay()],
+        ['tray:next',        () => next()],
+      ];
+      for (const [event, handler] of handlers) {
+        const u = await listen(event, handler);
+        if (cancelled) { u(); return; }
+        unlisten.push(u);
       }
-    }).then(u => unlisten.push(u));
 
-    return () => unlisten.forEach(u => u());
+      // Handle close → minimize to tray if enabled (Tauri 2 approach)
+      const win = getCurrentWindow();
+      const u = await win.onCloseRequested(async (event) => {
+        if (minimizeToTray) {
+          event.preventDefault();
+          await win.hide();
+        } else {
+          await invoke('exit_app');
+        }
+      });
+      if (cancelled) { u(); return; }
+      unlisten.push(u);
+    };
+
+    setup();
+    return () => { cancelled = true; unlisten.forEach(u => u()); };
   }, [togglePlay, next, previous, minimizeToTray]);
 
   return null;
@@ -294,6 +312,10 @@ export default function App() {
 
   useEffect(() => {
     return initAudioListeners();
+  }, []);
+
+  useEffect(() => {
+    useGlobalShortcutsStore.getState().registerAll();
   }, []);
 
   return (

@@ -1900,6 +1900,10 @@
   border-color: #222222;
 }
 
+[data-theme='doh-matic'] .btn-surface:hover {
+  background: #D0E5FF;
+}
+
 /* ─── Order of the Phoenix ─── */
 [data-theme='order-of-the-phoenix'] {
   color-scheme: dark;
@@ -1997,7 +2001,7 @@
   --ctp-mantle:   #a0a0a0;
   --ctp-base:     #c0c0c0;
   --ctp-surface0: #dfdfdf;
-  --ctp-surface1: #ffffff;
+  --ctp-surface1: #e0e0e0;
   --ctp-surface2: #000080;
   --ctp-overlay0: #808080;
   --ctp-overlay1: #404040;
@@ -2052,7 +2056,7 @@
 [data-theme='w98'] .sidebar,
 [data-theme='w98'] .player-bar,
 [data-theme='w98'] .btn-surface {
-  border: 1px solid #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
   border-right-color: #808080 !important;
   border-bottom-color: #808080 !important;
   box-shadow: 1px 1px 0 0 #000, inset 1px 1px 0 0 #dfdfdf !important;
@@ -2060,7 +2064,7 @@
 
 [data-theme='w98'] .nav-link.active {
   background-color: #000080 !important;
-  color: #ffffff !important;
+  color: #e0e0e0 !important;
 }
 
 [data-theme='w98'] .nav-link:hover:not(.active) {
@@ -2081,10 +2085,119 @@
 
 [data-theme='w98'] ::-webkit-scrollbar-thumb {
   background: #c0c0c0;
-  border: 1px solid #ffffff;
+  border: 1px solid #e0e0e0;
   border-right-color: #808080;
   border-bottom-color: #808080;
   box-shadow: 1px 1px 0 0 #000;
+}
+
+/* ── W98: contrast & hover fixes ── */
+/* Queue round buttons default bg uses --bg-hover (#000080) → swap to silver */
+[data-theme='w98'] .queue-round-btn {
+  background: #d4d0c8;
+  color: #000000;
+}
+[data-theme='w98'] .queue-round-btn:hover:not(:disabled) {
+  background: #000080;
+  color: #e0e0e0;
+}
+[data-theme='w98'] .queue-round-btn.active {
+  color: #e0e0e0;
+}
+/* btn-surface hover: light W98 grey instead of navy */
+[data-theme='w98'] .btn-surface:hover {
+  background: #d4d0c8 !important;
+  color: #000000;
+}
+/* Queue tab hover */
+[data-theme='w98'] .queue-tab-btn:hover {
+  background: #d4d0c8;
+  color: #000000;
+}
+/* Hero eyebrow + meta badges: --accent (#000080) invisible on dark hero overlay */
+[data-theme='w98'] .hero-eyebrow {
+  color: rgba(224, 224, 224, 0.85);
+}
+[data-theme='w98'] .hero-meta .badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e0e0e0;
+}
+/* Hero play/enqueue buttons */
+[data-theme='w98'] .hero-play-btn {
+  color: #e0e0e0;
+}
+/* Settings nav tabs hover */
+[data-theme='w98'] .settings-tab:hover { color: #e0e0e0; }
+/* Theme accordion: hover + open-state both use navy bg */
+[data-theme='w98'] .theme-accordion-header:hover { color: #e0e0e0; }
+[data-theme='w98'] .theme-accordion-open .theme-accordion-header { color: #e0e0e0; }
+[data-theme='w98'] .theme-accordion-open .theme-accordion-chevron { color: rgba(224, 224, 224, 0.7); }
+/* Language dropdown hover */
+[data-theme='w98'] .custom-select-trigger:hover { color: #e0e0e0; }
+[data-theme='w98'] .custom-select-option:hover { color: #e0e0e0; }
+/* Genre filter keywords / artist ext links hover (!important — inline style wins otherwise) */
+[data-theme='w98'] .artist-ext-link:hover { color: #e0e0e0 !important; }
+/* Changelog entries hover */
+[data-theme='w98'] .changelog-summary:hover { color: #e0e0e0; }
+/* Keybind/global-shortcut badge buttons: --bg-hover (#000080) as static bg */
+[data-theme='w98'] .keybind-badge { color: #e0e0e0 !important; }
+
+/* ── W98: remaining navy-hover contrast fixes ── */
+/* Header toggle button (queue/sidebar) */
+[data-theme='w98'] .collapse-btn:hover { color: #e0e0e0; }
+/* Album section nav arrows */
+[data-theme='w98'] .album-row-nav .nav-btn:hover:not(.disabled) { color: #e0e0e0; }
+/* Live search results */
+[data-theme='w98'] .search-result-item:hover .search-result-name,
+[data-theme='w98'] .search-result-item:hover .search-result-sub,
+[data-theme='w98'] .search-result-item.active .search-result-name,
+[data-theme='w98'] .search-result-item.active .search-result-sub { color: #e0e0e0; }
+/* Tracklist rows — many children have explicit colors, override all */
+[data-theme='w98'] .track-row:hover *,
+[data-theme='w98'] .track-row.context-active * { color: #e0e0e0; }
+/* Artist list rows */
+[data-theme='w98'] .artist-row:hover { color: #e0e0e0; }
+/* Year/decade toggle */
+[data-theme='w98'] .year-toggle:hover { color: #e0e0e0; }
+/* Playlist rows */
+[data-theme='w98'] .playlist-row:hover,
+[data-theme='w98'] .playlist-row:hover * { color: #e0e0e0; }
+/* Help/FAQ */
+[data-theme='w98'] .help-question:hover { color: #e0e0e0; }
+[data-theme='w98'] .help-item-open .help-question { color: #e0e0e0; }
+[data-theme='w98'] .help-item-open .help-chevron { color: rgba(224, 224, 224, 0.7); }
+/* Now Playing action buttons + queue items */
+[data-theme='w98'] .np-action-btn:hover { color: #e0e0e0; }
+[data-theme='w98'] .np-queue-item:hover,
+[data-theme='w98'] .np-queue-item.context-active { color: #e0e0e0; }
+/* EQ buttons: static navy bg → swap to silver; hover → navy + light grey */
+[data-theme='w98'] .eq-ctrl-btn { background: #d4d0c8; color: #000000; }
+[data-theme='w98'] .eq-ctrl-btn:hover { background: #000080; color: #e0e0e0; }
+/* Changelog inline code: navy bg + navy text = invisible → silver bg + navy text */
+[data-theme='w98'] .changelog-code { background: #d4d0c8; color: #000080; }
+/* Ghost buttons (e.g. "Als Favorit") — !important needed, inline color style wins otherwise */
+[data-theme='w98'] .btn-ghost:hover { color: #e0e0e0 !important; }
+/* Built-in keyword chips (inline style uses --bg-hover) */
+[data-theme='w98'] .genre-keyword-badge { background: #d4d0c8 !important; color: #404040 !important; }
+/* Toggle switch knob: hardcoded white → W98 silver-grey */
+[data-theme='w98'] .toggle-track::before { background: #e0e0e0; }
+/* Now Playing: song title in W98 teal (inline style needs !important) */
+[data-theme='w98'] .np-title { color: #008080 !important; }
+/* Queue items: keep navy hover, light grey text */
+[data-theme='w98'] .queue-item:hover .queue-item-title,
+[data-theme='w98'] .queue-item:hover .queue-item-artist,
+[data-theme='w98'] .queue-item:hover .queue-item-duration,
+[data-theme='w98'] .queue-item.context-active .queue-item-title,
+[data-theme='w98'] .queue-item.context-active .queue-item-artist,
+[data-theme='w98'] .queue-item.context-active .queue-item-duration {
+  color: #e0e0e0;
+}
+/* Player bar buttons: keep navy hover, light grey icon */
+[data-theme='w98'] .player-btn:hover {
+  color: #e0e0e0;
+}
+[data-theme='w98'] .player-btn-primary:hover {
+  color: #e0e0e0;
 }
 
 /* ─── Global Base Settings ─── */

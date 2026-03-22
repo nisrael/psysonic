@@ -38,7 +38,7 @@
   flex-direction: column;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-subtle);
-  overflow: hidden;
+  position: relative;
 }
 
 .sidebar-brand {
@@ -70,7 +70,7 @@
 
 .sidebar-nav {
   flex: 1;
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-1) var(--space-3) var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -176,7 +176,7 @@
 /* Collapsed Sidebar Styles */
 .sidebar.collapsed .sidebar-brand {
   justify-content: center;
-  padding: 0;
+  padding: 0 var(--space-3);
 }
 
 .sidebar.collapsed .nav-link {
@@ -185,21 +185,34 @@
 }
 
 .collapse-btn {
-  background: transparent;
-  border: none;
+  position: absolute;
+  top: 50%;
+  right: -13px;
+  transform: translateY(-50%);
+  z-index: 101;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar:hover .collapse-btn {
+  opacity: 1;
 }
 
 .collapse-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+  box-shadow: var(--shadow-md);
 }
 
 /* ─── Update Toast ─── */
@@ -311,7 +324,7 @@
   grid-area: player;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
   padding: 0 var(--space-5);
   background: var(--bg-player);
   border-top: 1px solid var(--border-subtle);
@@ -324,9 +337,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  flex: 0 0 auto;
-  max-width: min(40vw, 480px);
+  flex: 0 0 320px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .player-album-art {
@@ -385,6 +398,7 @@
 .player-album-art-wrap.clickable:hover .player-art-expand-hint { opacity: 1; }
 
 .player-track-meta {
+  flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
 }
@@ -393,18 +407,31 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .player-track-artist {
   font-size: 12px;
   color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-top: 2px;
+}
+
+/* ── Marquee (PlayerBar track name / artist) ── */
+.marquee-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.marquee-scroll {
+  display: inline-block;
+  animation: player-marquee 12s linear infinite;
+  animation-delay: 2s;
+}
+
+@keyframes player-marquee {
+  0%,   12% { transform: translateX(0); }
+  78%,  88% { transform: translateX(var(--marquee-amount)); }
+  88.1%, 100% { transform: translateX(0); }
 }
 
 .player-buttons {
@@ -462,6 +489,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin-left: 32px;
+  margin-right: 32px;
 }
 
 .player-waveform-wrap {
@@ -486,9 +515,30 @@
   width: 155px;
 }
 
-.player-volume-slider {
+.player-volume-slider-wrap {
   flex: 1;
   min-width: 0;
+  position: relative;
+}
+
+.player-volume-slider {
+  width: 100%;
+}
+
+.player-volume-pct {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
 }
 
 .player-eq-btn {

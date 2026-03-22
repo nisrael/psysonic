@@ -8,10 +8,8 @@ import {
   Disc3, Users, Music4, Radio, Settings, Heart, BarChart3, Shuffle, ListMusic,
   PanelLeftClose, PanelLeft, HelpCircle, Dices, ArrowUpCircle, AudioLines
 } from 'lucide-react';
-
-const PsysonicLogo = () => (
-  <img src="/logo-psysonic.png" alt="Psysonic Logo" width="36" height="36" />
-);
+import PsysonicLogo from './PsysonicLogo';
+import PSmallLogo from './PSmallLogo';
 
 const navItems = [
   { icon: Disc3, labelKey: 'sidebar.mainstage', to: '/' },
@@ -99,18 +97,20 @@ export default function Sidebar({
   return (
     <aside className={`sidebar animate-slide-in ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-brand">
-        <button 
-          className="collapse-btn"
-          onClick={toggleCollapse}
-          data-tooltip={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          data-tooltip-pos="bottom"
-          style={{ padding: 0 }}
-        >
-          {isCollapsed ? <PanelLeft size={24} /> : <PanelLeftClose size={24} />}
-        </button>
-        {!isCollapsed && <PsysonicLogo />}
-        {!isCollapsed && <span className="brand-name">Psysonic</span>}
+        {isCollapsed
+          ? <PSmallLogo style={{ height: '32px', width: 'auto' }} />
+          : <PsysonicLogo style={{ height: '28px', width: 'auto' }} />
+        }
       </div>
+
+      <button
+        className="collapse-btn"
+        onClick={toggleCollapse}
+        data-tooltip={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+        data-tooltip-pos="right"
+      >
+        {isCollapsed ? <PanelLeft size={14} /> : <PanelLeftClose size={14} />}
+      </button>
 
       <nav className="sidebar-nav" aria-label="Hauptnavigation">
         {!isCollapsed && <span className="nav-section-label">{t('sidebar.library')}</span>}

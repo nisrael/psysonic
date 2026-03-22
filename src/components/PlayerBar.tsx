@@ -13,6 +13,7 @@ import Equalizer from './Equalizer';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useLyricsStore } from '../store/lyricsStore';
+import MarqueeText from './MarqueeText';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -25,6 +26,7 @@ export default function PlayerBar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [eqOpen, setEqOpen] = useState(false);
+  const [showVolPct, setShowVolPct] = useState(false);
   const showLyrics   = useLyricsStore(s => s.showLyrics);
   const activeTab    = useLyricsStore(s => s.activeTab);
   const {
@@ -77,20 +79,18 @@ export default function PlayerBar() {
           )}
         </div>
         <div className="player-track-meta">
-          <div
+          <MarqueeText
+            text={currentTrack?.title ?? t('player.noTitle')}
             className="player-track-name"
             style={{ cursor: currentTrack?.albumId ? 'pointer' : 'default' }}
             onClick={() => currentTrack?.albumId && navigate(`/album/${currentTrack.albumId}`)}
-          >
-            {currentTrack?.title ?? t('player.noTitle')}
-          </div>
-          <div
+          />
+          <MarqueeText
+            text={currentTrack?.artist ?? '—'}
             className="player-track-artist"
             style={{ cursor: currentTrack?.artistId ? 'pointer' : 'default' }}
             onClick={() => currentTrack?.artistId && navigate(`/artist/${currentTrack.artistId}`)}
-          >
-            {currentTrack?.artist ?? '—'}
-          </div>
+          />
         </div>
         {currentTrack && lastfmSessionKey && (
           <button
@@ -174,18 +174,27 @@ export default function PlayerBar() {
         >
           {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
-        <input
-          type="range"
-          id="player-volume"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
-          onChange={handleVolume}
-          style={volumeStyle}
-          aria-label={t('player.volume')}
-          className="player-volume-slider"
-        />
+        <div className="player-volume-slider-wrap">
+          {showVolPct && (
+            <span className="player-volume-pct" style={{ left: `${volume * 100}%` }}>
+              {Math.round(volume * 100)}%
+            </span>
+          )}
+          <input
+            type="range"
+            id="player-volume"
+            min={0}
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={handleVolume}
+            style={volumeStyle}
+            aria-label={t('player.volume')}
+            className="player-volume-slider"
+            onMouseEnter={() => setShowVolPct(true)}
+            onMouseLeave={() => setShowVolPct(false)}
+          />
+        </div>
       </div>
 
       {/* EQ Popup — rendered via portal to avoid backdrop-filter containing-block issue */}

@@ -3,11 +3,18 @@
 
 mod audio;
 
+use std::collections::HashMap;
+use std::sync::Mutex;
+
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager,
 };
+
+/// Tracks which user-configured shortcuts are currently registered (shortcut_str → action).
+/// Prevents on_shortcut() accumulating duplicate handlers across JS reloads (HMR / StrictMode).
+type ShortcutMap = Mutex<HashMap<String, String>>;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -54,14 +61,14 @@ async fn lastfm_request(
         client
             .get("https://ws.audioscrobbler.com/2.0/")
             .query(&map)
-            .header("User-Agent", "psysonic/1.6.0")
+            .header("User-Agent", "psysonic/1.13.0")
             .send()
             .await
     } else {
         client
             .post("https://ws.audioscrobbler.com/2.0/")
             .form(&map)
-            .header("User-Agent", "psysonic/1.6.0")
+            .header("User-Agent", "psysonic/1.13.0")
             .send()
             .await
     }.map_err(|e| e.to_string())?;
@@ -76,11 +83,67 @@ async fn lastfm_request(
 }
 
 
+#[tauri::command]
+fn register_global_shortcut(
+    app: tauri::AppHandle,
+    shortcut_map: tauri::State<ShortcutMap>,
+    shortcut: String,
+    action: String,
+) -> Result<(), String> {
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
+
+    let mut map = shortcut_map.lock().unwrap();
+
+    // Idempotent: if this exact shortcut+action is already registered, skip.
+    // This prevents on_shortcut() from accumulating duplicate handlers when
+    // registerAll() is called again after a JS HMR reload or StrictMode double-effect.
+    if map.get(&shortcut).map(|a| a == &action).unwrap_or(false) {
+        return Ok(());
+    }
+
+    // Unregister any existing OS grab for this shortcut before re-registering.
+    if let Ok(s) = shortcut.parse::<Shortcut>() {
+        let _ = app.global_shortcut().unregister(s);
+    }
+    map.insert(shortcut.clone(), action.clone());
+    drop(map); // release lock before the blocking OS call
+
+    let parsed: Shortcut = shortcut.parse().map_err(|_| format!("Invalid shortcut: {shortcut}"))?;
+    app.global_shortcut()
+        .on_shortcut(parsed, move |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                let event_name = match action.as_str() {
+                    "play-pause"  => "media:play-pause",
+                    "next"        => "media:next",
+                    "prev"        => "media:prev",
+                    "volume-up"   => "media:volume-up",
+                    "volume-down" => "media:volume-down",
+                    _             => return,
+                };
+                let _ = app.emit(event_name, ());
+            }
+        })
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn unregister_global_shortcut(
+    app: tauri::AppHandle,
+    shortcut_map: tauri::State<ShortcutMap>,
+    shortcut: String,
+) -> Result<(), String> {
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+    shortcut_map.lock().unwrap().remove(&shortcut);
+    let parsed: Shortcut = shortcut.parse().map_err(|_| format!("Invalid shortcut: {shortcut}"))?;
+    app.global_shortcut().unregister(parsed).map_err(|e| e.to_string())
+}
+
 pub fn run() {
     let (audio_engine, _audio_thread) = audio::create_engine();
 
     tauri::Builder::default()
         .manage(audio_engine)
+        .manage(ShortcutMap::default())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
@@ -138,8 +201,7 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Register media key global shortcuts
-            #[cfg(not(target_os = "linux"))]
+            // Register media key global shortcuts (all platforms)
             {
                 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
                 let shortcuts = ["MediaPlayPause", "MediaNextTrack", "MediaPreviousTrack"];
@@ -175,6 +237,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             exit_app,
+            register_global_shortcut,
+            unregister_global_shortcut,
             audio::audio_play,
             audio::audio_pause,
             audio::audio_resume,

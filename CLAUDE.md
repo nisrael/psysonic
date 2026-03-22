@@ -244,4 +244,4 @@ The workflow is split into three jobs: `create-release` (creates the GitHub Rele
 - **CoverLightbox**: Shared component (`src/components/CoverLightbox.tsx`). Props: `{ src, alt, onClose }`. ESC + overlay click to close. Used in `AlbumHeader` (album cover) and `ArtistDetail` (artist avatar, wrapped in `.artist-detail-avatar-btn`).
 - **Home page**: Section order: recent → discover → artist discovery (pill-buttons, no images) → starred → mostPlayed. Artist discovery uses `getArtists()` full list + client-side Fisher-Yates shuffle (16 random), rendered as `artist-ext-link` pill-buttons (same as ArtistDetail "Similar Artists") — no image loading, no performance impact.
 - **CoverLightbox + EQ popup**: Both use `createPortal(…, document.body)` to escape `backdrop-filter` CSS containing-block issues on the player bar and other ancestors.
-- **Version**: 1.12.0
+- **Version**: 1.13.0

@@ -15,6 +15,7 @@ import { useAuthStore, ServerProfile } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useFontStore, FontId } from '../store/fontStore';
 import { useKeybindingsStore, KeyAction, formatKeyCode, DEFAULT_BINDINGS } from '../store/keybindingsStore';
+import { useGlobalShortcutsStore, GlobalAction, buildGlobalShortcut, formatGlobalShortcut } from '../store/globalShortcutsStore';
 import { pingWithCredentials } from '../api/subsonic';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { useTranslation } from 'react-i18next';
@@ -87,12 +88,14 @@ export default function Settings() {
   const theme = useThemeStore();
   const fontStore = useFontStore();
   const kb = useKeybindingsStore();
+  const gs = useGlobalShortcutsStore();
   const [listeningFor, setListeningFor] = useState<KeyAction | null>(null);
+  const [listeningForGlobal, setListeningForGlobal] = useState<GlobalAction | null>(null);
   const navigate = useNavigate();
   const { state: routeState } = useLocation();
   const { t, i18n } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<Tab>((routeState as { tab?: Tab } | null)?.tab ?? 'playback');
+  const [activeTab, setActiveTab] = useState<Tab>((routeState as { tab?: Tab } | null)?.tab ?? 'server');
   const [connStatus, setConnStatus] = useState<Record<string, 'idle' | 'testing' | 'ok' | 'error'>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGenre, setNewGenre] = useState('');
@@ -295,11 +298,8 @@ export default function Settings() {
               {/* Crossfade */}
               <div className="settings-toggle-row">
                 <div>
-                  <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ fontWeight: 500 }}>
                     {t('settings.crossfade')}
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'var(--accent)', color: 'var(--ctp-base)', opacity: 0.85, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                      {t('settings.experimental')}
-                    </span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.crossfadeDesc')}</div>
                 </div>
@@ -448,7 +448,7 @@ export default function Settings() {
               <div style={{ fontSize: 13, fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('settings.randomMixHardcodedTitle')}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                 {AUDIOBOOK_GENRES_DISPLAY.map(genre => (
-                  <span key={genre} style={{
+                  <span key={genre} className="genre-keyword-badge" style={{
                     display: 'inline-flex', alignItems: 'center',
                     background: 'var(--bg-hover)', color: 'var(--text-muted)',
                     borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 12,
@@ -545,6 +545,7 @@ export default function Settings() {
 
       {/* ── Shortcuts ────────────────────────────────────────────────────────── */}
       {activeTab === 'shortcuts' && (
+        <>
         <section className="settings-section">
           <div className="settings-section-header">
             <Keyboard size={18} />
@@ -599,6 +600,7 @@ export default function Settings() {
                           };
                           window.addEventListener('keydown', handler, true);
                         }}
+                        className="keybind-badge"
                         style={{
                           minWidth: 72, padding: '3px 10px', borderRadius: 'var(--radius-sm)',
                           fontSize: 12, fontWeight: 600, fontFamily: 'monospace',
@@ -626,6 +628,90 @@ export default function Settings() {
             </div>
           </div>
         </section>
+
+        <section className="settings-section">
+          <div className="settings-section-header">
+            <Keyboard size={18} />
+            <h2>{t('settings.globalShortcutsTitle')}</h2>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
+            {t('settings.globalShortcutsNote')}
+          </p>
+          <div className="settings-card">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+              <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { gs.resetAll(); setListeningForGlobal(null); }}>
+                {t('settings.shortcutsReset')}
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {([
+                ['play-pause',  t('settings.shortcutPlayPause')],
+                ['next',        t('settings.shortcutNext')],
+                ['prev',        t('settings.shortcutPrev')],
+                ['volume-up',   t('settings.shortcutVolumeUp')],
+                ['volume-down', t('settings.shortcutVolumeDown')],
+              ] as [GlobalAction, string][]).map(([action, label]) => {
+                const bound = gs.shortcuts[action] ?? null;
+                const isListening = listeningForGlobal === action;
+                return (
+                  <div key={action} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    background: isListening ? 'var(--accent-dim)' : 'transparent',
+                    transition: 'background 0.15s',
+                  }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        onClick={() => {
+                          if (isListening) { setListeningForGlobal(null); return; }
+                          setListeningForGlobal(action);
+                          const handler = (e: KeyboardEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.code === 'Escape') {
+                              setListeningForGlobal(null);
+                              window.removeEventListener('keydown', handler, true);
+                              return;
+                            }
+                            const shortcut = buildGlobalShortcut(e);
+                            if (shortcut) {
+                              gs.setShortcut(action, shortcut);
+                              setListeningForGlobal(null);
+                              window.removeEventListener('keydown', handler, true);
+                            }
+                          };
+                          window.addEventListener('keydown', handler, true);
+                        }}
+                        className="keybind-badge"
+                        style={{
+                          minWidth: 120, padding: '3px 10px', borderRadius: 'var(--radius-sm)',
+                          fontSize: 12, fontWeight: 600, fontFamily: 'monospace',
+                          background: isListening ? 'var(--accent)' : bound ? 'var(--bg-hover)' : 'var(--bg-card)',
+                          color: isListening ? 'var(--ctp-base)' : bound ? 'var(--text-primary)' : 'var(--text-muted)',
+                          border: `1px solid ${isListening ? 'var(--accent)' : 'var(--border-subtle)'}`,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {isListening ? t('settings.shortcutListening') : bound ? formatGlobalShortcut(bound) : t('settings.shortcutUnbound')}
+                      </button>
+                      {bound && !isListening && (
+                        <button
+                          onClick={() => gs.setShortcut(action, null)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 4px', lineHeight: 1 }}
+                          data-tooltip={t('settings.shortcutClear')}
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+        </>
       )}
 
       {/* ── Server ───────────────────────────────────────────────────────────── */}
