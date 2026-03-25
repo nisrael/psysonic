@@ -3,9 +3,10 @@ import AlbumRow from '../components/AlbumRow';
 import ArtistRow from '../components/ArtistRow';
 import { getStarred, SubsonicAlbum, SubsonicArtist, SubsonicSong } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
-import { Play, ListPlus } from 'lucide-react';
+import { ListPlus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { unstar } from '../api/subsonic';
 
 export default function Favorites() {
   const { t } = useTranslation();
@@ -15,6 +16,11 @@ export default function Favorites() {
   const [loading, setLoading] = useState(true);
 
   const { playTrack, enqueue } = usePlayerStore();
+
+  function removeSong(id: string) {
+    unstar(id, 'song').catch(() => {});
+    setSongs(prev => prev.filter(s => s.id !== id));
+  }
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const navigate = useNavigate();
 
@@ -77,11 +83,12 @@ export default function Favorites() {
                 </button>
               </div>
               <div className="tracklist" style={{ padding: 0 }}>
-                <div className="tracklist-header tracklist-va">
+                <div className="tracklist-header tracklist-va" style={{ gridTemplateColumns: '40px 1fr 1fr 60px 32px' }}>
                   <div className="col-center">#</div>
                   <div>{t('albumDetail.trackTitle')}</div>
                   <div>{t('albumDetail.trackArtist')}</div>
                   <div className="col-center">{t('albumDetail.trackDuration')}</div>
+                  <div />
                 </div>
                 {songs.map((song, i) => {
                   const track = {
@@ -93,6 +100,7 @@ export default function Favorites() {
                     <div
                       key={song.id}
                       className="track-row track-row-va"
+                      style={{ gridTemplateColumns: '40px 1fr 1fr 60px 32px' }}
                       onDoubleClick={() => playTrack(song, songs)}
                       onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, track, 'song'); }}
                       role="row"
@@ -117,6 +125,16 @@ export default function Favorites() {
                       </div>
                       <div className="track-duration">
                         {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button
+                          className="btn-icon fav-remove-btn"
+                          data-tooltip={t('favorites.removeSong')}
+                          onClick={e => { e.stopPropagation(); removeSong(song.id); }}
+                          aria-label={t('favorites.removeSong')}
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
                     </div>
                   );

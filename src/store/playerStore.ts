@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { buildStreamUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong } from '../api/subsonic';
+import { buildStreamUrl, buildCoverArtUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong } from '../api/subsonic';
 import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTrack, lastfmGetTrackLoved, lastfmGetAllLovedTracks } from '../api/lastfm';
 import { useAuthStore } from './authStore';
 
@@ -335,8 +335,43 @@ export function initAudioListeners(): () => void {
     invoke('audio_set_gapless', { enabled: state.gaplessEnabled }).catch(() => {});
   });
 
+  // ── MPRIS / OS media controls sync ───────────────────────────────────────
+  // Whenever the current track or playback state changes, push updates to the
+  // Rust souvlaki MediaControls so the OS media overlay stays accurate.
+  let prevTrackId: string | null = null;
+  let prevIsPlaying: boolean | null = null;
+
+  const unsubMpris = usePlayerStore.subscribe((state) => {
+    const { currentTrack, isPlaying, currentTime } = state;
+
+    // Update metadata when track changes
+    if (currentTrack && currentTrack.id !== prevTrackId) {
+      prevTrackId = currentTrack.id;
+      const coverUrl = currentTrack.coverArt
+        ? buildCoverArtUrl(currentTrack.coverArt, 512)
+        : undefined;
+      invoke('mpris_set_metadata', {
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        album: currentTrack.album,
+        coverUrl,
+        durationSecs: currentTrack.duration,
+      }).catch(() => {});
+    }
+
+    // Update playback state when it changes
+    if (isPlaying !== prevIsPlaying) {
+      prevIsPlaying = isPlaying;
+      invoke('mpris_set_playback', {
+        playing: isPlaying,
+        positionSecs: currentTime > 0 ? currentTime : null,
+      }).catch(() => {});
+    }
+  });
+
   return () => {
     unsubAuth();
+    unsubMpris();
     pending.forEach(p => p.then(unlisten => unlisten()));
   };
 }

@@ -22,7 +22,7 @@ Designed specifically for users hosting their own music via Navidrome or other S
 
 ## ✨ Features
 
-- 🎨 **Gorgeous UI**: 47 deeply integrated themes across 7 groups — Open Source Classics (Catppuccin, Nord, Gruvbox), Operating Systems, Games, Movies, Series, Psysonic originals, and Psysonic Mediaplayer — with smooth glassmorphism effects and micro-animations.
+- 🎨 **Gorgeous UI**: A large selection of beautiful, lean themes for every taste — Open Source Classics (Catppuccin, Nord, Gruvbox), Operating Systems, Games, Movies, Series, Psysonic originals, and Mediaplayer — with smooth glassmorphism effects and micro-animations.
 - ⚡ **Blazing Fast**: Built with Rust & Tauri — native audio engine (rodio), minimal RAM usage compared to typical Electron apps.
 - 🌍 **Internationalization (i18n)**: Fully translated into English, German, French, and Dutch.
 - 📻 **Live "Now Playing"**: See what other users on your server are currently listening to in real-time.
@@ -55,7 +55,7 @@ Designed specifically for users hosting their own music via Navidrome or other S
 - [x] Multi-server support
 - [x] IndexedDB image caching
 - [x] Random Mix with keyword filter & Super Genre mix
-- [x] 47 themes across 7 groups: Open Source Classics, Operating Systems, Games, Movies, Series, Psysonic originals, Psysonic Mediaplayer
+- [x] Large theme library across 8 groups: Open Source Classics, Operating Systems, Games, Movies, Series, Social Media, Psysonic originals, Mediaplayer
 - [x] Internationalization (English, German, French, Dutch)
 - [x] AUR package (Arch / CachyOS)
 - [x] Configurable keybindings
@@ -63,6 +63,7 @@ Designed specifically for users hosting their own music via Navidrome or other S
 
 ### 📋 Planned
 - [ ] General UI polish & visual refinement
+- [ ] Accessibility (a11y) — keyboard navigation, screen reader support, ARIA labels
 - [ ] More languages
 
 ---

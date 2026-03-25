@@ -48,6 +48,7 @@ export default function RandomMix() {
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
   const { excludeAudiobooks, setExcludeAudiobooks, customGenreBlacklist, setCustomGenreBlacklist } = useAuthStore();
   const [addedGenre, setAddedGenre] = useState<string | null>(null);
+  const [addedArtist, setAddedArtist] = useState<string | null>(null);
 
   // Blacklist panel state
   const [blacklistOpen, setBlacklistOpen] = useState(false);
@@ -94,6 +95,7 @@ export default function RandomMix() {
     if (song.genre && checkText(song.genre)) return false;
     if (song.title && checkText(song.title)) return false;
     if (song.album && checkText(song.album)) return false;
+    if (song.artist && checkText(song.artist)) return false;
     return true;
   });
 
@@ -419,7 +421,45 @@ export default function RandomMix() {
               </div>
 
               <div className="track-artist-cell">
-                <span className="track-artist">{song.artist}</span>
+                {(() => {
+                  const artist = song.artist;
+                  if (!artist) return <span className="track-artist">—</span>;
+                  const isBlocked = customGenreBlacklist.some(bg => artist.toLowerCase().includes(bg.toLowerCase()));
+                  const justAdded = addedArtist === artist;
+                  return (
+                    <button
+                      className="btn btn-ghost track-artist"
+                      style={{
+                        fontSize: 'inherit',
+                        padding: '1px 6px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: isBlocked ? 'color-mix(in srgb, var(--danger) 15%, transparent)' : justAdded ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'transparent',
+                        color: isBlocked ? 'var(--danger)' : justAdded ? 'var(--accent)' : 'var(--text-secondary)',
+                        border: 'none',
+                        cursor: isBlocked ? 'default' : 'pointer',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        height: 'auto',
+                        minHeight: 'unset',
+                        textAlign: 'left',
+                      }}
+                      onClick={() => {
+                        if (isBlocked) return;
+                        const already = customGenreBlacklist.some(bg => artist.toLowerCase().includes(bg.toLowerCase()));
+                        if (!already) {
+                          setCustomGenreBlacklist([...customGenreBlacklist, artist]);
+                          setAddedArtist(artist);
+                          setTimeout(() => setAddedArtist(null), 1500);
+                        }
+                      }}
+                      data-tooltip={isBlocked ? t('randomMix.artistBlocked') : justAdded ? t('randomMix.artistAddedToBlacklist') : t('randomMix.artistClickHint')}
+                    >
+                      {artist}
+                    </button>
+                  );
+                })()}
               </div>
 
               <div className="track-info">

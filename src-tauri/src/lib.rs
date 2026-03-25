@@ -16,6 +16,10 @@ use tauri::{
 /// Prevents on_shortcut() accumulating duplicate handlers across JS reloads (HMR / StrictMode).
 type ShortcutMap = Mutex<HashMap<String, String>>;
 
+/// Shared handle to OS media controls (MPRIS2 on Linux, Now Playing on macOS, SMTC on Windows).
+/// `None` if souvlaki failed to initialize (e.g. no D-Bus session on Linux).
+type MprisControls = Mutex<Option<souvlaki::MediaControls>>;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
@@ -138,6 +142,52 @@ fn unregister_global_shortcut(
     app.global_shortcut().unregister(parsed).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn mpris_set_metadata(
+    controls: tauri::State<MprisControls>,
+    title: Option<String>,
+    artist: Option<String>,
+    album: Option<String>,
+    cover_url: Option<String>,
+    duration_secs: Option<f64>,
+) -> Result<(), String> {
+    use souvlaki::MediaMetadata;
+    use std::time::Duration;
+
+    let duration = duration_secs.map(|s| Duration::from_secs_f64(s));
+    let mut guard = controls.lock().unwrap();
+    let Some(ctrl) = guard.as_mut() else { return Ok(()); };
+    ctrl.set_metadata(MediaMetadata {
+        title: title.as_deref(),
+        artist: artist.as_deref(),
+        album: album.as_deref(),
+        cover_url: cover_url.as_deref(),
+        duration,
+    })
+    .map_err(|e| format!("MPRIS set_metadata failed: {e:?}"))
+}
+
+#[tauri::command]
+fn mpris_set_playback(
+    controls: tauri::State<MprisControls>,
+    playing: bool,
+    position_secs: Option<f64>,
+) -> Result<(), String> {
+    use souvlaki::{MediaPlayback, MediaPosition};
+    use std::time::Duration;
+
+    let progress = position_secs.map(|s| MediaPosition(Duration::from_secs_f64(s)));
+    let playback = if playing {
+        MediaPlayback::Playing { progress }
+    } else {
+        MediaPlayback::Paused { progress }
+    };
+    let mut guard = controls.lock().unwrap();
+    let Some(ctrl) = guard.as_mut() else { return Ok(()); };
+    ctrl.set_playback(playback)
+        .map_err(|e| format!("MPRIS set_playback failed: {e:?}"))
+}
+
 pub fn run() {
     let (audio_engine, _audio_thread) = audio::create_engine();
 
@@ -201,26 +251,56 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Register media key global shortcuts (all platforms)
+            // ── MPRIS2 / OS media controls via souvlaki ──────────────────
             {
-                use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
-                let shortcuts = ["MediaPlayPause", "MediaNextTrack", "MediaPreviousTrack"];
-                for shortcut_str in &shortcuts {
-                    if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
-                        let shortcut_clone = shortcut_str.to_string();
-                        let _ = app.global_shortcut().on_shortcut(shortcut, move |app, _shortcut, event| {
-                            if event.state == ShortcutState::Pressed {
-                                let event_name = match shortcut_clone.as_str() {
-                                    "MediaPlayPause" => "media:play-pause",
-                                    "MediaNextTrack" => "media:next",
-                                    "MediaPreviousTrack" => "media:prev",
-                                    _ => return,
-                                };
-                                let _ = app.emit(event_name, ());
-                            }
-                        });
+                use souvlaki::{MediaControlEvent, MediaControls, PlatformConfig};
+
+                // On Linux, souvlaki requires a live D-Bus session. If the env var
+                // is absent or empty (headless, test, or stripped environment),
+                // skip init entirely — commands will no-op via the None branch.
+                #[cfg(target_os = "linux")]
+                let dbus_ok = std::env::var("DBUS_SESSION_BUS_ADDRESS")
+                    .map(|v| !v.is_empty())
+                    .unwrap_or(false);
+                #[cfg(not(target_os = "linux"))]
+                let dbus_ok = true;
+
+                if !dbus_ok {
+                    eprintln!("[Psysonic] No D-Bus session — MPRIS media controls disabled");
+                    app.manage(MprisControls::new(None));
+                } else {
+
+                let config = PlatformConfig {
+                    dbus_name: "psysonic",
+                    display_name: "Psysonic",
+                    hwnd: None,
+                };
+
+                let maybe_controls = match MediaControls::new(config) {
+                    Ok(mut controls) => {
+                        let app_handle = app.handle().clone();
+                        if let Err(e) = controls.attach(move |event: MediaControlEvent| {
+                            let event_name = match event {
+                                MediaControlEvent::Toggle   => "media:play-pause",
+                                MediaControlEvent::Play     => "media:play-pause",
+                                MediaControlEvent::Pause    => "media:play-pause",
+                                MediaControlEvent::Next     => "media:next",
+                                MediaControlEvent::Previous => "media:prev",
+                                _ => return,
+                            };
+                            let _ = app_handle.emit(event_name, ());
+                        }) {
+                            eprintln!("[Psysonic] Failed to attach media controls: {e:?}");
+                        }
+                        Some(controls)
                     }
-                }
+                    Err(e) => {
+                        eprintln!("[Psysonic] Could not create media controls: {e:?}");
+                        None
+                    }
+                };
+                app.manage(MprisControls::new(maybe_controls));
+                } // end dbus_ok
             }
 
             Ok(())
@@ -239,6 +319,8 @@ pub fn run() {
             exit_app,
             register_global_shortcut,
             unregister_global_shortcut,
+            mpris_set_metadata,
+            mpris_set_playback,
             audio::audio_play,
             audio::audio_pause,
             audio::audio_resume,

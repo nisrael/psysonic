@@ -50,7 +50,7 @@ There are no test scripts. TypeScript compilation (`tsc`) is part of the build.
 | `src/store/authStore.ts` | Multi-server support via `ServerProfile[]` + `activeServerId`. `getBaseUrl()` / `getActiveServer()` used by subsonic.ts. Also stores Last.fm session key, username, scrobbling toggle. Persisted via **`localStorage`** (synchronous — do not change to async storage). |
 | `src/store/playerStore.ts` | Playback state, queue, scrobbling at 50% via Last.fm, server queue sync (debounced 1.5s). On `playTrack`: calls `reportNowPlaying` (Navidrome) + `lastfmUpdateNowPlaying` (Last.fm) independently. Persists `currentTrack`, `queue`, `queueIndex`, `currentTime` for cold-start resume. |
 | `src-tauri/src/audio.rs` | Rust audio engine: `audio_play`, `audio_pause`, `audio_resume`, `audio_stop`, `audio_seek`, `audio_set_volume` commands. Emits `audio:playing`, `audio:progress` (100ms), `audio:ended`, `audio:error` events. `MASTER_HEADROOM` (-1 dB) prevents inter-sample clipping at full volume. |
-| `src/store/themeStore.ts` | Theme selection (62 themes across 8 groups), applied as `data-theme` on `<html>` |
+| `src/store/themeStore.ts` | Theme selection (60 themes across 8 groups), applied as `data-theme` on `<html>` |
 | `src/store/lyricsStore.ts` | Sidebar tab state (`activeTab: 'queue' \| 'lyrics'`). `showLyrics()` / `showQueue()` / `setTab()`. Not persisted. |
 | `src/components/LyricsPane.tsx` | Lyrics pane rendered inside QueuePanel when `activeTab === 'lyrics'`. Fetches from LRCLIB, parses LRC, auto-scrolls active line. Only subscribes to `currentTime` when synced lyrics are present. |
 | `src/api/lrclib.ts` | Fetches lyrics from `https://lrclib.net/api/get`. Returns `{ syncedLyrics, plainLyrics }`. `parseLrc()` parses LRC timestamps into sorted `LrcLine[]`. |
@@ -113,7 +113,7 @@ Use `getActiveServer()` to get the current server, `getBaseUrl()` to get its URL
 Add a function to `src/api/subsonic.ts` using the `api<T>()` helper. The helper automatically injects auth params and unwraps `subsonic-response`.
 
 ### Themes
-62 themes across 8 groups, selectable in Settings via `ThemePicker`. `themeStore` persists the choice and sets `data-theme` on `<html>`. All component CSS uses semantic tokens (`--accent`, `--text-primary`, etc.) — only the player button gradient and a few decorative elements reference `--ctp-*` palette vars directly, so every theme must define the full `--ctp-*` set.
+60 themes across 8 groups, selectable in Settings via `ThemePicker`. `themeStore` persists the choice and sets `data-theme` on `<html>`. All component CSS uses semantic tokens (`--accent`, `--text-primary`, etc.) — only the player button gradient and a few decorative elements reference `--ctp-*` palette vars directly, so every theme must define the full `--ctp-*` set.
 
 `--volume-accent` overrides the volume slider colour independently of `--accent` (used by WnAmp for orange volume, yellow accent elsewhere).
 
@@ -125,41 +125,44 @@ Add a function to `src/api/subsonic.ts` using the `api<T>()` helper. The helper 
 | `vintage-tube-radio` | Psysonic Themes | warm brown, VFD orange | Orange `#FF6F00` |
 | `neon-drift` | Psysonic Themes | midnight blue, electric cyan glow | Cyan `#00f2ff` |
 | `wnamp` | Mediaplayer | cool gray-blue dark, LCD glow, Courier New | Yellow `#d4cc46`, volume `#de9b35` |
-| `navy-jukebox` | Mediaplayer | silver/blue light | Blue `#0070a0` |
-| `cobalt-media` | Mediaplayer | cobalt blue dark | Lime `#45ff00` |
-| `onyx-cinema` | Mediaplayer | near-black cinematic | Cyan `#00aaff` |
+| `muma-jukebox` | Mediaplayer | silver/blue light | Blue `#0070a0` |
+| `winmedplayer` | Mediaplayer | cobalt blue dark | Lime `#45ff00` |
+| `p-dvd` | Mediaplayer | near-black cinematic | Cyan `#00aaff` |
 | `spotless` | Mediaplayer | flat dark, Spotify-inspired | Green `#1ED760` |
 | `dzr0` | Mediaplayer | flat light, Deezer-inspired | Purple `#A238FF` |
 | `cupertino-beats` | Mediaplayer | Apple Music dark, glassmorphism | Red `#fa243c` |
 | `cupertino-light` | Operating Systems | macOS light, frosted glass | Apple Blue `#0071e3` |
 | `cupertino-dark` | Operating Systems | macOS Space Grey, frosted glass | Vibrant Blue `#007aff` |
-| `aero-glass` | Operating Systems | Win7 Aero glass blue | Blue `#1878e8` |
+| `aero-glass` | Operating Systems | Win7 Aero — ice-blue glass sidebar, near-black frosted taskbar player bar, Aero button gradients | Blue `#1878e8` |
 | `w98` | Operating Systems | Windows 98 teal desktop | Navy `#000080` |
-| `luna-teal` | Operating Systems | WinXP Luna, green gel buttons | Green `#3c9d29` |
-| `ascalon` | Games | Guild Wars 1 dark stone fantasy | Gold `#d4af37` |
-| `azerothian-gold` | Games | World of Warcraft | Gold `#c19e67` |
+| `luna-teal` | Operating Systems | WinXP Luna — warm tan bg, Luna blue task-pane sidebar, XP selection blue hover `#316AC5`, gel buttons | Green `#3c9d29` |
+| `w11` | Operating Systems | Windows 11 Fluent Design dark — Mica sidebar, clean neutrals, no gradients | Windows Blue `#0078d4` |
+| `gw1` | Games | Guild Wars 1 — aged Tyrian stone, ornate gold borders, Cinzel serif track name, Searing crimson danger | Gold `#c8960c` |
 | `grand-theft-audio` | Games | GTA night city | Green `#57b05a` |
 | `lambda-17` | Games | Half-Life orange alert | Amber `#ff9d00` |
 | `nightcity-2077` | Games | Cyberpunk 2077 | Neon Yellow `#FCEE0A` |
 | `tetrastack` | Games | Tetris 8-bit, grid background | Cyan `#00f0f0` |
 | `v-tactical` | Games | Battlefield | Burnt Orange `#ff8a00` |
-| `b-runner` | Movies | Blade Runner 2049, amber neon | Amber `#ff9500` |
+| `horde` | Games | WoW Horde — Durotar blood-red earth, forge-fire gold glow, iron-plate sidebar | Blood Red `#cc2200` |
+| `alliance` | Games | WoW Alliance — Stormwind deep navy, cathedral stone, paladin holy-light glow, gold sidebar trim | Royal Blue `#3388cc` |
 | `blade` | Movies | deep black, blood-red | Red `#b30000` |
-| `dune` | Movies | Arrakis desert stone, spice orange | Orange `#ff8c00` |
-| `hill-valley-85` | Movies | Back to the Future, brushed metal | Orange `#ff9900` |
+| `dune` | Movies | Arrakis — warm sand main vs cool sietch-blue `#0e0c1a` sidebar, spice cinnamon `#c8780a` accent, desert horizon gradient, sand-grain scrollbar | Spice `#c8780a` |
+| `hill-valley-85` | Movies | BTTF — DeLorean time circuit: track name red `#ff2200` Courier New uppercase, artist amber, stainless-steel sidebar lines, fire+lightning radial gradients | Orange `#ff8c00` |
 | `imperial-sith` | Movies | Star Wars dark side | Red `#e60000` |
-| `middle-earth` | Movies | warm parchment light (LOTR) | Gold `#d4af37` |
-| `morpheus` | Movies | Matrix terminal | Phosphor Green `#00ff41` |
+| `middle-earth` | Movies | LOTR — parchment bg, Bag End oak wood-grain sidebar, `ring-inscription-glow` 5s animation on track name, Sammath Naur player bar, seven-stop gold progress bar, Georgia serif | Gold `#d4a820` |
+| `morpheus` | Movies | Matrix — CRT scanlines on app-shell, vertical code-column sidebar pattern, terminal buttons (monospace, no fill, green glow border-radius 0), 6px scrollbar | Phosphor Green `#00ff41` |
 | `order-of-the-phoenix` | Movies | Harry Potter | Ember Orange `#e63900` |
 | `pandora` | Movies | Avatar bioluminescent | Cyan `#00f2ff` |
-| `spider-tech` | Movies | Spider-Man navy blue, hero red | Red `#E62429` |
+| `spider-tech` | Movies | Spider-Man — CSS spider web (conic+radial) radiating from sidebar top-left, Into the Spider-Verse halftone dots on app-shell, track name red glow, artist in suit-blue `#4a88ff` | Red `#E62429` |
 | `stark-hud` | Movies | Iron Man HUD | Cyan `#00f2ff` |
 | `t-800` | Movies | Terminator, Skynet blue | Cyan `#00d4ff` |
 | `aqua-quartz` | Operating Systems | Mac OS X Aqua, skeuomorphic jelly buttons | Blue `#3876f7` |
+| `dos` | Operating Systems | MS-DOS — ANSI blue `#0000AA` bg, Courier New everywhere, inverted grey selection, blinking block cursor on track name, 16px DOS scrollbar | Yellow `#FFFF55` |
+| `unix` | Operating Systems | Unix Shell — pure black, Courier New, `$ ` prompt prefix + blinking `_` cursor on track name, artist in ANSI blue `#5588FF` (ls directory color), thin 6px scrollbar | Green `#22C55E` |
 | `w3-1` | Operating Systems | Windows 3.1, light silver/teal | Navy `#000080` |
-| `ice-and-fire` | Series | Game of Thrones | Ice Blue `#70a1ff` |
+| `ice-and-fire` | Series | Game of Thrones — temperature duality: volcanic warm main (`#100c08`) vs cold Castle Black sidebar (`#090c10`), `fire-flicker` 5s irregular animation on track name, dragon gold `#c8880a` artist, red-to-gold content header rule, forge fire glow on player bar | Blood Red `#c41e1e` |
 | `doh-matic` | Series | The Simpsons | Blue `#1F75FE` |
-| `heisenberg` | Series | Breaking Bad | Crystal Blue `#3fe0ff` |
+| `heisenberg` | Series | Breaking Bad — periodic table grid on app-shell, hazmat tape diagonal on sidebar, `crystal-pulse` 3s glow animation on track name, lab fluorescent blue top border on player bar | Crystal Blue `#35d4f8` |
 | `turtle-power` | Series | TMNT, turtle green, brick sidebar | Green `#33cc33` |
 | `insta` | Social Media | Instagram dark, pink gradient | Pink `#E1306C` |
 | `readit` | Social Media | Reddit dark, orange-red | OrangeRed `#FF4500` |

@@ -332,6 +332,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-6);
+  contain: paint;
 }
 
 /* ─── Player Bar ─── */

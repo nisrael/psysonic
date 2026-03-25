@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Psysonic is a music player only — it does not record audio.
+         This description is shown if macOS prompts for microphone access
+         (triggered by CoreAudio enumerating input devices during init). -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Psysonic does not use the microphone. This prompt is triggered by the audio subsystem initializing output devices.</string>
+</dict>
+</plist>

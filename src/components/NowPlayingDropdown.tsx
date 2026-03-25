@@ -146,7 +146,7 @@ export default function NowPlayingDropdown() {
                   <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div className="truncate" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{stream.title}</div>
                     <div className="truncate" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{stream.artist}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', fontSize: '11px', color: 'var(--text-secondary)' }}>
                       <User size={10} />
                       <span className="truncate">{stream.username} ({stream.playerName || 'Web'})</span>
                       {stream.minutesAgo > 0 && <span>• {t('nowPlaying.minutesAgo', { n: stream.minutesAgo })}</span>}

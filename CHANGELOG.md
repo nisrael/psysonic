@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-03-25
+
+### Added
+
+- **Media Keys & OS Media Controls** *(experimental)*: Initial integration via [souvlaki](https://github.com/Sinono3/souvlaki) — MPRIS2 on Linux, Now Playing on macOS, SMTC on Windows. Track metadata (title, artist, album, cover art) and playback state are pushed to the OS media overlay in real time. On Linux, init is skipped gracefully if no D-Bus session is present. This feature is still under active development and observation — behaviour may vary across desktop environments and OS versions.
+- **Random Mix — Artist Blacklist**: Artist names are now included in the keyword blacklist filter. Clickable artist chips in the tracklist let you add an artist to the blacklist with one click — same UX as the existing genre chips.
+- **Favorites — Remove Song**: Each song row in Favorites now has an inline X button to remove the track from favorites instantly (optimistic UI, server unstar happens in the background).
+- **3 New Themes**:
+  - *Games*: **Horde** — Durotar blood-red earth, iron-plate sidebar, forge-fire gold glow on track name.
+  - *Games*: **Alliance** — Stormwind deep navy, cathedral stone columns, paladin holy-light glow, gold sidebar trim and nav accent.
+  - *Operating Systems*: **W11** — Windows 11 Fluent Design dark mode. Mica-style sidebar, clean neutral palette, taskbar-inspired player bar. No gradients — faithful to the minimal Fluent aesthetic.
+
+### Changed
+
+- **Theme renames**: Cobalt Media → **WinMedPlayer**, Onyx Cinema → **P-DVD**, Navy Jukebox → **MuMa Jukebox**.
+- **NowPlayingDropdown**: Username / player name row now uses `--text-secondary` for improved readability across all themes.
+
+### Fixed
+
+- **Performance — App-wide interaction lag**: Removed `[data-theme='X'] * { font-family: ... !important }` universal selectors from several themes (DOS, Unix, and others). The browser places universal selectors in the "universal bucket" and checks them against every DOM node on every style recalculation — measurably sluggish with 500–1000+ elements even when the affected theme is not active. `font-family` is now set on the theme root block (inherits to children) with a targeted `button, input, textarea, select` override for elements that don't inherit font.
+- **Performance — Scroll jank**: Removed `repeating-linear-gradient` / `repeating-radial-gradient` from `.app-shell` in DOS, Unix, GW1, Morpheus, Aqua Quartz, and others. WebKitGTK with `WEBKIT_DISABLE_COMPOSITING_MODE=1` (always set by the AUR wrapper) has no GPU compositing — fine-pitch repeating patterns on the full-viewport background re-rasterize every scroll frame. Patterns are now applied only to `.sidebar` and `.player-bar`, which never scroll.
+- **Contrast — 29 themes**: Audited all themes against WCAG AA. Fixed `--text-muted` and `--text-secondary` values in 29 themes that had insufficient contrast ratios (< 3.5:1). Affects Catppuccin (all four variants), Gruvbox (all six), Nord variants, GW1, Heisenberg, Ice and Fire, Spider-Tech, Morpheus, Hill Valley 85, Dune, and others.
+
+### Removed
+
+- **Theme**: Azerothian Gold removed from the Games group.
+
+---
+
 ## [1.16.0] - 2026-03-24
 
 ### Added

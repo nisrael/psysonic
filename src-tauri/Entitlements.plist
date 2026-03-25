@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Psysonic is a music PLAYER only — no microphone access needed.
+         This suppresses the macOS microphone permission prompt triggered
+         by cpal/CoreAudio enumerating input devices during audio init. -->
+    <key>com.apple.security.device.audio-input</key>
+    <false/>
+</dict>
+</plist>
