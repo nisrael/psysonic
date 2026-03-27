@@ -301,6 +301,35 @@
   cursor: default;
 }
 
+/* ─── Sidebar offline download queue ─── */
+.sidebar-offline-queue {
+  margin: 4px var(--space-1) 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--accent-dim);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--accent);
+  overflow: hidden;
+}
+
+.sidebar-offline-queue--collapsed {
+  justify-content: center;
+  padding: 6px;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.spin-slow {
+  animation: spin-slow 2s linear infinite;
+  flex-shrink: 0;
+}
+
 /* ─── Main Content ─── */
 .main-content {
   grid-area: main;
@@ -341,6 +370,47 @@
   overflow-x: hidden;
   padding: var(--space-6);
   contain: paint;
+}
+
+/* ─── Offline Banner ─── */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-sidebar));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.offline-banner span {
+  flex: 1;
+}
+
+.offline-banner-retry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.offline-banner-retry:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.offline-banner-retry:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ─── Player Bar ─── */

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -34,8 +34,11 @@ import TooltipPortal from './components/TooltipPortal';
 import ConnectionIndicator from './components/ConnectionIndicator';
 import LastfmIndicator from './components/LastfmIndicator';
 import OfflineOverlay from './components/OfflineOverlay';
+import OfflineBanner from './components/OfflineBanner';
+import OfflineLibrary from './pages/OfflineLibrary';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 import { useAuthStore } from './store/authStore';
+import { useOfflineStore } from './store/offlineStore';
 import { usePlayerStore, initAudioListeners } from './store/playerStore';
 import { useThemeStore } from './store/themeStore';
 import { useFontStore } from './store/fontStore';
@@ -59,6 +62,26 @@ function AppShell() {
   const currentTrack = usePlayerStore(s => s.currentTrack);
   const isPlaying = usePlayerStore(s => s.isPlaying);
   const { status: connStatus, isRetrying: connRetrying, retry: connRetry, isLan, serverName } = useConnectionStatus();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const offlineAlbums = useOfflineStore(s => s.albums);
+  const hasOfflineContent = Object.values(offlineAlbums).some(a => a.serverId === serverId);
+
+  // Auto-navigate to offline library when no connection but cached content exists
+  const prevConnStatus = useRef(connStatus);
+  useEffect(() => {
+    const prev = prevConnStatus.current;
+    prevConnStatus.current = connStatus;
+
+    if (connStatus === 'disconnected' && hasOfflineContent && prev !== 'disconnected') {
+      navigate('/offline', { replace: true });
+    }
+    // Return from offline page only when reconnecting (not when user navigates there manually while online)
+    if (connStatus === 'connected' && prev === 'disconnected' && location.pathname === '/offline') {
+      navigate('/', { replace: true });
+    }
+  }, [connStatus, hasOfflineContent, location.pathname, navigate]);
 
   useEffect(() => {
     initializeFromServerQueue();
@@ -155,8 +178,11 @@ function AppShell() {
             {isQueueVisible ? <PanelRightClose size={18} /> : <PanelRight size={18} />}
           </button>
         </header>
+        {connStatus === 'disconnected' && hasOfflineContent && (
+          <OfflineBanner onRetry={connRetry} isChecking={connRetrying} />
+        )}
         <div className="content-body" style={{ padding: 0, position: 'relative' }}>
-          {connStatus === 'disconnected' && (
+          {connStatus === 'disconnected' && !hasOfflineContent && (
             <OfflineOverlay
               serverName={serverName}
               onRetry={connRetry}
@@ -180,6 +206,7 @@ function AppShell() {
             <Route path="/now-playing" element={<NowPlayingPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
+            <Route path="/offline" element={<OfflineLibrary />} />
           </Routes>
         </div>
       </main>
@@ -273,6 +300,28 @@ function TauriEventBridge() {
       ];
       for (const [event, handler] of handlers) {
         const u = await listen(event, handler);
+        if (cancelled) { u(); return; }
+        unlisten.push(u);
+      }
+
+      // Seek events carry a numeric payload (seconds) — seek() expects 0-1 progress
+      {
+        const u = await listen<number>('media:seek-relative', e => {
+          const s = usePlayerStore.getState();
+          const dur = s.currentTrack?.duration;
+          if (!dur) return;
+          s.seek(Math.max(0, s.currentTime + e.payload) / dur);
+        });
+        if (cancelled) { u(); return; }
+        unlisten.push(u);
+      }
+      {
+        const u = await listen<number>('media:seek-absolute', e => {
+          const s = usePlayerStore.getState();
+          const dur = s.currentTrack?.duration;
+          if (!dur) return;
+          s.seek(e.payload / dur);
+        });
         if (cancelled) { u(); return; }
         unlisten.push(u);
       }

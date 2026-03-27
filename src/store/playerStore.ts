@@ -5,6 +5,7 @@ import { listen } from '@tauri-apps/api/event';
 import { buildStreamUrl, buildCoverArtUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong } from '../api/subsonic';
 import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTrack, lastfmGetTrackLoved, lastfmGetAllLovedTracks } from '../api/lastfm';
 import { useAuthStore } from './authStore';
+import { useOfflineStore } from './offlineStore';
 
 export interface Track {
   id: string;
@@ -186,7 +187,8 @@ function handleAudioProgress(current_time: number, duration: number) {
       : (nextIdx < queue.length ? queue[nextIdx] : (repeatMode === 'all' ? queue[0] : null));
     if (nextTrack && nextTrack.id !== track.id && nextTrack.id !== gaplessPreloadingId) {
       gaplessPreloadingId = nextTrack.id;
-      const nextUrl = buildStreamUrl(nextTrack.id);
+      const serverId = useAuthStore.getState().activeServerId ?? '';
+      const nextUrl = useOfflineStore.getState().getLocalUrl(nextTrack.id, serverId) ?? buildStreamUrl(nextTrack.id);
       if (gaplessEnabled) {
         // Gapless ON: decode + chain directly into the Sink now, 30 s in
         // advance. By the time the track boundary arrives, the next source is
@@ -340,6 +342,7 @@ export function initAudioListeners(): () => void {
   // Rust souvlaki MediaControls so the OS media overlay stays accurate.
   let prevTrackId: string | null = null;
   let prevIsPlaying: boolean | null = null;
+  let lastMprisPositionUpdate = 0;
 
   const unsubMpris = usePlayerStore.subscribe((state) => {
     const { currentTrack, isPlaying, currentTime } = state;
@@ -359,12 +362,25 @@ export function initAudioListeners(): () => void {
       }).catch(() => {});
     }
 
-    // Update playback state when it changes
-    if (isPlaying !== prevIsPlaying) {
+    // Update playback state on play/pause change
+    const playbackChanged = isPlaying !== prevIsPlaying;
+    if (playbackChanged) {
       prevIsPlaying = isPlaying;
+      lastMprisPositionUpdate = Date.now();
       invoke('mpris_set_playback', {
         playing: isPlaying,
         positionSecs: currentTime > 0 ? currentTime : null,
+      }).catch(() => {});
+      return;
+    }
+
+    // Keep position in sync while playing — update every ~500 ms so Plasma
+    // always shows the correct time without interpolation gaps.
+    if (isPlaying && Date.now() - lastMprisPositionUpdate >= 500) {
+      lastMprisPositionUpdate = Date.now();
+      invoke('mpris_set_playback', {
+        playing: true,
+        positionSecs: currentTime,
       }).catch(() => {});
     }
   });
@@ -502,8 +518,8 @@ export const usePlayerStore = create<PlayerState>()(
           isPlaying: true, // optimistic — reverted on error
         });
 
-        const url = buildStreamUrl(track.id);
         const authState = useAuthStore.getState();
+        const url = useOfflineStore.getState().getLocalUrl(track.id, authState.activeServerId ?? '') ?? buildStreamUrl(track.id);
         const replayGainDb = authState.replayGainEnabled
           ? (authState.replayGainMode === 'album' ? track.replayGainAlbumDb : track.replayGainTrackDb) ?? null
           : null;
@@ -566,8 +582,10 @@ export const usePlayerStore = create<PlayerState>()(
             ? (authStateCold.replayGainMode === 'album' ? currentTrack.replayGainAlbumDb : currentTrack.replayGainTrackDb) ?? null
             : null;
           const replayGainPeakCold = authStateCold.replayGainEnabled ? (currentTrack.replayGainPeak ?? null) : null;
+          const coldServerId = useAuthStore.getState().activeServerId ?? '';
+          const coldUrl = useOfflineStore.getState().getLocalUrl(currentTrack.id, coldServerId) ?? buildStreamUrl(currentTrack.id);
           invoke('audio_play', {
-            url: buildStreamUrl(currentTrack.id),
+            url: coldUrl,
             volume: vol,
             durationHint: currentTrack.duration,
             replayGainDb: replayGainDbCold,

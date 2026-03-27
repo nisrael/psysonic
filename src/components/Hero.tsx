@@ -97,6 +97,11 @@ export default function Hero({ albums: albumsProp }: HeroProps = {}) {
   const bgCacheKey = album?.coverArt ? coverArtCacheKey(album.coverArt, 800) : '';
   const resolvedBgUrl = useCachedUrl(bgRawUrl, bgCacheKey);
 
+  // Keep the last known good URL so HeroBg never receives '' during a cache-miss
+  // transition (which would cause the background to flash empty before fading in).
+  const stableBgUrl = useRef('');
+  if (resolvedBgUrl) stableBgUrl.current = resolvedBgUrl;
+
   // Resolve cover thumbnail via cache
   const coverRawUrl = album?.coverArt ? buildCoverArtUrl(album.coverArt, 300) : '';
   const coverCacheKey = album?.coverArt ? coverArtCacheKey(album.coverArt, 300) : '';
@@ -111,7 +116,7 @@ export default function Hero({ albums: albumsProp }: HeroProps = {}) {
       onClick={() => navigate(`/album/${album.id}`)}
       style={{ cursor: 'pointer' }}
     >
-      <HeroBg url={resolvedBgUrl} />
+      <HeroBg url={stableBgUrl.current} />
       <div className="hero-overlay" aria-hidden="true" />
 
       {/* key causes re-mount → animate-fade-in triggers on each album change */}

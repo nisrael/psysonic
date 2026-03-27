@@ -3424,7 +3424,7 @@ dependencies = [
 
 [[package]]
 name = "psysonic"
-version = "1.16.0"
+version = "1.18.0"
 dependencies = [
  "biquad",
  "md5",

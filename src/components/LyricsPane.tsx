@@ -8,14 +8,25 @@ interface Props {
   currentTrack: Track | null;
 }
 
+interface CachedLyrics {
+  syncedLines: LrcLine[] | null;
+  plainLyrics: string | null;
+  notFound: boolean;
+}
+
+// Session-level cache — survives tab switches (component unmount/remount).
+// Cleared implicitly when the app restarts.
+const lyricsCache = new Map<string, CachedLyrics>();
+
 export default function LyricsPane({ currentTrack }: Props) {
   const { t } = useTranslation();
 
-  const [loading, setLoading]         = useState(false);
-  const [syncedLines, setSyncedLines]   = useState<LrcLine[] | null>(null);
-  const [plainLyrics, setPlainLyrics]   = useState<string | null>(null);
-  const [notFound, setNotFound]         = useState(false);
-  const [fetchedFor, setFetchedFor]     = useState<string | null>(null);
+  const cached = currentTrack ? lyricsCache.get(currentTrack.id) : undefined;
+
+  const [loading, setLoading]       = useState(!cached && !!currentTrack);
+  const [syncedLines, setSyncedLines] = useState<LrcLine[] | null>(cached?.syncedLines ?? null);
+  const [plainLyrics, setPlainLyrics] = useState<string | null>(cached?.plainLyrics ?? null);
+  const [notFound, setNotFound]       = useState(cached?.notFound ?? false);
 
   const hasSynced  = syncedLines !== null && syncedLines.length > 0;
   const currentTime = usePlayerStore(s => hasSynced ? s.currentTime : 0);
@@ -24,7 +35,20 @@ export default function LyricsPane({ currentTrack }: Props) {
   const prevActive = useRef(-1);
 
   useEffect(() => {
-    if (!currentTrack || currentTrack.id === fetchedFor) return;
+    if (!currentTrack) return;
+
+    // Serve from cache if available
+    const hit = lyricsCache.get(currentTrack.id);
+    if (hit) {
+      setSyncedLines(hit.syncedLines);
+      setPlainLyrics(hit.plainLyrics);
+      setNotFound(hit.notFound);
+      setLoading(false);
+      lineRefs.current = [];
+      prevActive.current = -1;
+      return;
+    }
+
     let cancelled = false;
     setSyncedLines(null);
     setPlainLyrics(null);
@@ -41,26 +65,25 @@ export default function LyricsPane({ currentTrack }: Props) {
     ).then(result => {
       if (cancelled) return;
       setLoading(false);
-      setFetchedFor(currentTrack.id);
       if (!result || (!result.syncedLyrics && !result.plainLyrics)) {
+        lyricsCache.set(currentTrack.id, { syncedLines: null, plainLyrics: null, notFound: true });
         setNotFound(true);
         return;
       }
-      if (result.syncedLyrics) {
-        const lines = parseLrc(result.syncedLyrics);
-        setSyncedLines(lines.length > 0 ? lines : null);
-      }
+      const lines = result.syncedLyrics ? parseLrc(result.syncedLyrics) : null;
+      const synced = lines && lines.length > 0 ? lines : null;
+      lyricsCache.set(currentTrack.id, { syncedLines: synced, plainLyrics: result.plainLyrics, notFound: false });
+      setSyncedLines(synced);
       setPlainLyrics(result.plainLyrics);
     }).catch(() => {
-      if (!cancelled) { setLoading(false); setNotFound(true); }
+      if (!cancelled) {
+        lyricsCache.set(currentTrack.id, { syncedLines: null, plainLyrics: null, notFound: true });
+        setLoading(false);
+        setNotFound(true);
+      }
     });
     return () => { cancelled = true; };
   }, [currentTrack?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Reset when track changes
-  useEffect(() => {
-    setFetchedFor(null);
-  }, [currentTrack?.id]);
 
   const activeIdx = hasSynced
     ? syncedLines!.reduce((acc, line, i) => (currentTime >= line.time ? i : acc), -1)

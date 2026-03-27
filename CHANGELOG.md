@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2026-03-27
+
+### Added
+
+- **Offline Mode *(Beta — tested on CachyOS only)***: Albums can now be cached for offline playback via the new "Cache Offline" button in the album header. Cached albums are accessible in the new **Offline Library** page. On launch without internet, the app automatically navigates there if cached content is available — no blocking overlay. A slim non-blocking banner shows while in offline mode. Offline tracks are removed when clearing the cache.
+- **Settings — Cache section improvements**: Live usage display (image cache + offline tracks). Adjustable limit now goes up to 5 GB. When the limit is reached, the oldest image cache entries are evicted automatically (offline albums are not auto-removed). "Clear Cache" button with confirmation removes both image cache and all offline albums.
+- **MPRIS — Seek support**: The Plasma (and other MPRIS2-compatible) seekbar now works correctly. Seek and SetPosition events from the OS are forwarded to the audio engine. Position is synced every 500 ms while playing so the OS overlay stays accurate.
+- **Lyrics caching**: Fetched lyrics are cached in memory for the session. Switching between Queue and Lyrics tabs no longer re-fetches from lrclib.net.
+- **2 New Themes** *(Movies)*:
+  - **Barb & Ken** — Barbie dreamhouse universe. Deep magenta dark, polka-dot sidebar, glitter shimmer animation on track name, Ken powder blue for artist name and volume slider.
+  - **Toy Tale** — Toy Story. Dark warm toy-chest brown main, Andy's iconic cloud-wallpaper sky-blue sidebar, Woody sheriff-star gold track name, Buzz Lightyear purple for active queue item and volume slider.
+
+### Changed
+
+- **Hero carousel — background crossfade**: The blurred background no longer flickers when switching albums. The last resolved URL is held until the new one is ready, so the old background stays visible until the new one loads.
+- **AlbumDetail — Download hint**: Removed the inline hint text from the album header. The explanation (server zips first — may take a moment) is now in the Help FAQ.
+
+### Fixed
+
+- **Performance — Home page scroll**: `AlbumCard` subscribed to two large Zustand record objects (`tracks`, `albums`) per card — 96+ selector calls across a typical home page. Replaced with a single boolean selector per card. Added `React.memo` to prevent re-renders when parent rows reload.
+- **Middle Earth theme — active queue item contrast**: Track title was invisible (dark text on dark background). Fixed to bright gold. Tech info bar text also corrected.
+
+---
+
 ## [1.17.2] - 2026-03-26
 
 ### Fixed

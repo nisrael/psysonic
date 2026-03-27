@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Star, ExternalLink, X, ChevronLeft, Download, ListPlus, Info } from 'lucide-react';
+import { Play, Star, ExternalLink, X, ChevronLeft, Download, ListPlus, HardDriveDownload, Loader2 } from 'lucide-react';
 import { SubsonicSong, buildCoverArtUrl } from '../api/subsonic';
 import CachedImage from './CachedImage';
 import CoverLightbox from './CoverLightbox';
@@ -70,10 +70,14 @@ interface AlbumHeaderProps {
   resolvedCoverUrl: string | null;
   isStarred: boolean;
   downloadProgress: number | null;
+  offlineStatus: 'none' | 'downloading' | 'cached';
+  offlineProgress: { done: number; total: number } | null;
   bio: string | null;
   bioOpen: boolean;
   onToggleStar: () => void;
   onDownload: () => void;
+  onCacheOffline: () => void;
+  onRemoveOffline: () => void;
   onPlayAll: () => void;
   onEnqueueAll: () => void;
   onBio: () => void;
@@ -88,10 +92,14 @@ export default function AlbumHeader({
   resolvedCoverUrl,
   isStarred,
   downloadProgress,
+  offlineStatus,
+  offlineProgress,
   bio,
   bioOpen,
   onToggleStar,
   onDownload,
+  onCacheOffline,
+  onRemoveOffline,
   onPlayAll,
   onEnqueueAll,
   onBio,
@@ -216,10 +224,30 @@ export default function AlbumHeader({
                     <Download size={16} /> {t('albumDetail.download')}{totalSize > 0 ? ` · ${formatSize(totalSize)}` : ''}
                   </button>
                 )}
-                <span className="download-hint">
-                  <Info size={12} />
-                  {t('albumDetail.downloadHintShort')}
-                </span>
+                {offlineStatus === 'downloading' && offlineProgress ? (
+                  <div className="offline-cache-btn offline-cache-btn--progress">
+                    <Loader2 size={14} className="spin" />
+                    {t('albumDetail.offlineDownloading', { n: offlineProgress.done, total: offlineProgress.total })}
+                  </div>
+                ) : offlineStatus === 'cached' ? (
+                  <button
+                    className="btn btn-ghost offline-cache-btn offline-cache-btn--cached"
+                    onClick={onRemoveOffline}
+                    data-tooltip={t('albumDetail.removeOffline')}
+                  >
+                    <HardDriveDownload size={16} />
+                    {t('albumDetail.offlineCached')}
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-ghost offline-cache-btn"
+                    onClick={onCacheOffline}
+                    data-tooltip={t('albumDetail.cacheOffline')}
+                  >
+                    <HardDriveDownload size={16} />
+                    {t('albumDetail.cacheOffline')}
+                  </button>
+                )}
               </div>
             </div>
           </div>

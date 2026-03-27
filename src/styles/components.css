@@ -399,6 +399,21 @@
   box-shadow: var(--shadow-sm);
 }
 
+.album-card-offline-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: color-mix(in srgb, var(--accent) 85%, transparent);
+  color: var(--ctp-crust);
+  border-radius: var(--radius-sm);
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .album-card-play-overlay {
   position: absolute;
   inset: 0;
@@ -591,6 +606,82 @@
 }
 
 /* ─ Album Detail ─ */
+/* ─── Offline Library ─── */
+.offline-library {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.offline-library-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--accent);
+}
+
+.offline-library-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.offline-library-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+.offline-library-card .album-card-info {
+  gap: 3px;
+}
+
+.offline-library-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.offline-library-enqueue {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.offline-library-enqueue:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.offline-library-tracks {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.offline-library-delete {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.offline-library-delete:hover {
+  color: var(--color-error, #e05050);
+}
+
 .album-detail {
   display: flex;
   flex-direction: column;
@@ -851,6 +942,28 @@
   min-width: 28px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* ─ Offline cache button ─ */
+.offline-cache-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.offline-cache-btn--cached {
+  color: var(--color-star-active, var(--accent));
+  border-color: var(--color-star-active, var(--accent));
+}
+
+.offline-cache-btn--progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.75;
+  padding: 6px 10px;
 }
 
 /* ─ Download folder modal ─ */

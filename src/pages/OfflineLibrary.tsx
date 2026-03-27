@@ -1,0 +1,115 @@
+import React from 'react';
+import { Play, HardDriveDownload, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useOfflineStore } from '../store/offlineStore';
+import { useAuthStore } from '../store/authStore';
+import { usePlayerStore } from '../store/playerStore';
+import { buildCoverArtUrl, coverArtCacheKey } from '../api/subsonic';
+import CachedImage from '../components/CachedImage';
+
+export default function OfflineLibrary() {
+  const { t } = useTranslation();
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const offlineAlbums = useOfflineStore(s => s.albums);
+  const offlineTracks = useOfflineStore(s => s.tracks);
+  const deleteAlbum = useOfflineStore(s => s.deleteAlbum);
+  const playTrack = usePlayerStore(s => s.playTrack);
+  const enqueue = usePlayerStore(s => s.enqueue);
+
+  const albums = Object.values(offlineAlbums).filter(a => a.serverId === serverId);
+
+  const buildTracks = (albumId: string) => {
+    const meta = offlineAlbums[`${serverId}:${albumId}`];
+    if (!meta) return [];
+    return meta.trackIds.flatMap(tid => {
+      const t = offlineTracks[`${serverId}:${tid}`];
+      if (!t) return [];
+      return [{
+        id: t.id, title: t.title, artist: t.artist, album: t.album,
+        albumId: t.albumId, artistId: t.artistId, duration: t.duration,
+        coverArt: t.coverArt, track: undefined, year: t.year,
+        bitRate: t.bitRate, suffix: t.suffix, genre: t.genre,
+      }];
+    });
+  };
+
+  const handlePlay = (albumId: string) => {
+    const tracks = buildTracks(albumId);
+    if (tracks[0]) playTrack(tracks[0], tracks);
+  };
+
+  const handleEnqueue = (albumId: string) => {
+    enqueue(buildTracks(albumId));
+  };
+
+  return (
+    <div className="offline-library animate-fade-in">
+      <div className="offline-library-header">
+        <HardDriveDownload size={24} />
+        <div>
+          <h1 className="offline-library-title">{t('connection.offlineLibraryTitle')}</h1>
+          <p className="offline-library-count">
+            {t('connection.offlineAlbumCount', { n: albums.length, count: albums.length })}
+          </p>
+        </div>
+      </div>
+
+      {albums.length === 0 ? (
+        <div className="empty-state">{t('connection.offlineLibraryEmpty')}</div>
+      ) : (
+        <div className="album-grid-wrap">
+          {albums.map(album => {
+            const coverUrl = album.coverArt ? buildCoverArtUrl(album.coverArt, 300) : '';
+            const cacheKey = album.coverArt ? coverArtCacheKey(album.coverArt, 300) : '';
+            const trackCount = album.trackIds.filter(tid => !!offlineTracks[`${serverId}:${tid}`]).length;
+            return (
+              <div key={album.id} className="album-card card offline-library-card">
+                <div className="album-card-cover">
+                  {coverUrl ? (
+                    <CachedImage src={coverUrl} cacheKey={cacheKey} alt={`${album.name} Cover`} loading="lazy" />
+                  ) : (
+                    <div className="album-card-cover-placeholder">
+                      <HardDriveDownload size={32} />
+                    </div>
+                  )}
+                  <div className="album-card-play-overlay">
+                    <button
+                      className="album-card-details-btn"
+                      onClick={() => handlePlay(album.id)}
+                      aria-label={`${album.name} abspielen`}
+                    >
+                      <Play size={15} fill="currentColor" />
+                    </button>
+                  </div>
+                </div>
+                <div className="album-card-info">
+                  <p className="album-card-title truncate">{album.name}</p>
+                  <p className="album-card-artist truncate">{album.artist}</p>
+                  {album.year && <p className="album-card-year">{album.year}</p>}
+                  <div className="offline-library-card-meta">
+                    <button
+                      className="offline-library-enqueue"
+                      onClick={() => handleEnqueue(album.id)}
+                      title="Zur Warteschlange hinzufügen"
+                    >
+                      + Queue
+                    </button>
+                    <span className="offline-library-tracks">{trackCount} tracks</span>
+                    <button
+                      className="offline-library-delete"
+                      onClick={() => deleteAlbum(album.id, serverId)}
+                      data-tooltip={t('albumDetail.removeOffline')}
+                      data-tooltip-pos="top"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play } from 'lucide-react';
+import { Play, HardDriveDownload } from 'lucide-react';
 import { SubsonicAlbum, buildCoverArtUrl, coverArtCacheKey } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
+import { useOfflineStore } from '../store/offlineStore';
+import { useAuthStore } from '../store/authStore';
 import CachedImage from './CachedImage';
 import { playAlbum } from '../utils/playAlbum';
 
@@ -10,9 +12,15 @@ interface AlbumCardProps {
   album: SubsonicAlbum;
 }
 
-export default function AlbumCard({ album }: AlbumCardProps) {
+function AlbumCard({ album }: AlbumCardProps) {
   const navigate = useNavigate();
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const isOffline = useOfflineStore(s => {
+    const meta = s.albums[`${serverId}:${album.id}`];
+    if (!meta || meta.trackIds.length === 0) return false;
+    return meta.trackIds.every(tid => !!s.tracks[`${serverId}:${tid}`]);
+  });
   const coverUrl = album.coverArt ? buildCoverArtUrl(album.coverArt, 300) : '';
 
   return (
@@ -48,6 +56,11 @@ export default function AlbumCard({ album }: AlbumCardProps) {
             </svg>
           </div>
         )}
+        {isOffline && (
+          <div className="album-card-offline-badge" aria-label="Offline available">
+            <HardDriveDownload size={12} />
+          </div>
+        )}
         <div className="album-card-play-overlay">
           <button
             className="album-card-details-btn"
@@ -66,3 +79,5 @@ export default function AlbumCard({ album }: AlbumCardProps) {
     </div>
   );
 }
+
+export default memo(AlbumCard);

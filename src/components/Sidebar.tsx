@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/playerStore';
+import { useOfflineStore } from '../store/offlineStore';
+import { useAuthStore } from '../store/authStore';
 import { open } from '@tauri-apps/plugin-shell';
 import { version as appVersion } from '../../package.json';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Disc3, Users, Music4, Radio, Settings, Heart, BarChart3, Shuffle, ListMusic,
-  PanelLeftClose, PanelLeft, HelpCircle, Dices, ArrowUpCircle, AudioLines
+  PanelLeftClose, PanelLeft, HelpCircle, Dices, ArrowUpCircle, AudioLines, HardDriveDownload
 } from 'lucide-react';
 import PsysonicLogo from './PsysonicLogo';
 import PSmallLogo from './PSmallLogo';
@@ -69,6 +71,11 @@ export default function Sidebar({
   const { t } = useTranslation();
   const isPlaying   = usePlayerStore(s => s.isPlaying);
   const currentTrack = usePlayerStore(s => s.currentTrack);
+  const offlineJobs = useOfflineStore(s => s.jobs);
+  const activeJobs = offlineJobs.filter(j => j.status === 'queued' || j.status === 'downloading');
+  const offlineAlbums = useOfflineStore(s => s.albums);
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const hasOfflineContent = Object.values(offlineAlbums).some(a => a.serverId === serverId);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,6 +150,18 @@ export default function Sidebar({
           {!isCollapsed && <span>{t('sidebar.nowPlaying')}</span>}
         </NavLink>
 
+        {hasOfflineContent && (
+          <NavLink
+            to="/offline"
+            className={({ isActive }) => `nav-link nav-link-offline ${isActive ? 'active' : ''}`}
+            data-tooltip={isCollapsed ? t('sidebar.offlineLibrary') : undefined}
+            data-tooltip-pos="bottom"
+          >
+            <HardDriveDownload size={isCollapsed ? 22 : 18} />
+            {!isCollapsed && <span>{t('sidebar.offlineLibrary')}</span>}
+          </NavLink>
+        )}
+
         {!isCollapsed && <span className="nav-section-label">{t('sidebar.system')}</span>}
         {latestVersion && <UpdateToast isCollapsed={isCollapsed} latestVersion={latestVersion} />}
         <NavLink
@@ -172,6 +191,19 @@ export default function Sidebar({
           <Settings size={isCollapsed ? 22 : 18} />
           {!isCollapsed && <span>{t('sidebar.settings')}</span>}
         </NavLink>
+
+        {activeJobs.length > 0 && (
+          <div
+            className={`sidebar-offline-queue ${isCollapsed ? 'sidebar-offline-queue--collapsed' : ''}`}
+            data-tooltip={isCollapsed ? t('sidebar.downloadingTracks', { n: activeJobs.length }) : undefined}
+            data-tooltip-pos="right"
+          >
+            <HardDriveDownload size={isCollapsed ? 18 : 14} className="spin-slow" />
+            {!isCollapsed && (
+              <span>{t('sidebar.downloadingTracks', { n: activeJobs.length })}</span>
+            )}
+          </div>
+        )}
       </nav>
     </aside>
   );

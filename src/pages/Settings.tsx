@@ -6,7 +6,10 @@ import {
   Wifi, WifiOff, Globe, Music2, Sliders, LogOut, CheckCircle2, FolderOpen,
   Palette, Server, Plus, Trash2, Eye, EyeOff, Info, ExternalLink, Shuffle, X, Play, Type, Keyboard
 } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
 import { open as openUrl } from '@tauri-apps/plugin-shell';
+import { getImageCacheSize, clearImageCache } from '../utils/imageCache';
+import { useOfflineStore } from '../store/offlineStore';
 import { lastfmGetToken, lastfmAuthUrl, lastfmGetSession, lastfmGetUserInfo, LastfmUserInfo } from '../api/lastfm';
 import LastfmIcon from '../components/LastfmIcon';
 import CustomSelect from '../components/CustomSelect';
@@ -83,12 +86,20 @@ function AddServerForm({ onSave, onCancel }: { onSave: (data: Omit<ServerProfile
   );
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+
 export default function Settings() {
   const auth = useAuthStore();
   const theme = useThemeStore();
   const fontStore = useFontStore();
   const kb = useKeybindingsStore();
   const gs = useGlobalShortcutsStore();
+  const serverId = auth.activeServerId ?? '';
+  const clearAllOffline = useOfflineStore(s => s.clearAll);
   const [listeningFor, setListeningFor] = useState<KeyAction | null>(null);
   const [listeningForGlobal, setListeningForGlobal] = useState<GlobalAction | null>(null);
   const navigate = useNavigate();
@@ -103,11 +114,35 @@ export default function Settings() {
   const [lfmPendingToken, setLfmPendingToken] = useState<string | null>(null);
   const [lfmError, setLfmError] = useState<string | null>(null);
   const [lfmUserInfo, setLfmUserInfo] = useState<LastfmUserInfo | null>(null);
+  const [imageCacheBytes, setImageCacheBytes] = useState<number | null>(null);
+  const [offlineCacheBytes, setOfflineCacheBytes] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     if (!auth.lastfmSessionKey || !auth.lastfmUsername) { setLfmUserInfo(null); return; }
     lastfmGetUserInfo(auth.lastfmUsername, auth.lastfmSessionKey).then(setLfmUserInfo).catch(() => {});
   }, [auth.lastfmSessionKey, auth.lastfmUsername]);
+
+  useEffect(() => {
+    if (activeTab !== 'library') return;
+    getImageCacheSize().then(setImageCacheBytes);
+    invoke<number>('get_offline_cache_size').then(setOfflineCacheBytes).catch(() => setOfflineCacheBytes(0));
+  }, [activeTab]);
+
+  const handleClearCache = useCallback(async () => {
+    setClearing(true);
+    await clearImageCache();
+    await clearAllOffline(serverId);
+    const [imgBytes, offBytes] = await Promise.all([
+      getImageCacheSize(),
+      invoke<number>('get_offline_cache_size').catch(() => 0),
+    ]);
+    setImageCacheBytes(imgBytes);
+    setOfflineCacheBytes(offBytes);
+    setShowClearConfirm(false);
+    setClearing(false);
+  }, [clearAllOffline, serverId]);
 
   const startLastfmConnect = useCallback(async () => {
     setLfmError(null);
@@ -363,15 +398,24 @@ export default function Settings() {
               <h2>{t('settings.behavior')}</h2>
             </div>
             <div className="settings-card">
-              <div className="settings-toggle-row">
-                <div>
-                  <div style={{ fontWeight: 500 }}>{t('settings.cacheTitle')}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.cacheDesc')} ({auth.maxCacheMb} MB)</div>
-                </div>
+              <div style={{ fontWeight: 500, marginBottom: 4 }}>{t('settings.cacheTitle')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>
+                {t('settings.cacheDesc')}
+                {(imageCacheBytes !== null || offlineCacheBytes !== null) && (
+                  <span style={{ marginLeft: 6, color: 'var(--text-secondary)' }}>
+                    — {t('settings.cacheUsed', {
+                      images: imageCacheBytes !== null ? formatBytes(imageCacheBytes) : '…',
+                      offline: offlineCacheBytes !== null ? formatBytes(offlineCacheBytes) : '…',
+                    })}
+                  </span>
+                )}
+              </div>
+              <div className="settings-toggle-row" style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{auth.maxCacheMb} MB</span>
                 <input
                   type="range"
                   min={100}
-                  max={2000}
+                  max={5000}
                   step={100}
                   value={auth.maxCacheMb}
                   onChange={e => auth.setMaxCacheMb(Number(e.target.value))}
@@ -379,6 +423,28 @@ export default function Settings() {
                   id="cache-size-slider"
                 />
               </div>
+              {showClearConfirm ? (
+                <div style={{ background: 'color-mix(in srgb, var(--color-danger, #e53935) 10%, transparent)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 13, lineHeight: 1.5 }}>
+                  <div style={{ marginBottom: 8, color: 'var(--text-primary)' }}>{t('settings.cacheClearWarning')}</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="btn btn-primary"
+                      style={{ background: 'var(--color-danger, #e53935)', fontSize: 13 }}
+                      onClick={handleClearCache}
+                      disabled={clearing}
+                    >
+                      {t('settings.cacheClearConfirm')}
+                    </button>
+                    <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => setShowClearConfirm(false)} disabled={clearing}>
+                      {t('settings.cacheClearCancel')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => setShowClearConfirm(true)}>
+                  <Trash2 size={14} /> {t('settings.cacheClearBtn')}
+                </button>
+              )}
             </div>
           </section>
 

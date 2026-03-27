@@ -34,6 +34,8 @@ const THEME_GROUPS: { group: string; themes: ThemeDef[] }[] = [
       { id: 'spider-tech',          label: 'Spider-Tech',          bg: '#0e0c18', card: '#181428', accent: '#E62429' },
       { id: 'stark-hud',            label: 'Stark HUD',            bg: '#0b0f15', card: '#05070a', accent: '#00f2ff' },
       { id: 't-800',                label: 'T-800',                bg: '#1f242d', card: '#0a0c10', accent: '#00d4ff' },
+      { id: 'barb-and-ken',         label: 'Barb & Ken',           bg: '#1a000f', card: '#2e0019', accent: '#FF1B8D' },
+      { id: 'toy-tale',             label: 'Toy Tale',             bg: '#1a1208', card: '#2a1c10', accent: '#FFD600' },
     ],
   },
   {

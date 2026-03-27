@@ -4,6 +4,7 @@ import { getAlbum, getArtist, getArtistInfo, setRating, buildCoverArtUrl, coverA
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
+import { useOfflineStore } from '../store/offlineStore';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
 import AlbumCard from '../components/AlbumCard';
@@ -43,6 +44,29 @@ export default function AlbumDetail() {
   const [isStarred, setIsStarred] = useState(false);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
   const [hoveredSongId, setHoveredSongId] = useState<string | null>(null);
+
+  const { downloadAlbum, deleteAlbum } = useOfflineStore();
+  const offlineTracks = useOfflineStore(s => s.tracks);
+  const offlineAlbums = useOfflineStore(s => s.albums);
+  const offlineJobs = useOfflineStore(s => s.jobs);
+  const serverId = auth.activeServerId ?? '';
+
+  const offlineStatus: 'none' | 'downloading' | 'cached' = (() => {
+    if (!album) return 'none';
+    const meta = offlineAlbums[`${serverId}:${album.album.id}`];
+    const isDownloaded = meta && meta.trackIds.length > 0 && meta.trackIds.every(tid => !!offlineTracks[`${serverId}:${tid}`]);
+    if (isDownloaded) return 'cached';
+    const isDownloading = offlineJobs.some(j => j.albumId === album.album.id && (j.status === 'queued' || j.status === 'downloading'));
+    return isDownloading ? 'downloading' : 'none';
+  })();
+
+  const offlineProgress = (() => {
+    if (!album) return null;
+    const albumJobs = offlineJobs.filter(j => j.albumId === album.album.id);
+    if (albumJobs.length === 0) return null;
+    const done = albumJobs.filter(j => j.status === 'done' || j.status === 'error').length;
+    return { done, total: albumJobs.length };
+  })();
 
   useEffect(() => {
     if (!id) return;
@@ -183,6 +207,16 @@ export default function AlbumDetail() {
     }
   };
 
+  const handleCacheOffline = () => {
+    if (!album) return;
+    downloadAlbum(album.album.id, album.album.name, album.album.artist, album.album.coverArt, album.album.year, album.songs, serverId);
+  };
+
+  const handleRemoveOffline = () => {
+    if (!album) return;
+    deleteAlbum(album.album.id, serverId);
+  };
+
   // Hooks must be called unconditionally — derive from nullable album state
   const coverUrl = album?.album.coverArt ? buildCoverArtUrl(album.album.coverArt, 400) : '';
   const coverKey = album?.album.coverArt ? coverArtCacheKey(album.album.coverArt, 400) : '';
@@ -212,6 +246,10 @@ export default function AlbumDetail() {
         onEnqueueAll={handleEnqueueAll}
         onBio={handleBio}
         onCloseBio={() => setBioOpen(false)}
+        offlineStatus={offlineStatus}
+        offlineProgress={offlineProgress}
+        onCacheOffline={handleCacheOffline}
+        onRemoveOffline={handleRemoveOffline}
       />
 
       <AlbumTrackList

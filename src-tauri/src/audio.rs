@@ -738,6 +738,12 @@ async fn fetch_data(
         return Ok(Some(data));
     }
 
+    // Offline cache — local file written by download_track_offline.
+    if let Some(path) = url.strip_prefix("psysonic-local://") {
+        let data = tokio::fs::read(path).await.map_err(|e| e.to_string())?;
+        return Ok(Some(data));
+    }
+
     let response = state.http_client.get(url).send().await.map_err(|e| e.to_string())?;
     if !response.status().is_success() {
         if state.generation.load(Ordering::SeqCst) != gen {
@@ -1040,12 +1046,16 @@ pub async fn audio_chain_preload(
         if let Some(d) = cached {
             d
         } else {
-            let resp = state.http_client.get(&url).send().await
-                .map_err(|e| e.to_string())?;
-            if !resp.status().is_success() {
-                return Ok(()); // silently fail — audio_play will retry
+            if let Some(path) = url.strip_prefix("psysonic-local://") {
+                tokio::fs::read(path).await.map_err(|e| e.to_string())?
+            } else {
+                let resp = state.http_client.get(&url).send().await
+                    .map_err(|e| e.to_string())?;
+                if !resp.status().is_success() {
+                    return Ok(()); // silently fail — audio_play will retry
+                }
+                resp.bytes().await.map_err(|e| e.to_string())?.into()
             }
-            resp.bytes().await.map_err(|e| e.to_string())?.into()
         }
     };
 
@@ -1346,11 +1356,15 @@ pub async fn audio_preload(
             return Ok(());
         }
     }
-    let response = state.http_client.get(&url).send().await.map_err(|e| e.to_string())?;
-    if !response.status().is_success() {
-        return Ok(());
-    }
-    let data: Vec<u8> = response.bytes().await.map_err(|e| e.to_string())?.into();
+    let data: Vec<u8> = if let Some(path) = url.strip_prefix("psysonic-local://") {
+        tokio::fs::read(path).await.map_err(|e| e.to_string())?
+    } else {
+        let response = state.http_client.get(&url).send().await.map_err(|e| e.to_string())?;
+        if !response.status().is_success() {
+            return Ok(());
+        }
+        response.bytes().await.map_err(|e| e.to_string())?.into()
+    };
     let _ = duration_hint; // kept in API for compatibility
     *state.preloaded.lock().unwrap() = Some(PreloadedTrack { url, data });
     Ok(())

@@ -188,6 +188,108 @@ fn mpris_set_playback(
         .map_err(|e| format!("MPRIS set_playback failed: {e:?}"))
 }
 
+// ─── Offline Track Cache ──────────────────────────────────────────────────────
+
+/// Downloads a single track to the app's offline cache directory.
+/// Returns the absolute file path so TypeScript can store it and later
+/// construct a `psysonic-local://<path>` URL for the audio engine.
+#[tauri::command]
+async fn download_track_offline(
+    track_id: String,
+    server_id: String,
+    url: String,
+    suffix: String,
+    app: tauri::AppHandle,
+) -> Result<String, String> {
+    let cache_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("psysonic-offline")
+        .join(&server_id);
+
+    tokio::fs::create_dir_all(&cache_dir)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let file_path = cache_dir.join(format!("{}.{}", track_id, suffix));
+    let path_str = file_path.to_string_lossy().to_string();
+
+    // Already cached — skip re-download.
+    if file_path.exists() {
+        return Ok(path_str);
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("HTTP {}", response.status().as_u16()));
+    }
+    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+    tokio::fs::write(&file_path, &bytes)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(path_str)
+}
+
+/// Returns the total size in bytes of all files in the offline cache directory.
+#[tauri::command]
+async fn get_offline_cache_size(app: tauri::AppHandle) -> u64 {
+    let offline_dir = match app.path().app_data_dir() {
+        Ok(d) => d.join("psysonic-offline"),
+        Err(_) => return 0,
+    };
+    if !offline_dir.exists() {
+        return 0;
+    }
+    let mut total: u64 = 0;
+    let mut stack = vec![offline_dir];
+    while let Some(dir) = stack.pop() {
+        let rd = match std::fs::read_dir(&dir) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        for entry in rd.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if let Ok(meta) = std::fs::metadata(&path) {
+                total += meta.len();
+            }
+        }
+    }
+    total
+}
+
+/// Removes a cached track from the offline cache directory.
+#[tauri::command]
+async fn delete_offline_track(
+    track_id: String,
+    server_id: String,
+    suffix: String,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let file_path = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("psysonic-offline")
+        .join(&server_id)
+        .join(format!("{}.{}", track_id, suffix));
+
+    if file_path.exists() {
+        tokio::fs::remove_file(&file_path)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 pub fn run() {
     let (audio_engine, _audio_thread) = audio::create_engine();
 
@@ -300,15 +402,32 @@ pub fn run() {
                         Ok(mut controls) => {
                             let app_handle = app.handle().clone();
                             if let Err(e) = controls.attach(move |event: MediaControlEvent| {
-                                let event_name = match event {
-                                    MediaControlEvent::Toggle   => "media:play-pause",
-                                    MediaControlEvent::Play     => "media:play-pause",
-                                    MediaControlEvent::Pause    => "media:play-pause",
-                                    MediaControlEvent::Next     => "media:next",
-                                    MediaControlEvent::Previous => "media:prev",
-                                    _ => return,
-                                };
-                                let _ = app_handle.emit(event_name, ());
+                                match event {
+                                    MediaControlEvent::Toggle
+                                    | MediaControlEvent::Play
+                                    | MediaControlEvent::Pause => {
+                                        let _ = app_handle.emit("media:play-pause", ());
+                                    }
+                                    MediaControlEvent::Next => {
+                                        let _ = app_handle.emit("media:next", ());
+                                    }
+                                    MediaControlEvent::Previous => {
+                                        let _ = app_handle.emit("media:prev", ());
+                                    }
+                                    MediaControlEvent::Seek(direction) => {
+                                        use souvlaki::SeekDirection;
+                                        let delta: f64 = match direction {
+                                            SeekDirection::Forward  =>  5.0,
+                                            SeekDirection::Backward => -5.0,
+                                        };
+                                        let _ = app_handle.emit("media:seek-relative", delta);
+                                    }
+                                    MediaControlEvent::SetPosition(pos) => {
+                                        let secs = pos.0.as_secs_f64();
+                                        let _ = app_handle.emit("media:seek-absolute", secs);
+                                    }
+                                    _ => {}
+                                }
                             }) {
                                 eprintln!("[Psysonic] Failed to attach media controls: {e:?}");
                             }
@@ -354,6 +473,9 @@ pub fn run() {
             audio::audio_set_gapless,
             audio::audio_chain_preload,
             lastfm_request,
+            download_track_offline,
+            delete_offline_track,
+            get_offline_cache_size,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Psysonic");
