@@ -52,6 +52,7 @@ export interface SubsonicAlbum {
   genre?: string;
   starred?: string;
   recordLabel?: string;
+  created?: string;
 }
 
 export interface SubsonicSong {

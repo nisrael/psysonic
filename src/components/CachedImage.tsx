@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getCachedUrl } from '../utils/imageCache';
 
 interface CachedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -17,7 +17,22 @@ export function useCachedUrl(fetchUrl: string, cacheKey: string): string {
   return resolved || fetchUrl;
 }
 
-export default function CachedImage({ src, cacheKey, ...props }: CachedImageProps) {
+export default function CachedImage({ src, cacheKey, style, onLoad, ...props }: CachedImageProps) {
   const resolvedSrc = useCachedUrl(src, cacheKey);
-  return <img src={resolvedSrc} {...props} />;
+  const [loaded, setLoaded] = useState(false);
+  const prevSrc = useRef('');
+
+  if (resolvedSrc !== prevSrc.current) {
+    prevSrc.current = resolvedSrc;
+    setLoaded(false);
+  }
+
+  return (
+    <img
+      src={resolvedSrc}
+      style={{ ...style, opacity: loaded ? 1 : 0, transition: loaded ? 'opacity 0.15s ease' : 'none' }}
+      onLoad={e => { setLoaded(true); onLoad?.(e); }}
+      {...props}
+    />
+  );
 }

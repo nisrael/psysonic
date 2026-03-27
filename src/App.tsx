@@ -36,6 +36,7 @@ import LastfmIndicator from './components/LastfmIndicator';
 import OfflineOverlay from './components/OfflineOverlay';
 import OfflineBanner from './components/OfflineBanner';
 import OfflineLibrary from './pages/OfflineLibrary';
+import ExportPickerModal from './components/ExportPickerModal';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 import { useAuthStore } from './store/authStore';
 import { useOfflineStore } from './store/offlineStore';
@@ -230,12 +231,11 @@ function AppShell() {
   );
 }
 
-// Tray / media key event handler
+// Media key event handler
 function TauriEventBridge() {
   const togglePlay = usePlayerStore(s => s.togglePlay);
   const next = usePlayerStore(s => s.next);
   const previous = usePlayerStore(s => s.previous);
-  const { minimizeToTray } = useAuthStore();
 
   // Configurable keybindings
   useEffect(() => {
@@ -295,8 +295,6 @@ function TauriEventBridge() {
         ['media:prev',       () => previous()],
         ['media:volume-up',   () => { const s = usePlayerStore.getState(); s.setVolume(Math.min(1, s.volume + 0.05)); }],
         ['media:volume-down', () => { const s = usePlayerStore.getState(); s.setVolume(Math.max(0, s.volume - 0.05)); }],
-        ['tray:play-pause',  () => togglePlay()],
-        ['tray:next',        () => next()],
       ];
       for (const [event, handler] of handlers) {
         const u = await listen(event, handler);
@@ -326,15 +324,10 @@ function TauriEventBridge() {
         unlisten.push(u);
       }
 
-      // Handle close → minimize to tray if enabled (Tauri 2 approach)
+      // Close → exit app
       const win = getCurrentWindow();
-      const u = await win.onCloseRequested(async (event) => {
-        if (minimizeToTray) {
-          event.preventDefault();
-          await win.hide();
-        } else {
-          await invoke('exit_app');
-        }
+      const u = await win.onCloseRequested(async () => {
+        await invoke('exit_app');
       });
       if (cancelled) { u(); return; }
       unlisten.push(u);
@@ -342,7 +335,7 @@ function TauriEventBridge() {
 
     setup();
     return () => { cancelled = true; unlisten.forEach(u => u()); };
-  }, [togglePlay, next, previous, minimizeToTray]);
+  }, [togglePlay, next, previous]);
 
   return null;
 }
@@ -350,6 +343,7 @@ function TauriEventBridge() {
 export default function App() {
   const theme = useThemeStore(s => s.theme);
   const font = useFontStore(s => s.font);
+  const [exportPickerOpen, setExportPickerOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -367,6 +361,67 @@ export default function App() {
     useGlobalShortcutsStore.getState().registerAll();
   }, []);
 
+  // ── Easter egg: Ctrl+Shift+Alt+N → export new albums image ──
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.ctrlKey || !e.shiftKey || !e.altKey || e.code !== 'KeyN') return;
+      e.preventDefault();
+      setExportPickerOpen(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const handleExport = async (since: number) => {
+    setExportPickerOpen(false);
+    const showToast = (text: string) => {
+      const toast = document.createElement('div');
+      toast.textContent = text;
+      toast.style.cssText = `
+        position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+        background:#24273a; color:#cad3f5; border:1px solid #363a4f;
+        padding:10px 20px; border-radius:10px; font-size:14px;
+        z-index:999999; pointer-events:none;
+        box-shadow:0 4px 24px rgba(0,0,0,0.5);
+        white-space:nowrap;
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    };
+    try {
+      const { exportNewAlbumsImage } = await import('./utils/exportNewAlbums');
+      const result = await exportNewAlbumsImage(since);
+      if (result) {
+        const files = result.paths.length > 1 ? ` (${result.paths.length} Dateien)` : '';
+        showToast(`📸 ${result.count} Alben exportiert${files}`);
+      } else {
+        showToast('📭 Keine Alben in diesem Zeitraum gefunden');
+      }
+    } catch (err) {
+      showToast(`❌ Export fehlgeschlagen: ${String(err).slice(0, 80)}`);
+      console.error('[easter egg] export failed:', err);
+    }
+  };
+
+  useEffect(() => {
+    const timers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
+    const onScroll = (e: Event) => {
+      const el = e.target as HTMLElement;
+      el.classList.add('is-scrolling');
+      const existing = timers.get(el);
+      if (existing !== undefined) clearTimeout(existing);
+      timers.set(el, setTimeout(() => {
+        el.classList.remove('is-scrolling');
+        timers.delete(el);
+      }, 800));
+    };
+    document.addEventListener('scroll', onScroll, true);
+    return () => {
+      document.removeEventListener('scroll', onScroll, true);
+      timers.forEach(t => clearTimeout(t));
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <TauriEventBridge />
@@ -381,6 +436,7 @@ export default function App() {
           }
         />
       </Routes>
+      {exportPickerOpen && <ExportPickerModal onConfirm={handleExport} onClose={() => setExportPickerOpen(false)} />}
     </BrowserRouter>
   );
 }

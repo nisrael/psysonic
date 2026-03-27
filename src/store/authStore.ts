@@ -21,7 +21,6 @@ interface AuthState {
   lastfmUsername: string;
 
   // Settings (global)
-  minimizeToTray: boolean;
   scrobblingEnabled: boolean;
   maxCacheMb: number;
   downloadFolder: string;
@@ -51,7 +50,6 @@ interface AuthState {
   connectLastfm: (sessionKey: string, username: string) => void;
   disconnectLastfm: () => void;
   setLastfmSessionError: (v: boolean) => void;
-  setMinimizeToTray: (v: boolean) => void;
   setScrobblingEnabled: (v: boolean) => void;
   setMaxCacheMb: (v: number) => void;
   setDownloadFolder: (v: string) => void;
@@ -82,7 +80,6 @@ export const useAuthStore = create<AuthState>()(
       lastfmApiSecret: '',
       lastfmSessionKey: '',
       lastfmUsername: '',
-      minimizeToTray: false,
       scrobblingEnabled: true,
       maxCacheMb: 500,
       downloadFolder: '',
@@ -139,7 +136,6 @@ export const useAuthStore = create<AuthState>()(
 
       setLastfmSessionError: (v) => set({ lastfmSessionError: v }),
 
-      setMinimizeToTray: (v) => set({ minimizeToTray: v }),
       setScrobblingEnabled: (v) => set({ scrobblingEnabled: v }),
       setMaxCacheMb: (v) => set({ maxCacheMb: v }),
       setDownloadFolder: (v) => set({ downloadFolder: v }),

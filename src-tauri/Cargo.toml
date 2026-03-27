@@ -1,6 +1,6 @@
 [package]
 name = "psysonic"
-version = "1.18.0"
+version = "1.19.0"
 description = "Psysonic Desktop Music Player"
 authors = []
 license = ""
@@ -23,7 +23,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-shell = "2"
-tauri-plugin-notification = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-store = "2"
 tauri-plugin-dialog = "2"

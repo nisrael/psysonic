@@ -6,11 +6,7 @@ mod audio;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager,
-};
+use tauri::{Emitter, Manager};
 
 /// Tracks which user-configured shortcuts are currently registered (shortcut_str → action).
 /// Prevents on_shortcut() accumulating duplicate handlers across JS reloads (HMR / StrictMode).
@@ -298,61 +294,12 @@ pub fn run() {
         .manage(ShortcutMap::default())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+
         .setup(|app| {
-            // Build tray menu
-            let play_pause = MenuItemBuilder::with_id("play_pause", "Play / Pause").build(app)?;
-            let next = MenuItemBuilder::with_id("next", "Next Track").build(app)?;
-            let separator = tauri::menu::PredefinedMenuItem::separator(app)?;
-            let show = MenuItemBuilder::with_id("show", "Show Psysonic").build(app)?;
-            let quit = MenuItemBuilder::with_id("quit", "Exit").build(app)?;
-
-            let menu = MenuBuilder::new(app)
-                .item(&play_pause)
-                .item(&next)
-                .item(&separator)
-                .item(&show)
-                .item(&quit)
-                .build()?;
-
-            let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .menu(&menu)
-                .tooltip("Psysonic")
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "play_pause" => {
-                        let _ = app.emit("tray:play-pause", ());
-                    }
-                    "next" => {
-                        let _ = app.emit("tray:next", ());
-                    }
-                    "show" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                    "quit" => {
-                        std::process::exit(0);
-                    }
-                    _ => {}
-                })
-                .on_tray_icon_event(|_tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        // Left click shows app (handled in JS side via tray event)
-                    }
-                })
-                .build(app)?;
-
             // ── MPRIS2 / OS media controls via souvlaki ──────────────────
             {
                 use souvlaki::{MediaControlEvent, MediaControls, PlatformConfig};
@@ -444,15 +391,6 @@ pub fn run() {
             }
 
             Ok(())
-        })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                // Only intercept close for the main window (hide to tray).
-                // Browser popup windows (browser_*) close normally.
-                if window.label() == "main" {
-                    let _ = window.emit("window:close-requested", ());
-                }
-            }
         })
         .invoke_handler(tauri::generate_handler![
             greet,

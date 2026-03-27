@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2026-03-27
+
+### Added
+
+- **Offline storage full warning**: When caching an album would exceed the configured storage limit, a dismissible warning banner appears directly on the album page with quick links to the Offline Library and Settings.
+- **Offline Mode — Help section**: New section in the Help page covering cache setup, playback, and troubleshooting for offline use.
+
+### Changed
+
+- **Windows installer — NSIS**: Switched from WiX/MSI to NSIS (`currentUser` install mode). Upgrades install in-place without requiring an uninstall first.
+- **Tray icon — removed**: The system tray icon and its menu have been removed. Media keys and OS media controls (added in v1.17.0) make the tray redundant. The "Minimize to tray" setting has been removed accordingly. The app now always exits cleanly on window close.
+- **Settings — cache label**: "Max. Image Cache Size" renamed to "Max. Storage Size" to reflect that the limit now covers both image cache and offline tracks.
+- **Cover art — fade-in on load**: `CachedImage` now fades album art in (150 ms) instead of popping in abruptly. The image starts transparent and becomes visible once fully loaded, preventing layout flicker on slow connections.
+- **Scrollbar auto-hide**: Scrollbar thumbs are hidden when content is not being scrolled and fade in on hover or while actively scrolling. System-style themes (W98, Muma Jukebox, Luna Teal, W3.1, DOS) retain always-visible scrollbars.
+- **Help page — two-column layout**: Sections now flow in CSS columns (masonry layout) instead of a rigid two-column grid, making better use of available space.
+- **Theme picker — preview corrections**: Updated colour swatches for T-800 (red accent, was cyan), WnAmp (yellow accent, was green), TetraStack (darker navy background), NightCity 2077 (darker blue-tinted background).
+- **Theme overhaul — Grand Theft Audio, NightCity 2077**: Detailed per-element styling added — active queue item, hover states, track rows, artist/playlist rows, settings tabs, connection indicators, and more. Both themes are now fully consistent across all UI sections.
+- **Theme refinements — Lambda 17, T-800, TetraStack, Muma Jukebox**: Targeted fixes for connection indicators, hover colours, active states, and contrast throughout.
+
+### Fixed
+
+- **AlbumDetail — hero background flicker on hover**: Moving the mouse over songs in the track list caused the blurred hero background to reload on every hover. Moving `hoveredSongId` state into `AlbumTrackList` prevents the parent from re-rendering.
+- **AlbumDetail — context menu loses row highlight**: Right-clicking a song caused the hover highlight to disappear. The row now stays highlighted while its context menu is open (`.context-active` pattern — consistent with Queue and Random Mix).
+- **Muma Jukebox — hero readability**: The "Album" chip and meta info text below the artist name had insufficient contrast. Both are now legible.
+- **Muma Jukebox — waveform colours**: Waveform now uses orange (played) and cyan (buffered) to match the theme's colour scheme.
+
+---
+
 ## [1.18.0] - 2026-03-27
 
 ### Added

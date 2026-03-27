@@ -8,7 +8,6 @@
     "core:default",
     "shell:default",
     { "identifier": "shell:allow-open", "allow": [{ "url": "https://**" }] },
-    "notification:default",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
     "store:default",

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Star } from 'lucide-react';
 import { SubsonicSong } from '../api/subsonic';
-import { Track } from '../store/playerStore';
+import { Track, usePlayerStore } from '../store/playerStore';
 import { useTranslation } from 'react-i18next';
 
 function formatDuration(seconds: number): string {
@@ -45,8 +45,6 @@ interface AlbumTrackListProps {
   hasVariousArtists: boolean;
   currentTrack: Track | null;
   isPlaying: boolean;
-  hoveredSongId: string | null;
-  setHoveredSongId: (id: string | null) => void;
   ratings: Record<string, number>;
   starredSongs: Set<string>;
   onPlaySong: (song: SubsonicSong) => void;
@@ -60,8 +58,6 @@ export default function AlbumTrackList({
   hasVariousArtists,
   currentTrack,
   isPlaying,
-  hoveredSongId,
-  setHoveredSongId,
   ratings,
   starredSongs,
   onPlaySong,
@@ -70,6 +66,12 @@ export default function AlbumTrackList({
   onContextMenu,
 }: AlbumTrackListProps) {
   const { t } = useTranslation();
+  const [hoveredSongId, setHoveredSongId] = useState<string | null>(null);
+  const [contextMenuSongId, setContextMenuSongId] = useState<string | null>(null);
+  const contextMenuOpen = usePlayerStore(s => s.contextMenu.isOpen);
+  useEffect(() => {
+    if (!contextMenuOpen) setContextMenuSongId(null);
+  }, [contextMenuOpen]);
   const totalDuration = songs.reduce((acc, s) => acc + s.duration, 0);
 
   const discs = new Map<number, SubsonicSong[]>();
@@ -112,12 +114,13 @@ export default function AlbumTrackList({
           {discs.get(discNum)!.map((song, i) => (
             <div
               key={song.id}
-              className={`track-row${hasVariousArtists ? ' track-row-va' : ''}${currentTrack?.id === song.id ? ' active' : ''}`}
+              className={`track-row${hasVariousArtists ? ' track-row-va' : ''}${currentTrack?.id === song.id ? ' active' : ''}${contextMenuSongId === song.id ? ' context-active' : ''}`}
               onMouseEnter={() => setHoveredSongId(song.id)}
               onMouseLeave={() => setHoveredSongId(null)}
               onDoubleClick={() => onPlaySong(song)}
               onContextMenu={e => {
                 e.preventDefault();
+                setContextMenuSongId(song.id);
                 onContextMenu(e.clientX, e.clientY, makeTrack(song), 'album-song');
               }}
               role="row"

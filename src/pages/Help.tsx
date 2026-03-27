@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Rocket, Play, LibraryBig, Settings2, Radio, Wrench, Shuffle } from 'lucide-react';
+import { ChevronDown, Rocket, Play, LibraryBig, Settings2, Radio, Wrench, Shuffle, WifiOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface FaqItem { q: string; a: string; }
@@ -65,7 +65,6 @@ export default function Help() {
       items: [
         { q: t('help.q12'), a: t('help.a12') },
         { q: t('help.q13'), a: t('help.a13') },
-        { q: t('help.q14'), a: t('help.a14') },
         { q: t('help.q15'), a: t('help.a15') },
         { q: t('help.q31'), a: t('help.a31') },
         { q: t('help.q32'), a: t('help.a32') },
@@ -89,6 +88,15 @@ export default function Help() {
       ],
     },
     {
+      icon: <WifiOff size={18} />,
+      title: t('help.s8'),
+      items: [
+        { q: t('help.q34'), a: t('help.a34') },
+        { q: t('help.q35'), a: t('help.a35') },
+        { q: t('help.q36'), a: t('help.a36') },
+      ],
+    },
+    {
       icon: <Wrench size={18} />,
       title: t('help.s6'),
       items: [
@@ -104,9 +112,9 @@ export default function Help() {
     <div className="content-body animate-fade-in">
       <h1 className="page-title" style={{ marginBottom: '2rem' }}>{t('help.title')}</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', alignItems: 'start' }}>
+      <div style={{ columns: 2, columnGap: '1.25rem' }}>
         {sections.map((section, si) => (
-          <section key={si} className="settings-section">
+          <section key={si} className="settings-section" style={{ breakInside: 'avoid', marginBottom: '1.25rem' }}>
             <div className="settings-section-header">
               {section.icon}
               <h2>{section.title}</h2>

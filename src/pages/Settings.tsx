@@ -946,19 +946,6 @@ export default function Settings() {
             <div className="settings-card">
               <div className="settings-toggle-row">
                 <div>
-                  <div style={{ fontWeight: 500 }}>{t('settings.trayTitle')}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.trayDesc')}</div>
-                </div>
-                <label className="toggle-switch" aria-label={t('settings.trayTitle')}>
-                  <input type="checkbox" checked={auth.minimizeToTray} onChange={e => auth.setMinimizeToTray(e.target.checked)} id="tray-toggle" />
-                  <span className="toggle-track" />
-                </label>
-              </div>
-
-              <div className="divider" />
-
-              <div className="settings-toggle-row">
-                <div>
                   <div style={{ fontWeight: 500 }}>{t('settings.downloadsTitle')}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, wordBreak: 'break-all' }}>
                     {auth.downloadFolder || t('settings.downloadsDefault')}

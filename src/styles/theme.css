@@ -1053,89 +1053,194 @@
   --danger:        #9d0006;
 }
 
-/* ─── Lambda 17 ─── */
+/* ─── Lambda 17 — Half-Life / City 17 ─── */
+/* HEV orange + Combine Overwatch teal + City 17 concrete       */
 [data-theme='lambda-17'] {
   color-scheme: dark;
   --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ff9d00%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 
-  --ctp-crust:    #0a0b0c;
-  --ctp-mantle:   #101214;
-  --ctp-base:     #14171a;
-  --ctp-surface0: #1c1f22;
-  --ctp-surface1: #25292d;
-  --ctp-surface2: #2d3237;
-  --ctp-overlay0: #4a4f54;
-  --ctp-overlay1: #6b7279;
-  --ctp-overlay2: #8c959d;
-  --ctp-text:     #ffb000;
-  --ctp-subtext1: #e09000;
-  --ctp-subtext0: #a0a5a9;
+  /* City 17 — warm concrete dark, not pure black */
+  --ctp-crust:    #0c0d0e;
+  --ctp-mantle:   #111315;
+  --ctp-base:     #171a1c;
+  --ctp-surface0: #1f2326;
+  --ctp-surface1: #282d30;
+  --ctp-surface2: #33393d;
+  --ctp-overlay0: #4e5660;
+  --ctp-overlay1: #718090;
+  --ctp-overlay2: #96a8b4;
+  --ctp-text:     #e4ddd0;   /* concrete dust off-white */
+  --ctp-subtext1: #c8c0b0;
+  --ctp-subtext0: #96a8b4;
+
+  /* Half-Life palette */
+  --ctp-peach:    #ff9d00;   /* HEV suit orange */
   --ctp-mauve:    #ff9d00;
   --ctp-lavender: #ffb84d;
-  --ctp-pink:     #ff5555;
-  --ctp-flamingo: #ff6e6e;
-  --ctp-rosewater:#ffb000;
-  --ctp-green:    #50fa7b;
-  --ctp-teal:     #33cccc;
-  --ctp-sky:      #8be9fd;
-  --ctp-blue:     #33cccc;
-  --ctp-sapphire: #33cccc;
-  --ctp-yellow:   #f1fa8c;
-  --ctp-peach:    #ffb000;
-  --ctp-maroon:   #ff5555;
-  --ctp-red:      #ff5555;
+  --ctp-flamingo: #ffb84d;
+  --ctp-rosewater:#ffd080;
+  --ctp-teal:     #00c8c0;   /* Combine Overwatch scanner teal */
+  --ctp-sky:      #00c8c0;
+  --ctp-sapphire: #0090a0;
+  --ctp-blue:     #0060a0;   /* G-Man suit navy */
+  --ctp-green:    #78c800;   /* Headcrab / barnacle green */
+  --ctp-yellow:   #f0d000;   /* radiation warning yellow */
+  --ctp-red:      #e03020;   /* danger / health critical */
+  --ctp-maroon:   #b82010;
+  --ctp-pink:     #cc44aa;   /* Xen alien purple-pink */
 
-  --bg-app:        #14171a;
-  --bg-sidebar:    #101214;
-  --bg-card:       #1c1f22;
-  --bg-hover:      rgba(255, 157, 0, 0.1);
-  --bg-player:     #0a0b0c;
-  --bg-glass:      rgba(20, 23, 26, 0.85);
-  --accent:        #ff9d00;
-  --accent-dim:    rgba(255, 157, 0, 0.15);
-  --accent-glow:   rgba(255, 157, 0, 0.4);
-  --text-primary:  #ffb000;
-  --text-secondary:#e09000;
-  --text-muted:    #6b7279;
-  --border:        #2d3237;
-  --border-subtle: #1c1f22;
-  --border-dropdown: #2d3237;
-  --shadow-dropdown: rgba(0, 0, 0, 0.7);
-  --positive:      #50fa7b;
-  --warning:       #f1fa8c;
-  --danger:        #ff5555;
+  --bg-app:     #171a1c;   /* City 17 corridor concrete */
+  --bg-sidebar: #111315;   /* Combine facility wall */
+  --bg-card:    #1f2326;
+  --bg-hover:   rgba(255, 157, 0, 0.08);
+  --bg-player:  #0c0d0e;   /* HEV suit display dark */
+  --bg-glass:   rgba(17, 19, 21, 0.95);
+
+  --accent:       #ff9d00;   /* HEV orange */
+  --accent-dim:   rgba(255, 157, 0, 0.13);
+  --accent-glow:  rgba(255, 157, 0, 0.45);
+  --volume-accent:#00c8c0;   /* Combine teal for volume */
+
+  --text-primary:  #e4ddd0;  /* concrete dust off-white */
+  --text-secondary:#00c8c0;  /* Combine Overwatch teal */
+  --text-muted:    #4e5660;
+  --border:        #2a3035;
+  --border-subtle: #1f2326;
+  --shadow-dropdown: rgba(0, 0, 0, 0.85);
+
+  --positive: #78c800;
+  --warning:  #ff9d00;
+  --danger:   #e03020;
+
   --radius-sm: 0px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
+  --radius-md: 1px;
+  --radius-lg: 2px;
+  --radius-xl: 3px;
 }
 
-[data-theme='lambda-17'] .app-shell {
-  background-image:
-    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
-    radial-gradient(rgba(255, 157, 0, 0.05) 0%, transparent 80%);
-  background-size: 100% 4px, 100% 100%;
-}
-
+/* Sidebar = Combine control panel: horizontal panel lines */
 [data-theme='lambda-17'] .sidebar {
-  border-right: 1px solid var(--accent);
-  box-shadow: inset -10px 0 20px -15px var(--accent-glow);
+  border-right: 2px solid #ff9d00;
+  box-shadow: 2px 0 12px rgba(255, 157, 0, 0.08);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 28px,
+    rgba(0, 200, 192, 0.04) 28px,
+    rgba(0, 200, 192, 0.04) 29px
+  );
 }
 
+/* Player bar = HEV suit monitor: orange top + teal secondary */
 [data-theme='lambda-17'] .player-bar {
-  border-top: 2px solid var(--accent);
+  border-top: 2px solid #ff9d00;
+  box-shadow:
+    0 -1px 0 rgba(0, 200, 192, 0.3),
+    0 -6px 24px rgba(255, 157, 0, 0.07);
 }
 
+/* Track name = HEV announcement style */
 [data-theme='lambda-17'] .player-track-name {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  text-shadow: 0 0 8px var(--accent-glow);
-  letter-spacing: 0.5px;
+  color: #ff9d00;
+  text-shadow: 0 0 10px rgba(255, 157, 0, 0.65), 0 0 24px rgba(255, 157, 0, 0.25);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
+/* Artist = Combine Overwatch voice color */
+[data-theme='lambda-17'] .player-track-artist { color: #00c8c0; }
+
+/* Queue album = Xen purple */
+[data-theme='lambda-17'] .queue-meta-album { color: #cc44aa; }
+
+/* Active nav: HEV orange gradient */
 [data-theme='lambda-17'] .nav-link.active {
-  background: var(--accent-dim);
-  border-left: 3px solid var(--accent);
-  color: var(--accent);
+  background: linear-gradient(90deg, rgba(255,157,0,0.16) 0%, transparent 100%);
+  color: #ff9d00;
 }
+[data-theme='lambda-17'] .nav-link.active::before {
+  width: 3px;
+  box-shadow: 2px 0 10px rgba(255,157,0,0.6);
+}
+
+/* Buttons */
+[data-theme='lambda-17'] .btn-primary {
+  background: #ff9d00;
+  color: #0c0d0e;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: 1px;
+}
+[data-theme='lambda-17'] .btn-primary:hover { background: #ffb030; }
+
+/* Queue active = HEV orange lambda bar */
+[data-theme='lambda-17'] .queue-item.active {
+  background: rgba(255, 157, 0, 0.08);
+  box-shadow: inset 3px 0 0 #ff9d00;
+}
+[data-theme='lambda-17'] .np-queue-item.active { background: rgba(255,157,0,0.07); }
+[data-theme='lambda-17'] .np-queue-item-active {
+  color: #ff9d00;
+  text-shadow: 0 0 8px rgba(255,157,0,0.55);
+}
+
+/* Now-playing active track = Combine teal */
+[data-theme='lambda-17'] .np-album-track.active .np-album-track-title,
+[data-theme='lambda-17'] .np-album-track.active .np-album-track-num {
+  color: #00c8c0;
+  text-shadow: 0 0 8px rgba(0,200,192,0.5);
+}
+
+/* Hover rows */
+[data-theme='lambda-17'] .track-row:hover,
+[data-theme='lambda-17'] .track-row.context-active {
+  background: rgba(255,157,0,0.07) !important;
+  box-shadow: inset 3px 0 0 #ff9d00;
+}
+[data-theme='lambda-17'] .queue-item:hover,
+[data-theme='lambda-17'] .queue-item.context-active {
+  background: rgba(255,157,0,0.07) !important;
+  box-shadow: inset 3px 0 0 #ff9d00;
+}
+[data-theme='lambda-17'] .np-queue-item:hover,
+[data-theme='lambda-17'] .np-queue-item.context-active {
+  background: rgba(255,157,0,0.07);
+  box-shadow: inset 2px 0 0 #ff9d00;
+}
+[data-theme='lambda-17'] .artist-row:hover  { background: rgba(255,157,0,0.06); box-shadow: inset 3px 0 0 #ff9d00; }
+[data-theme='lambda-17'] .playlist-row:hover { background: rgba(255,157,0,0.06); box-shadow: inset 3px 0 0 #ff9d00; }
+
+/* Settings tabs: Combine teal when active */
+[data-theme='lambda-17'] .settings-tab:hover { background: rgba(255,157,0,0.07); color: #ff9d00; }
+[data-theme='lambda-17'] .settings-tab.active {
+  background: rgba(0, 200, 192, 0.08);
+  color: #00c8c0;
+  box-shadow: inset 3px 0 0 #00c8c0;
+}
+
+/* Queue tabs */
+[data-theme='lambda-17'] .queue-tab-btn:hover { background: rgba(255,157,0,0.07); color: #ff9d00; }
+
+/* Dropdowns */
+[data-theme='lambda-17'] .custom-select-trigger:hover { background: rgba(255,157,0,0.07); }
+[data-theme='lambda-17'] .custom-select-option:hover {
+  background: rgba(255,157,0,0.1) !important;
+  color: #ff9d00 !important;
+}
+
+/* Artist pills = headcrab green */
+[data-theme='lambda-17'] .artist-ext-link:hover {
+  background: rgba(120,200,0,0.1);
+  color: #78c800 !important;
+  border-color: rgba(120,200,0,0.4) !important;
+}
+
+/* Connection indicators */
+[data-theme='lambda-17'] .connection-type,
+[data-theme='lambda-17'] .connection-server { color: #00c8c0; }
 
 /* ─── Guild Wars 1 — Tyria ─── */
 [data-theme='gw1'] {
@@ -1345,90 +1450,188 @@
 }
 
 
-/* ─── Grand Theft Audio ─── */
+/* ─── Grand Theft Audio — GTA V / Los Santos at Night ─── */
+/* Money green + Wanted-level gold + LS asphalt dark           */
 [data-theme='grand-theft-audio'] {
   color-scheme: dark;
   --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2357b05a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 
-  --ctp-crust:    #0a0a0a;
-  --ctp-mantle:   #0f0f0f;
-  --ctp-base:     #141414;
-  --ctp-surface0: #1e1e1e;
-  --ctp-surface1: #282828;
-  --ctp-surface2: #323232;
-  --ctp-overlay0: #555555;
-  --ctp-overlay1: #888888;
-  --ctp-overlay2: #aaaaaa;
-  --ctp-text:     #ffffff;
-  --ctp-subtext1: #cccccc;
-  --ctp-subtext0: #999999;
-  --ctp-mauve:    #57b05a;
-  --ctp-lavender: #76d379;
-  --ctp-pink:     #ec4899;
-  --ctp-flamingo: #f43f5e;
-  --ctp-rosewater:#fda4af;
-  --ctp-green:    #57b05a;
-  --ctp-teal:     #4d9e50;
-  --ctp-sky:      #60a5fa;
-  --ctp-blue:     #3b82f6;
-  --ctp-sapphire: #2563eb;
-  --ctp-yellow:   #fbbf24;
-  --ctp-peach:    #f59e0b;
-  --ctp-maroon:   #b91c1c;
-  --ctp-red:      #ef4444;
+  /* LS asphalt — almost black with a warm urban undertone */
+  --ctp-crust:    #030303;
+  --ctp-mantle:   #080808;
+  --ctp-base:     #0e0e0e;
+  --ctp-surface0: #161616;
+  --ctp-surface1: #202020;
+  --ctp-surface2: #2c2c2c;
+  --ctp-overlay0: #484848;
+  --ctp-overlay1: #707070;
+  --ctp-overlay2: #989898;
+  --ctp-text:     #e8e8e8;
+  --ctp-subtext1: #c0c0c0;
+  --ctp-subtext0: #888888;
 
-  --bg-app:        #141414;
-  --bg-sidebar:    #0f0f0f;
-  --bg-card:       #1e1e1e;
-  --bg-hover:      rgba(87, 176, 90, 0.1);
-  --bg-player:     #0a0a0a;
-  --bg-glass:      rgba(15, 15, 15, 0.85);
-  --accent:        #57b05a;
-  --accent-dim:    rgba(87, 176, 90, 0.15);
-  --accent-glow:   rgba(87, 176, 90, 0.4);
-  --text-primary:  #ffffff;
-  --text-secondary:#999999;
-  --text-muted:    #888888;
-  --border:        #333333;
-  --border-subtle: #1e1e1e;
-  --border-dropdown: #333333;
-  --shadow-dropdown: rgba(0, 0, 0, 0.8);
-  --positive:      #57b05a;
-  --warning:       #fbbf24;
-  --danger:        #ef4444;
+  /* GTA palette */
+  --ctp-green:    #57b05a;   /* money green — health bar */
+  --ctp-mauve:    #57b05a;
+  --ctp-teal:     #3d9e40;
+  --ctp-yellow:   #ffd700;   /* wanted stars — 5-star gold */
+  --ctp-peach:    #ffb800;   /* Los Santos Customs orange */
+  --ctp-flamingo: #ffb800;
+  --ctp-rosewater:#ffb800;
+  --ctp-red:      #e02020;   /* wasted / busted red */
+  --ctp-maroon:   #c01818;
+  --ctp-blue:     #4a9fd4;   /* armor bar blue */
+  --ctp-sapphire: #3a8fc4;
+  --ctp-sky:      #4a9fd4;
+  --ctp-lavender: #57b05a;
+  --ctp-pink:     #e02020;
+
+  --bg-app:     #0e0e0e;
+  --bg-sidebar: #080808;   /* minimap dark */
+  --bg-card:    #161616;
+  --bg-hover:   rgba(87, 176, 90, 0.08);
+  --bg-player:  #030303;   /* HUD strip */
+  --bg-glass:   rgba(8, 8, 8, 0.95);
+
+  --accent:       #57b05a;   /* money green */
+  --accent-dim:   rgba(87, 176, 90, 0.14);
+  --accent-glow:  rgba(87, 176, 90, 0.45);
+  --volume-accent:#ffd700;   /* wanted-gold for volume knob */
+
+  --text-primary:  #e8e8e8;
+  --text-secondary:#ffd700;  /* wanted-level gold — the key differentiator */
+  --text-muted:    #484848;
+  --border:        #242424;
+  --border-subtle: #161616;
+  --shadow-dropdown: rgba(0, 0, 0, 0.9);
+
   --radius-sm: 0px;
   --radius-md: 2px;
-  --radius-lg: 4px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
 }
 
+/* Sidebar = minimap panel: dark border + subtle city-grid stripe */
 [data-theme='grand-theft-audio'] .sidebar {
-  border-right: 2px solid var(--accent);
+  border-right: 2px solid #57b05a;
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 40px,
+    rgba(87, 176, 90, 0.018) 40px,
+    rgba(87, 176, 90, 0.018) 41px
+  );
 }
 
+/* Player bar = GTA HUD strip: green health line + gold secondary */
 [data-theme='grand-theft-audio'] .player-bar {
-  border-top: 1px solid var(--border);
+  border-top: 2px solid #57b05a;
+  box-shadow:
+    0 -1px 0 rgba(255, 215, 0, 0.25),
+    0 -8px 30px rgba(87, 176, 90, 0.08);
 }
 
+/* Track name = money counter — green + uppercase */
 [data-theme='grand-theft-audio'] .player-track-name {
+  color: #57b05a;
+  text-shadow: 0 0 10px rgba(87, 176, 90, 0.6), 0 0 24px rgba(87, 176, 90, 0.25);
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
+/* Artist = wanted-gold, like the bounty/level display */
+[data-theme='grand-theft-audio'] .player-track-artist { color: #ffd700; }
+
+/* Active nav link: money-green gradient + glow bar */
 [data-theme='grand-theft-audio'] .nav-link.active {
-  background: linear-gradient(90deg, rgba(87, 176, 90, 0.2) 0%, transparent 100%);
-  color: var(--accent);
+  background: linear-gradient(90deg, rgba(87, 176, 90, 0.18) 0%, transparent 100%);
+  color: #57b05a;
 }
-
 [data-theme='grand-theft-audio'] .nav-link.active::before {
-  width: 4px;
-  box-shadow: 2px 0 10px var(--accent-glow);
+  width: 3px;
+  box-shadow: 2px 0 12px rgba(87, 176, 90, 0.6);
 }
 
+/* Buttons: blocky GTA UI style */
 [data-theme='grand-theft-audio'] .btn-primary {
+  background: #57b05a;
+  color: #030303;
   text-transform: uppercase;
-  font-weight: bold;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border: none;
 }
+[data-theme='grand-theft-audio'] .btn-primary:hover { background: #6abf6e; }
+
+/* Queue active = health-bar green left strip */
+[data-theme='grand-theft-audio'] .queue-item.active {
+  background: rgba(87, 176, 90, 0.08);
+  box-shadow: inset 3px 0 0 #57b05a;
+}
+[data-theme='grand-theft-audio'] .np-queue-item.active { background: rgba(87, 176, 90, 0.07); }
+[data-theme='grand-theft-audio'] .np-queue-item-active {
+  color: #57b05a;
+  text-shadow: 0 0 8px rgba(87, 176, 90, 0.55);
+}
+
+/* Now-playing active track = gold (5-star wanted) */
+[data-theme='grand-theft-audio'] .np-album-track.active .np-album-track-title,
+[data-theme='grand-theft-audio'] .np-album-track.active .np-album-track-num {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+/* Hover rows */
+[data-theme='grand-theft-audio'] .track-row:hover,
+[data-theme='grand-theft-audio'] .track-row.context-active {
+  background: rgba(87, 176, 90, 0.07) !important;
+  box-shadow: inset 3px 0 0 #57b05a;
+}
+[data-theme='grand-theft-audio'] .queue-item:hover,
+[data-theme='grand-theft-audio'] .queue-item.context-active {
+  background: rgba(87, 176, 90, 0.08) !important;
+  box-shadow: inset 3px 0 0 #57b05a;
+}
+[data-theme='grand-theft-audio'] .np-queue-item:hover,
+[data-theme='grand-theft-audio'] .np-queue-item.context-active {
+  background: rgba(87, 176, 90, 0.07);
+  box-shadow: inset 2px 0 0 #57b05a;
+}
+[data-theme='grand-theft-audio'] .artist-row:hover  { background: rgba(87,176,90,0.07); box-shadow: inset 3px 0 0 #57b05a; }
+[data-theme='grand-theft-audio'] .playlist-row:hover { background: rgba(87,176,90,0.07); box-shadow: inset 3px 0 0 #57b05a; }
+
+/* Settings tabs: gold active = 5-star screen */
+[data-theme='grand-theft-audio'] .settings-tab:hover { background: rgba(87,176,90,0.07); color: #57b05a; }
+[data-theme='grand-theft-audio'] .settings-tab.active {
+  background: rgba(255, 215, 0, 0.07);
+  color: #ffd700;
+  box-shadow: inset 3px 0 0 #ffd700;
+}
+
+/* Queue tab */
+[data-theme='grand-theft-audio'] .queue-tab-btn:hover { background: rgba(87,176,90,0.07); color: #57b05a; }
+
+/* Dropdowns */
+[data-theme='grand-theft-audio'] .custom-select-trigger:hover { background: rgba(87,176,90,0.07); }
+[data-theme='grand-theft-audio'] .custom-select-option:hover {
+  background: rgba(87, 176, 90, 0.1) !important;
+  color: #57b05a !important;
+}
+
+/* Artist pills = LS Customs orange */
+[data-theme='grand-theft-audio'] .artist-ext-link:hover {
+  background: rgba(255, 184, 0, 0.1);
+  color: #ffb800 !important;
+  border-color: rgba(255, 184, 0, 0.4) !important;
+}
+
+/* Queue album title = gold */
+[data-theme='grand-theft-audio'] .queue-meta-album { color: #ffd700; }
+
+/* Connection indicators */
+[data-theme='grand-theft-audio'] .connection-type,
+[data-theme='grand-theft-audio'] .connection-server { color: #ffd700; }
 
 /* ─── V-Tactical ─── */
 [data-theme='v-tactical'] {
@@ -1514,97 +1717,254 @@
   letter-spacing: 0.5px;
 }
 
-/* ─── NightCity 2077 ─── */
+/* ─── NightCity 2077 — Cyberpunk 2077 ─── */
+/* V yellow + Netrunner cyan + Gang magenta + Johnny Silverhand glitch */
+@keyframes glitch-2077 {
+  0%,  85%, 100% {
+    text-shadow:
+      0 0 8px  rgba(252,238,10,0.75),
+      0 0 22px rgba(252,238,10,0.35),
+      0 0 48px rgba(252,238,10,0.12);
+    transform: none;
+  }
+  86% {
+    text-shadow:
+      -3px 0 rgba(0,245,255,0.65),
+       3px 0 rgba(255,45,155,0.65),
+       0 0 8px rgba(252,238,10,0.75);
+    transform: translateX(-2px);
+  }
+  87% {
+    text-shadow:
+       3px 0 rgba(0,245,255,0.65),
+      -3px 0 rgba(255,45,155,0.65),
+       0 0 8px rgba(252,238,10,0.75);
+    transform: translateX(2px) skewX(-2deg);
+  }
+  88% {
+    text-shadow:
+      0 0 8px rgba(252,238,10,0.75),
+      0 0 22px rgba(252,238,10,0.35);
+    transform: none;
+  }
+  89% {
+    text-shadow:
+      -1px 0 rgba(0,245,255,0.4),
+       1px 0 rgba(255,45,155,0.4),
+       0 0 10px rgba(252,238,10,0.8);
+    transform: translateX(1px);
+  }
+  90% {
+    text-shadow:
+      0 0 8px rgba(252,238,10,0.75),
+      0 0 22px rgba(252,238,10,0.35),
+      0 0 48px rgba(252,238,10,0.12);
+    transform: none;
+  }
+}
+
 [data-theme='nightcity-2077'] {
   color-scheme: dark;
   --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23FCEE0A%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 
-  --ctp-crust:    #000000;
-  --ctp-mantle:   #0a0a0a;
-  --ctp-base:     #050505;
-  --ctp-surface0: #151515;
-  --ctp-surface1: #202020;
-  --ctp-surface2: #2a2a2a;
-  --ctp-overlay0: #444444;
-  --ctp-overlay1: #666666;
-  --ctp-overlay2: #888888;
-  --ctp-text:     #f0f0f0;
-  --ctp-subtext1: #cccccc;
-  --ctp-subtext0: #aaaaaa;
+  /* Night City asphalt — dark with cold blue-black undertone */
+  --ctp-crust:    #000003;
+  --ctp-mantle:   #020208;
+  --ctp-base:     #06060f;
+  --ctp-surface0: #0d0d1a;
+  --ctp-surface1: #141428;
+  --ctp-surface2: #1e1e38;
+  --ctp-overlay0: #50508a;
+  --ctp-overlay1: #7878b8;
+  --ctp-overlay2: #a0a0d8;
+  --ctp-text:     #f0f0ff;
+  --ctp-subtext1: #d0d0f8;
+  --ctp-subtext0: #a0a0d8;
+
+  /* Cyberpunk palette */
+  --ctp-yellow:   #FCEE0A;   /* V / Johnny — primary yellow */
   --ctp-mauve:    #FCEE0A;
-  --ctp-lavender: #fff34d;
-  --ctp-pink:     #ff00ff;
-  --ctp-flamingo: #FF003C;
-  --ctp-rosewater:#ffcccc;
-  --ctp-green:    #00ff9f;
-  --ctp-teal:     #00f0ff;
-  --ctp-sky:      #00f0ff;
-  --ctp-blue:     #3e59ff;
-  --ctp-sapphire: #2233aa;
-  --ctp-yellow:   #FCEE0A;
-  --ctp-peach:    #ffb800;
-  --ctp-maroon:   #880000;
-  --ctp-red:      #FF003C;
+  --ctp-lavender: #ffe84d;
+  --ctp-teal:     #00f5ff;   /* Netrunner cyan */
+  --ctp-sky:      #00f5ff;
+  --ctp-sapphire: #00c8e0;
+  --ctp-blue:     #0088ff;   /* NCPD/corpo blue */
+  --ctp-pink:     #ff2d9b;   /* Gang magenta — Maelstrom/Valentinos neon */
+  --ctp-flamingo: #ff2d9b;
+  --ctp-rosewater:#ff80c8;
+  --ctp-green:    #00ff9f;   /* Netrunner green — Quickhack */
+  --ctp-red:      #ff1a1a;   /* Combat critical / Arasaka red */
+  --ctp-maroon:   #cc0000;
+  --ctp-peach:    #ff8800;   /* Trauma Team orange */
 
-  --bg-app:        #050505;
-  --bg-sidebar:    #0a0a0a;
-  --bg-card:       #151515;
-  --bg-hover:      rgba(252, 238, 10, 0.1);
-  --bg-player:     #000000;
-  --bg-glass:      rgba(5, 5, 5, 0.85);
-  --accent:        #FCEE0A;
-  --accent-dim:    rgba(252, 238, 10, 0.15);
-  --accent-glow:   rgba(252, 238, 10, 0.4);
-  --text-primary:  #f0f0f0;
-  --text-secondary:#cccccc;
-  --text-muted:    #888888;
-  --border:        #FCEE0A;
-  --border-subtle: #2a2a2a;
-  --border-dropdown: #2a2a2a;
-  --shadow-dropdown: rgba(0, 0, 0, 0.9);
-  --positive:      #00ff9f;
-  --warning:       #ffb800;
-  --danger:        #FF003C;
+  --bg-app:     #06060f;
+  --bg-sidebar: #020208;   /* deeper — like the Night City backdrop */
+  --bg-card:    #0d0d1a;
+  --bg-hover:   rgba(252, 238, 10, 0.07);
+  --bg-player:  #000003;
+  --bg-glass:   rgba(6, 6, 15, 0.96);
+
+  --accent:       #FCEE0A;   /* V yellow */
+  --accent-dim:   rgba(252, 238, 10, 0.12);
+  --accent-glow:  rgba(252, 238, 10, 0.5);
+  --volume-accent:#00f5ff;   /* Netrunner cyan for volume */
+
+  --text-primary:  #f0f0ff;
+  --text-secondary:#00f5ff;  /* Netrunner cyan — the key differentiator */
+  --text-muted:    #6868a8;
+  --border:        #1e1e38;
+  --border-subtle: #0d0d1a;
+  --shadow-dropdown: rgba(0, 0, 0, 0.95);
+
+  --positive: #00ff9f;
+  --warning:  #FCEE0A;
+  --danger:   #ff1a1a;
+
   --radius-sm: 0px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
+  --radius-md: 0px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
 }
 
+/* Sidebar = tech/netrunner panel: cyan border + scan-line texture */
 [data-theme='nightcity-2077'] .sidebar {
-  border-right: 1px solid var(--accent);
-  box-shadow: 2px 0 10px rgba(252, 238, 10, 0.1);
+  border-right: 2px solid #00f5ff;
+  box-shadow: 2px 0 16px rgba(0, 245, 255, 0.1);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 245, 255, 0.012) 3px,
+    rgba(0, 245, 255, 0.012) 4px
+  );
 }
 
+/* Player bar = HUD: V yellow top + cyan secondary strip */
 [data-theme='nightcity-2077'] .player-bar {
-  border-top: 2px solid var(--accent);
-  background: linear-gradient(to bottom, #111, #000);
+  border-top: 2px solid #FCEE0A;
+  box-shadow:
+    0 -1px 0 rgba(0, 245, 255, 0.35),
+    0 -8px 32px rgba(252, 238, 10, 0.08),
+    0 -2px 16px rgba(0, 245, 255, 0.06);
 }
 
+/* Track name = V's yellow + Johnny Silverhand glitch */
 [data-theme='nightcity-2077'] .player-track-name {
-  color: var(--accent);
+  color: #FCEE0A;
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 1px;
-  text-shadow: 0 0 5px rgba(252, 238, 10, 0.5);
+  letter-spacing: 0.08em;
+  animation: glitch-2077 9s infinite;
 }
 
+/* Artist = Netrunner cyan */
+[data-theme='nightcity-2077'] .player-track-artist { color: #00f5ff; }
+
+/* Queue album = gang magenta */
+[data-theme='nightcity-2077'] .queue-meta-album { color: #ff2d9b; }
+
+/* Active nav: yellow gradient + chamfered feel */
 [data-theme='nightcity-2077'] .nav-link.active {
-  background: linear-gradient(90deg, rgba(252, 238, 10, 0.2) 0%, transparent 100%);
-  color: var(--accent);
-  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, rgba(252,238,10,0.15) 0%, transparent 100%);
+  color: #FCEE0A;
 }
-
 [data-theme='nightcity-2077'] .nav-link.active::before {
-  display: none;
+  width: 3px;
+  background: #FCEE0A;
+  box-shadow: 2px 0 14px rgba(252,238,10,0.7);
 }
 
+/* Buttons: angular chamfered corner — iconic CP2077 UI shape */
 [data-theme='nightcity-2077'] .btn-primary {
-  background-color: var(--accent);
-  color: #000;
-  font-weight: bold;
+  background: #FCEE0A;
+  color: #000000;
+  font-weight: 800;
   text-transform: uppercase;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 70%, 90% 100%, 0% 100%);
+  letter-spacing: 0.08em;
+  border: none;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
+[data-theme='nightcity-2077'] .btn-primary:hover {
+  background: #ffe84d;
+  box-shadow: 0 0 20px rgba(252,238,10,0.5);
+}
+[data-theme='nightcity-2077'] .btn-surface {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+
+/* Queue active = cyan netrunner bar */
+[data-theme='nightcity-2077'] .queue-item.active {
+  background: rgba(0, 245, 255, 0.07);
+  box-shadow: inset 3px 0 0 #00f5ff;
+}
+[data-theme='nightcity-2077'] .np-queue-item.active { background: rgba(0,245,255,0.06); }
+[data-theme='nightcity-2077'] .np-queue-item-active {
+  color: #FCEE0A;
+  text-shadow: 0 0 8px rgba(252,238,10,0.6);
+}
+
+/* Now-playing active track = magenta gang glow */
+[data-theme='nightcity-2077'] .np-album-track.active .np-album-track-title,
+[data-theme='nightcity-2077'] .np-album-track.active .np-album-track-num {
+  color: #ff2d9b;
+  text-shadow: 0 0 10px rgba(255,45,155,0.55);
+}
+
+/* Hover rows: yellow left bar */
+[data-theme='nightcity-2077'] .track-row:hover,
+[data-theme='nightcity-2077'] .track-row.context-active {
+  background: rgba(252,238,10,0.06) !important;
+  box-shadow: inset 3px 0 0 #FCEE0A;
+}
+[data-theme='nightcity-2077'] .queue-item:hover,
+[data-theme='nightcity-2077'] .queue-item.context-active {
+  background: rgba(0,245,255,0.06) !important;
+  box-shadow: inset 3px 0 0 #00f5ff;
+}
+[data-theme='nightcity-2077'] .np-queue-item:hover,
+[data-theme='nightcity-2077'] .np-queue-item.context-active {
+  background: rgba(0,245,255,0.06);
+  box-shadow: inset 2px 0 0 #00f5ff;
+}
+[data-theme='nightcity-2077'] .artist-row:hover  { background: rgba(252,238,10,0.05); box-shadow: inset 3px 0 0 #FCEE0A; }
+[data-theme='nightcity-2077'] .playlist-row:hover { background: rgba(252,238,10,0.05); box-shadow: inset 3px 0 0 #FCEE0A; }
+
+/* Settings tabs: active = magenta Valentinos style */
+[data-theme='nightcity-2077'] .settings-tab:hover { background: rgba(252,238,10,0.06); color: #FCEE0A; }
+[data-theme='nightcity-2077'] .settings-tab.active {
+  background: rgba(255,45,155,0.08);
+  color: #ff2d9b;
+  box-shadow: inset 3px 0 0 #ff2d9b;
+}
+
+/* Queue tabs */
+[data-theme='nightcity-2077'] .queue-tab-btn:hover { background: rgba(0,245,255,0.07); color: #00f5ff; }
+
+/* Dropdowns */
+[data-theme='nightcity-2077'] .custom-select-trigger:hover { background: rgba(252,238,10,0.07); }
+[data-theme='nightcity-2077'] .custom-select-option:hover {
+  background: rgba(252,238,10,0.1) !important;
+  color: #FCEE0A !important;
+}
+
+/* Artist pills = Trauma Team orange */
+[data-theme='nightcity-2077'] .artist-ext-link:hover {
+  background: rgba(255,136,0,0.1);
+  color: #ff8800 !important;
+  border-color: rgba(255,136,0,0.4) !important;
+}
+
+/* Cards: dark glass with cyan edge-glow */
+[data-theme='nightcity-2077'] .glass {
+  border: 1px solid rgba(0, 245, 255, 0.12) !important;
+  box-shadow: 0 0 0 1px rgba(252,238,10,0.04), inset 0 0 20px rgba(0,245,255,0.02) !important;
+}
+
+/* Connection indicators */
+[data-theme='nightcity-2077'] .connection-type,
+[data-theme='nightcity-2077'] .connection-server { color: #00f5ff; }
 
 /* ─── Heisenberg — Breaking Bad ─── */
 @keyframes crystal-pulse {
@@ -2813,7 +3173,13 @@ ul, ol { list-style: none; }
 /* ─── Scrollbars ─── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--ctp-surface2); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-full);
+  transition: background 0.3s ease;
+}
+*:hover::-webkit-scrollbar-thumb { background: var(--ctp-surface2); }
+.is-scrolling::-webkit-scrollbar-thumb { background: var(--ctp-surface2); }
 ::-webkit-scrollbar-thumb:hover { background: var(--ctp-overlay0); }
 
 /* ─── Focus ─── */
@@ -3108,96 +3474,284 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 /* ── Musicmatch: contrast fixes ── */
-/* Active elements: navy text on cyan bg — high contrast, on-brand */
-[data-theme='muma-jukebox'] .queue-round-btn.active {
-  color: #001358;
-}
+[data-theme='muma-jukebox'] .queue-round-btn.active { color: #001358; }
 
 /* Accent-coloured text on silver body needs to be darker */
 [data-theme='muma-jukebox'] {
-  --accent: #0070a0;           /* darker cyan — readable as text on silver */
+  --accent:      #0070a0;
   --accent-dim:  rgba(0, 112, 160, 0.15);
   --accent-glow: rgba(0, 112, 160, 0.35);
 }
 
 /* Player bar keeps the bright cyan since it's on dark blue bg */
-[data-theme='muma-jukebox'] .player-bar {
-  --accent: #00d0ff;
-}
+[data-theme='muma-jukebox'] .player-bar { --accent: #00d0ff; }
 
-/* ── Musicmatch: metallic bevel buttons ── */
+/* ── Metallic bevel buttons ── */
 [data-theme='muma-jukebox'] .btn {
   background: linear-gradient(180deg, #e4e8eb 0%, #c0c4c7 100%);
   color: #1a1a1a;
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.9),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.28),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+    inset 1px 1px 0 rgba(255,255,255,0.9),
+    inset -1px -1px 0 rgba(0,0,0,0.28),
+    0 1px 3px rgba(0,0,0,0.2);
+  border-radius: 4px;
 }
-
 [data-theme='muma-jukebox'] .btn:hover {
   background: linear-gradient(180deg, #eceef0 0%, #cacdd0 100%);
 }
-
 [data-theme='muma-jukebox'] .btn-primary {
   background: linear-gradient(180deg, #40e0ff 0%, #00a8d8 100%);
   color: #001358;
+  font-weight: 600;
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.6),
-    inset -1px -1px 0 rgba(0, 60, 120, 0.4),
-    0 1px 4px rgba(0, 0, 0, 0.25);
+    inset 1px 1px 0 rgba(255,255,255,0.6),
+    inset -1px -1px 0 rgba(0,60,120,0.4),
+    0 1px 4px rgba(0,0,0,0.25);
+  border-radius: 4px;
+}
+[data-theme='muma-jukebox'] .btn-primary:hover {
+  background: linear-gradient(180deg, #60e8ff 0%, #20c0f0 100%);
 }
 
 /* ── Player bar: blue LCD display area ── */
 [data-theme='muma-jukebox'] .player-bar {
   background: #001358;
-  border-top: 2px solid #8a9094;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-top: 3px solid #8a9094;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 2px 12px rgba(0,0,0,0.4);
 }
-
 [data-theme='muma-jukebox'] .player-track-name {
   color: #ffffff;
-  text-shadow: 0 0 8px rgba(0, 208, 255, 0.75), 0 0 2px rgba(0, 208, 255, 0.4);
+  text-shadow: 0 0 8px rgba(0,208,255,0.75), 0 0 2px rgba(0,208,255,0.4);
   letter-spacing: 0.02em;
 }
-
 [data-theme='muma-jukebox'] .player-track-artist {
   color: #00d0ff;
-  opacity: 0.85;
+  opacity: 0.9;
 }
-
 [data-theme='muma-jukebox'] .player-btn,
 [data-theme='muma-jukebox'] .player-btn-primary {
   background: linear-gradient(180deg, #1a2880 0%, #000e40 100%);
   color: #00d0ff;
   box-shadow:
-    inset 1px 1px 0 rgba(0, 208, 255, 0.25),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.5),
-    0 2px 5px rgba(0, 0, 0, 0.4);
+    inset 1px 1px 0 rgba(0,208,255,0.25),
+    inset -1px -1px 0 rgba(0,0,0,0.5),
+    0 2px 5px rgba(0,0,0,0.4);
   border-radius: 50%;
 }
-
 [data-theme='muma-jukebox'] .player-btn:hover,
 [data-theme='muma-jukebox'] .player-btn-primary:hover {
   background: linear-gradient(180deg, #2030a0 0%, #001060 100%);
   color: #40e8ff;
 }
 
-/* ── Sidebar: brushed-metal look ── */
+/* ── Sidebar: brushed-metal panel ── */
 [data-theme='muma-jukebox'] .sidebar {
   background: linear-gradient(180deg, #c8ccce 0%, #b0b4b7 100%);
-  border-right: 2px solid #8a9094;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.4);
+  border-right: 2px solid #7a8084;
+  box-shadow: inset -2px 0 0 rgba(255,255,255,0.5), 2px 0 4px rgba(0,0,0,0.15);
 }
+
+/* Nav links on silver: look like Windows panel items */
+[data-theme='muma-jukebox'] .nav-link {
+  color: #1a1a2a;
+  border-radius: 3px;
+  margin: 1px 4px;
+}
+[data-theme='muma-jukebox'] .nav-link:hover {
+  background: linear-gradient(180deg, #dde2e5 0%, #c8ccce 100%);
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.8), inset -1px -1px 0 rgba(0,0,0,0.15);
+  color: #0070a0;
+}
+[data-theme='muma-jukebox'] .nav-link.active {
+  background: linear-gradient(180deg, #b8c8e0 0%, #9ab0d0 100%);
+  box-shadow:
+    inset 1px 1px 0 rgba(0,0,0,0.15),
+    inset -1px -1px 0 rgba(255,255,255,0.5);
+  color: #001358;
+  font-weight: 600;
+}
+[data-theme='muma-jukebox'] .nav-link.active::before { display: none; }
 
 /* ── Cards / panels: inset bevel ── */
 [data-theme='muma-jukebox'] .glass,
 [data-theme='muma-jukebox'] .card {
+  background: #d4d8db;
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.8),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.15),
-    0 2px 6px rgba(0, 0, 0, 0.12);
+    inset 1px 1px 0 rgba(255,255,255,0.85),
+    inset -1px -1px 0 rgba(0,0,0,0.15),
+    0 2px 6px rgba(0,0,0,0.1);
+  border: 1px solid #9a9ea0 !important;
+}
+
+/* ── Track rows: Windows XP list selection ── */
+[data-theme='muma-jukebox'] .track-row:hover,
+[data-theme='muma-jukebox'] .track-row.context-active {
+  background: #316AC5 !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+[data-theme='muma-jukebox'] .track-row:hover .track-title,
+[data-theme='muma-jukebox'] .track-row:hover .track-artist,
+[data-theme='muma-jukebox'] .track-row:hover .track-duration,
+[data-theme='muma-jukebox'] .track-row:hover .track-num,
+[data-theme='muma-jukebox'] .track-row.context-active .track-title,
+[data-theme='muma-jukebox'] .track-row.context-active .track-artist { color: #ffffff !important; }
+
+/* ── Queue items ── */
+[data-theme='muma-jukebox'] .queue-item:hover,
+[data-theme='muma-jukebox'] .queue-item.context-active {
+  background: #316AC5 !important;
+}
+[data-theme='muma-jukebox'] .queue-item:hover .queue-item-title,
+[data-theme='muma-jukebox'] .queue-item:hover .queue-item-artist,
+[data-theme='muma-jukebox'] .queue-item:hover .queue-item-duration,
+[data-theme='muma-jukebox'] .queue-item.context-active .queue-item-title,
+[data-theme='muma-jukebox'] .queue-item.context-active .queue-item-artist { color: #ffffff !important; }
+[data-theme='muma-jukebox'] .queue-item.active {
+  background: rgba(0, 112, 160, 0.14);
+  box-shadow: inset 3px 0 0 #0070a0;
+}
+[data-theme='muma-jukebox'] .np-queue-item:hover,
+[data-theme='muma-jukebox'] .np-queue-item.context-active {
+  background: #316AC5;
+}
+[data-theme='muma-jukebox'] .np-queue-item-active { color: #001358; font-weight: 600; }
+[data-theme='muma-jukebox'] .np-queue-item.active { background: rgba(49,106,197,0.18); }
+
+/* ── Artist / playlist rows ── */
+[data-theme='muma-jukebox'] .artist-row:hover,
+[data-theme='muma-jukebox'] .playlist-row:hover {
+  background: #316AC5;
+  color: #ffffff;
+}
+
+/* ── Settings tabs: XP tab strip ── */
+[data-theme='muma-jukebox'] .settings-tab {
+  background: linear-gradient(180deg, #d4d8db 0%, #c0c4c7 100%);
+  border: 1px solid #9a9ea0;
+  color: #1a1a1a;
+  border-radius: 3px 3px 0 0;
+  margin-right: 2px;
+}
+[data-theme='muma-jukebox'] .settings-tab:hover {
+  background: linear-gradient(180deg, #dde2e5 0%, #cacdd0 100%);
+  color: #0070a0;
+}
+[data-theme='muma-jukebox'] .settings-tab.active {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f4f8 100%);
+  color: #001358;
+  font-weight: 600;
+  box-shadow: inset 0 2px 0 #0070a0;
+  border-bottom-color: transparent;
+}
+
+/* ── Queue tab buttons ── */
+[data-theme='muma-jukebox'] .queue-tab-btn:hover { color: #0070a0; }
+
+/* ── Now-playing active ── */
+[data-theme='muma-jukebox'] .np-album-track.active .np-album-track-title,
+[data-theme='muma-jukebox'] .np-album-track.active .np-album-track-num {
+  color: #0070a0;
+  font-weight: 600;
+}
+
+/* ── Scrollbar: XP silver ── */
+[data-theme='muma-jukebox'] ::-webkit-scrollbar { width: 16px; height: 16px; }
+[data-theme='muma-jukebox'] ::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, #c0c4c7 0%, #d4d8db 100%);
+  border: 1px solid #9a9ea0;
+}
+[data-theme='muma-jukebox'] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #dde2e5 0%, #b8bcbf 100%);
+  border: 1px solid #9a9ea0;
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.7), inset -1px -1px 0 rgba(0,0,0,0.15);
+}
+[data-theme='muma-jukebox'] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #e8ecf0 0%, #c8ccce 100%);
+}
+[data-theme='muma-jukebox'] ::-webkit-scrollbar-button {
+  background: linear-gradient(180deg, #dde2e5 0%, #b8bcbf 100%);
+  border: 1px solid #9a9ea0;
+  height: 16px;
+}
+
+/* ── Dropdowns ── */
+[data-theme='muma-jukebox'] .custom-select-trigger {
+  background: linear-gradient(180deg, #e4e8eb 0%, #d4d8db 100%);
+  border: 1px solid #9a9ea0;
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.7);
+}
+[data-theme='muma-jukebox'] .custom-select-option:hover {
+  background: #316AC5 !important;
+  color: #ffffff !important;
+}
+
+/* ── Connection indicators ── */
+[data-theme='muma-jukebox'] .connection-type,
+[data-theme='muma-jukebox'] .connection-server { color: #0070a0; }
+
+/* ── Orange: volume knob + active/playing states ── */
+/* Knob is var(--text-primary) by default = near-black on silver → fix to orange */
+[data-theme='muma-jukebox'] input[type="range"]::-webkit-slider-thumb {
+  background: #ff6600;
+  box-shadow: inset 1px 1px 0 rgba(255,180,80,0.7), inset -1px -1px 0 rgba(160,40,0,0.4);
+}
+[data-theme='muma-jukebox'] input[type="range"]:hover::-webkit-slider-thumb {
+  background: #ff8020;
+}
+
+/* Active queue item: orange left bar instead of blue */
+[data-theme='muma-jukebox'] .queue-item.active {
+  background: rgba(255, 102, 0, 0.1);
+  box-shadow: inset 3px 0 0 #ff6600;
+}
+[data-theme='muma-jukebox'] .np-queue-item-active {
+  color: #cc4400;
+  font-weight: 600;
+}
+[data-theme='muma-jukebox'] .np-queue-item.active {
+  background: rgba(255, 102, 0, 0.1);
+}
+
+/* Now-playing active track = orange brand color */
+[data-theme='muma-jukebox'] .np-album-track.active .np-album-track-title,
+[data-theme='muma-jukebox'] .np-album-track.active .np-album-track-num {
+  color: #cc4400;
+  font-weight: 600;
+}
+
+/* Active nav link: orange accent text */
+[data-theme='muma-jukebox'] .nav-link.active { color: #cc4400; }
+
+/* Settings tab active: orange top border */
+[data-theme='muma-jukebox'] .settings-tab.active {
+  box-shadow: inset 0 2px 0 #ff6600;
+  color: #cc4400;
+}
+
+/* Track row playing indicator (now-playing track-num shown in orange) */
+[data-theme='muma-jukebox'] .track-row.playing .track-num { color: #ff6600; }
+
+/* Player bar artist: keep cyan, but LCD progress/waveform in orange */
+[data-theme='muma-jukebox'] .player-bar input[type="range"]::-webkit-slider-thumb {
+  background: #ff6600;
+}
+/* Waveform: orange played, cyan buffered, dim unplayed */
+[data-theme='muma-jukebox'] {
+  --waveform-played:   #ff6600;
+  --waveform-buffered: #00d0ff;
+  --waveform-unplayed: #3a5080;
+}
+
+/* ── Hero readability on silver background ── */
+[data-theme='muma-jukebox'] .album-detail-badge {
+  background: #0070a0;
+  color: #ffffff;
+}
+[data-theme='muma-jukebox'] .album-detail-info {
+  color: #4a4a4a;
 }
 
 /* ─── WMP8 Classic — Windows Media Player 8 / XP Luna ─── */
@@ -5840,87 +6394,207 @@ input[type="range"]:hover::-webkit-slider-thumb {
   color: #fff;
 }
 
-/* ── T-800 (Movies) ─────────────────────────────────────────── */
+/* ── T-800 — Terminator 2: Judgment Day ─────────────────────── */
+/* Endoskeleton HUD red + machine data green + industrial dark   */
 [data-theme='t-800'] {
   color-scheme: dark;
-  --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300d4ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ff2000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 
-  --ctp-crust:    #0a0c10;
-  --ctp-mantle:   #161b22;
-  --ctp-base:     #1f242d;
-  --ctp-surface0: #2d333b;
-  --ctp-surface1: #3e444d;
-  --ctp-surface2: #4d5561;
-  --ctp-overlay0: #6e7681;
-  --ctp-overlay1: #8b949e;
-  --ctp-overlay2: #afb8c1;
-  --ctp-text:     #f0f6fc;
-  --ctp-subtext1: #c9d1d9;
-  --ctp-subtext0: #8b949e;
+  /* Industrial dark — machine oil, scorched steel, warm black */
+  --ctp-crust:    #080606;
+  --ctp-mantle:   #0e0a0a;
+  --ctp-base:     #140e0e;
+  --ctp-surface0: #1e1414;
+  --ctp-surface1: #281c1c;
+  --ctp-surface2: #342424;
+  --ctp-overlay0: #584040;
+  --ctp-overlay1: #806060;
+  --ctp-overlay2: #a88888;
+  --ctp-text:     #e8d8c8;   /* CRT terminal warm white */
+  --ctp-subtext1: #c8b8a0;
+  --ctp-subtext0: #a08888;
 
-  --ctp-mauve:    #00d4ff;
-  --ctp-lavender: #60eaff;
-  --ctp-red:      #ff3131;
-  --ctp-maroon:   #ff3131;
-  --ctp-peach:    #ff8a00;
-  --ctp-yellow:   #d29922;
-  --ctp-green:    #238636;
-  --ctp-teal:     #00d4ff;
-  --ctp-sky:      #60eaff;
-  --ctp-sapphire: #00a8cc;
-  --ctp-blue:     #00d4ff;
-  --ctp-flamingo: #ff3131;
-  --ctp-pink:     #ff3131;
+  /* T2 palette */
+  --ctp-red:      #ff2000;   /* T-800 eye / HUD targeting red */
+  --ctp-maroon:   #cc1800;
+  --ctp-flamingo: #ff4020;
+  --ctp-mauve:    #ff2000;
+  --ctp-lavender: #ff5040;
+  --ctp-pink:     #ff4020;
+  --ctp-rosewater:#ff8060;
+  --ctp-green:    #00e040;   /* machine data readout green */
+  --ctp-teal:     #00b830;
+  --ctp-sky:      #40ff80;
+  --ctp-yellow:   #f0a000;   /* Judgment Day fire / nuclear orange */
+  --ctp-peach:    #ff6000;   /* napalm / explosion */
+  --ctp-blue:     #2040c0;   /* future war laser / Skynet */
+  --ctp-sapphire: #1830a0;
 
-  --bg-app:     #1f242d;
-  --bg-sidebar: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
-  --bg-card:    #2d333b;
-  --bg-hover:   rgba(0, 212, 255, 0.1);
-  --bg-player:  #0a0c10;
-  --bg-glass:   rgba(31, 36, 45, 0.85);
+  --bg-app:     #140e0e;   /* scorched industrial dark */
+  --bg-sidebar: #0e0a0a;   /* machine interior */
+  --bg-card:    #1e1414;
+  --bg-hover:   rgba(255, 32, 0, 0.08);
+  --bg-player:  #080606;   /* endoskeleton chassis */
+  --bg-glass:   rgba(14, 10, 10, 0.96);
 
-  --accent:       #00d4ff;
-  --accent-dim:   rgba(0, 212, 255, 0.15);
-  --accent-glow:  rgba(0, 212, 255, 0.4);
-  --volume-accent:#ff3131;
+  --accent:       #ff2000;   /* T-800 eye red */
+  --accent-dim:   rgba(255, 32, 0, 0.12);
+  --accent-glow:  rgba(255, 32, 0, 0.5);
+  --volume-accent:#00e040;   /* data-green for volume */
 
-  --text-primary:  #f0f6fc;
-  --text-secondary:#c9d1d9;
-  --text-muted:    #8b949e;
-  --border:        #444c56;
-  --border-subtle: #30363d;
+  --text-primary:  #e8d8c8;  /* warm terminal white */
+  --text-secondary:#00e040;  /* machine data green */
+  --text-muted:    #584040;
+  --border:        #2a1a1a;
+  --border-subtle: #1e1414;
+  --shadow-dropdown: rgba(0, 0, 0, 0.9);
 
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  --positive: #00e040;
+  --warning:  #f0a000;
+  --danger:   #ff2000;
+
+  --radius-sm: 0px;
+  --radius-md: 1px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
 }
 
+/* Sidebar = endoskeleton interior: scan-line texture + red glow */
 [data-theme='t-800'] .sidebar {
-  border-right: 1px solid #30363d;
-  box-shadow: inset -10px 0 20px rgba(0, 0, 0, 0.2);
+  border-right: 2px solid #ff2000;
+  box-shadow: 2px 0 16px rgba(255, 32, 0, 0.1);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 32, 0, 0.025) 3px,
+    rgba(255, 32, 0, 0.025) 4px
+  );
 }
 
+/* Player bar = HUD targeting display */
 [data-theme='t-800'] .player-bar {
-  border-top: 1px solid rgba(0, 212, 255, 0.27);
-  background: linear-gradient(0deg, #050505 0%, #161b22 100%);
+  border-top: 2px solid #ff2000;
+  box-shadow:
+    0 -1px 0 rgba(0, 224, 64, 0.2),
+    0 -8px 28px rgba(255, 32, 0, 0.1);
 }
 
+/* Track name = TARGET ACQUIRED — red HUD uppercase */
 [data-theme='t-800'] .player-track-name {
-  color: #00d4ff;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
-  letter-spacing: 0.5px;
+  color: #ff2000;
+  text-shadow: 0 0 10px rgba(255, 32, 0, 0.75), 0 0 28px rgba(255, 32, 0, 0.3);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
-[data-theme='t-800'] .player-btn-primary {
-  background: #ff3131;
-  box-shadow: 0 0 15px rgba(255, 49, 49, 0.4);
-  color: #fff;
-}
+/* Artist = machine data readout green */
+[data-theme='t-800'] .player-track-artist { color: #00e040; }
 
+/* Queue album = Judgment Day orange */
+[data-theme='t-800'] .queue-meta-album { color: #f0a000; }
+
+/* Active nav: red HUD left bar */
 [data-theme='t-800'] .nav-link.active {
-  background: linear-gradient(90deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
-  border-left: 3px solid #00d4ff;
+  background: linear-gradient(90deg, rgba(255,32,0,0.15) 0%, transparent 100%);
+  color: #ff2000;
 }
+[data-theme='t-800'] .nav-link.active::before {
+  width: 3px;
+  box-shadow: 2px 0 12px rgba(255,32,0,0.65);
+}
+
+/* Buttons: dark steel with red */
+[data-theme='t-800'] .btn-primary {
+  background: #ff2000;
+  color: #080606;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: none;
+  border-radius: 1px;
+}
+[data-theme='t-800'] .btn-primary:hover {
+  background: #ff4020;
+  box-shadow: 0 0 18px rgba(255,32,0,0.5);
+}
+
+/* Play button = T-800 eye glow */
+[data-theme='t-800'] .player-btn-primary {
+  background: #ff2000;
+  box-shadow: 0 0 16px rgba(255,32,0,0.5);
+  color: #080606;
+}
+[data-theme='t-800'] .player-btn-primary:hover {
+  box-shadow: 0 0 26px rgba(255,32,0,0.7);
+}
+
+/* Queue active = targeting lock — red left bar */
+[data-theme='t-800'] .queue-item.active {
+  background: rgba(255, 32, 0, 0.08);
+  box-shadow: inset 3px 0 0 #ff2000;
+}
+[data-theme='t-800'] .np-queue-item.active { background: rgba(255,32,0,0.07); }
+[data-theme='t-800'] .np-queue-item-active {
+  color: #ff2000;
+  text-shadow: 0 0 8px rgba(255,32,0,0.6);
+}
+
+/* Now-playing active track = data green */
+[data-theme='t-800'] .np-album-track.active .np-album-track-title,
+[data-theme='t-800'] .np-album-track.active .np-album-track-num {
+  color: #00e040;
+  text-shadow: 0 0 8px rgba(0,224,64,0.5);
+}
+
+/* Hover rows */
+[data-theme='t-800'] .track-row:hover,
+[data-theme='t-800'] .track-row.context-active {
+  background: rgba(255,32,0,0.07) !important;
+  box-shadow: inset 3px 0 0 #ff2000;
+}
+[data-theme='t-800'] .queue-item:hover,
+[data-theme='t-800'] .queue-item.context-active {
+  background: rgba(255,32,0,0.07) !important;
+  box-shadow: inset 3px 0 0 #ff2000;
+}
+[data-theme='t-800'] .np-queue-item:hover,
+[data-theme='t-800'] .np-queue-item.context-active {
+  background: rgba(255,32,0,0.07);
+  box-shadow: inset 2px 0 0 #ff2000;
+}
+[data-theme='t-800'] .artist-row:hover   { background: rgba(255,32,0,0.06); box-shadow: inset 3px 0 0 #ff2000; }
+[data-theme='t-800'] .playlist-row:hover { background: rgba(255,32,0,0.06); box-shadow: inset 3px 0 0 #ff2000; }
+
+/* Settings tabs: data-green active = SYSTEM ONLINE */
+[data-theme='t-800'] .settings-tab:hover { background: rgba(255,32,0,0.07); color: #ff2000; }
+[data-theme='t-800'] .settings-tab.active {
+  background: rgba(0, 224, 64, 0.07);
+  color: #00e040;
+  box-shadow: inset 3px 0 0 #00e040;
+}
+
+/* Queue tabs */
+[data-theme='t-800'] .queue-tab-btn:hover { background: rgba(255,32,0,0.07); color: #ff2000; }
+
+/* Dropdowns */
+[data-theme='t-800'] .custom-select-trigger:hover { background: rgba(255,32,0,0.07); }
+[data-theme='t-800'] .custom-select-option:hover {
+  background: rgba(255, 32, 0, 0.1) !important;
+  color: #ff2000 !important;
+}
+
+/* Artist pills = Skynet blue */
+[data-theme='t-800'] .artist-ext-link:hover {
+  background: rgba(32, 64, 192, 0.15);
+  color: #4060e0 !important;
+  border-color: rgba(32, 64, 192, 0.4) !important;
+}
+
+/* Connection indicators */
+[data-theme='t-800'] .connection-type,
+[data-theme='t-800'] .connection-server { color: #00e040; }
 
 /* ─── Dune — Arrakis ─── */
 [data-theme='dune'] {
@@ -5986,16 +6660,12 @@ input[type="range"]:hover::-webkit-slider-thumb {
 /* ── App shell: Arrakis desert horizon at dusk ── */
 /* Sky (cool/dark at top) fading into burning sand (warm at bottom) */
 [data-theme='dune'] .app-shell {
-  background:
-    radial-gradient(ellipse at 10% 90%, rgba(160, 90, 8, 0.10) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 15%, rgba(20, 100, 160, 0.07) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 100%, rgba(120, 70, 5, 0.12) 0%, transparent 55%),
-    linear-gradient(180deg,
-      #12101c 0%,    /* deep sky — cold purple-black */
-      #1a1408 30%,   /* desert horizon, last light */
-      #201608 60%,   /* warm sand surface */
-      #281e0a 100%   /* deep sand shadow */
-    );
+  background: linear-gradient(180deg,
+    #12101c 0%,
+    #1a1408 30%,
+    #201608 60%,
+    #281e0a 100%
+  );
 }
 
 /* ── Sidebar: sietch interior — cold carved rock ── */
@@ -6294,96 +6964,198 @@ input[type="range"]:hover::-webkit-slider-thumb {
   text-shadow: 0 0 8px rgba(200,120,10,0.50);
 }
 
-/* ── TetraStack (Games) ─────────────────────────────────────── */
+/* ── TetraStack (Games) — 7-tetromino NES Tetris ─────────────── */
+/* I=cyan  O=yellow  T=purple  S=green  Z=red  J=blue  L=orange  */
 [data-theme='tetrastack'] {
   color-scheme: dark;
   --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300f0f0%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 
-  --ctp-crust:    #000000;
-  --ctp-mantle:   #050505;
-  --ctp-base:     #0a0a0a;
-  --ctp-surface0: #151515;
-  --ctp-surface1: #202020;
-  --ctp-surface2: #303030;
-  --ctp-overlay0: #444444;
-  --ctp-overlay1: #888888;
-  --ctp-overlay2: #aaaaaa;
+  /* Dark navy — NES Tetris backdrop, not pure black */
+  --ctp-crust:    #000008;
+  --ctp-mantle:   #00000e;
+  --ctp-base:     #060614;
+  --ctp-surface0: #0d0d22;
+  --ctp-surface1: #141432;
+  --ctp-surface2: #1e1e48;
+  --ctp-overlay0: #3a3a6a;
+  --ctp-overlay1: #6060a8;
+  --ctp-overlay2: #9090cc;
   --ctp-text:     #ffffff;
-  --ctp-subtext1: #cccccc;
-  --ctp-subtext0: #999999;
+  --ctp-subtext1: #d0d0ff;
+  --ctp-subtext0: #9090cc;
 
-  --ctp-mauve:    #00f0f0;
-  --ctp-blue:     #0000f0;
-  --ctp-peach:    #f0a000;
-  --ctp-yellow:   #f0f000;
-  --ctp-green:    #00f000;
-  --ctp-pink:     #a000f0;
-  --ctp-red:      #f00000;
-  --ctp-sky:      #00f0f0;
+  /* 7 Tetromino colours mapped to palette slots */
+  --ctp-sky:      #00f0f0;  /* I-piece  — cyan   */
   --ctp-teal:     #00f0f0;
-  --ctp-lavender: #00f0f0;
-  --ctp-flamingo: #f00000;
-  --ctp-maroon:   #f00000;
-  --ctp-sapphire: #0080f0;
-  --ctp-rosewater:#f0a0a0;
+  --ctp-yellow:   #f0d000;  /* O-piece  — yellow */
+  --ctp-mauve:    #a020f0;  /* T-piece  — purple */
+  --ctp-lavender: #a020f0;
+  --ctp-pink:     #a020f0;
+  --ctp-green:    #00d000;  /* S-piece  — green  */
+  --ctp-red:      #f02000;  /* Z-piece  — red    */
+  --ctp-flamingo: #f02000;
+  --ctp-maroon:   #f02000;
+  --ctp-blue:     #0060f0;  /* J-piece  — blue   */
+  --ctp-sapphire: #0060f0;
+  --ctp-peach:    #f07800;  /* L-piece  — orange */
+  --ctp-rosewater:#f07800;
 
-  --bg-app:     #0a0a0a;
-  --bg-sidebar: #050505;
-  --bg-card:    #151515;
-  --bg-hover:   rgba(0, 240, 240, 0.1);
-  --bg-player:  #000000;
-  --bg-glass:   rgba(10, 10, 10, 0.9);
+  --bg-app:     #060614;
+  --bg-sidebar: #00000e;
+  --bg-card:    #0d0d22;
+  --bg-hover:   rgba(0, 240, 240, 0.07);
+  --bg-player:  #000008;
+  --bg-glass:   rgba(6, 6, 20, 0.96);
 
-  --accent:       #00f0f0;
-  --accent-dim:   rgba(0, 240, 240, 0.15);
-  --accent-glow:  rgba(0, 240, 240, 0.4);
-  --volume-accent:#00f0f0;
+  --accent:       #00f0f0;  /* I-piece cyan */
+  --accent-dim:   rgba(0, 240, 240, 0.12);
+  --accent-glow:  rgba(0, 240, 240, 0.5);
+  --volume-accent:#f0d000;  /* O-piece yellow — classic score-panel feel */
 
   --text-primary:  #ffffff;
-  --text-secondary:#00f0f0;
-  --text-muted:    #888888;
-  --border:        #333333;
-  --border-subtle: #1a1a1a;
+  --text-secondary:#f0d000;  /* O-piece yellow — like the score readout */
+  --text-muted:    #3a3a6a;
+  --border:        #1e1e48;
+  --border-subtle: #0d0d22;
 
+  /* All corners square — every element is a block */
   --radius-sm: 0px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
-  --radius-xl: 4px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 }
 
+/* 30 px grid — Tetris block scale */
 [data-theme='tetrastack'] .app-shell {
   background-image:
-    linear-gradient(rgba(0, 240, 240, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 240, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(0, 240, 240, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 240, 0.04) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
+/* Sidebar = the score/next-piece panel */
 [data-theme='tetrastack'] .sidebar {
-  border-right: 2px solid var(--accent);
+  border-right: 3px solid #00f0f0;
 }
 
+/* Player bar = bottom of the well */
 [data-theme='tetrastack'] .player-bar {
-  border-top: 2px solid var(--accent);
-  box-shadow: 0 -10px 20px rgba(0, 240, 240, 0.1);
+  border-top: 3px solid #00f0f0;
+  box-shadow:
+    0 -2px 0 #a020f0,
+    0 -8px 24px rgba(0, 240, 240, 0.12);
 }
 
+/* NES block shading on cards — lighter top-left, darker bottom-right */
 [data-theme='tetrastack'] .card,
-[data-theme='tetrastack'] .btn-surface {
-  border: 2px solid #333;
-  box-shadow: inset -2px -2px 0px #000, inset 2px 2px 0px #444;
+[data-theme='tetrastack'] .glass,
+[data-theme='tetrastack'] .settings-card {
+  border: 1px solid #1e1e48 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.55),
+    inset  3px  3px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Buttons: block-shaped, NES-style press effect */
 [data-theme='tetrastack'] .btn-primary {
-  border: 2px solid #fff;
-  box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), inset 3px 3px 0px rgba(255,255,255,0.3);
+  background: #00f0f0;
+  color: #000000;
+  border: none;
+  border-radius: 0;
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,0.5), inset 3px 3px 0 rgba(255,255,255,0.35);
   text-transform: uppercase;
   font-weight: 800;
+  letter-spacing: 0.08em;
+}
+[data-theme='tetrastack'] .btn-primary:hover {
+  background: #30ffff;
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,0.4), inset 3px 3px 0 rgba(255,255,255,0.45);
+}
+[data-theme='tetrastack'] .btn-surface {
+  border-radius: 0;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.5), inset 2px 2px 0 rgba(255,255,255,0.06);
 }
 
+/* Track name = I-piece glow */
 [data-theme='tetrastack'] .player-track-name {
-  color: var(--accent);
-  text-shadow: 0 0 8px var(--accent-glow);
+  color: #00f0f0;
+  text-shadow: 0 0 8px rgba(0,240,240,0.7), 0 0 20px rgba(0,240,240,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
+
+/* Artist name = L-piece orange */
+[data-theme='tetrastack'] .player-track-artist { color: #f07800; }
+
+/* Album title in queue = T-piece purple */
+[data-theme='tetrastack'] .queue-meta-album { color: #a020f0; }
+
+/* Active queue item = I-piece left border */
+[data-theme='tetrastack'] .queue-item.active {
+  background: rgba(0, 240, 240, 0.07);
+  box-shadow: inset 3px 0 0 #00f0f0;
+}
+[data-theme='tetrastack'] .np-queue-item-active {
+  color: #00f0f0;
+  text-shadow: 0 0 8px rgba(0,240,240,0.6);
+}
+[data-theme='tetrastack'] .np-queue-item.active { background: rgba(0,240,240,0.07); }
+
+/* Hover rows: subtle block highlight */
+[data-theme='tetrastack'] .track-row:hover,
+[data-theme='tetrastack'] .track-row.context-active {
+  background: rgba(0, 240, 240, 0.06) !important;
+  box-shadow: inset 3px 0 0 #00f0f0;
+}
+[data-theme='tetrastack'] .queue-item:hover,
+[data-theme='tetrastack'] .queue-item.context-active {
+  background: rgba(0, 240, 240, 0.07) !important;
+  box-shadow: inset 3px 0 0 #00f0f0;
+}
+[data-theme='tetrastack'] .np-queue-item:hover,
+[data-theme='tetrastack'] .np-queue-item.context-active {
+  background: rgba(0, 240, 240, 0.07);
+  box-shadow: inset 2px 0 0 #00f0f0;
+}
+[data-theme='tetrastack'] .artist-row:hover  { background: rgba(0,240,240,0.06); box-shadow: inset 3px 0 0 #00f0f0; }
+[data-theme='tetrastack'] .playlist-row:hover { background: rgba(0,240,240,0.06); box-shadow: inset 3px 0 0 #00f0f0; }
+
+/* Settings tabs: active = S-piece green left border */
+[data-theme='tetrastack'] .settings-tab:hover { background: rgba(0,240,240,0.06); color: #00f0f0; }
+[data-theme='tetrastack'] .settings-tab.active {
+  background: rgba(0, 208, 0, 0.08);
+  color: #00d000;
+  box-shadow: inset 3px 0 0 #00d000;
+}
+
+/* Queue tabs */
+[data-theme='tetrastack'] .queue-tab-btn:hover { background: rgba(0,240,240,0.06); color: #00f0f0; }
+
+/* Dropdowns / selects */
+[data-theme='tetrastack'] .custom-select-trigger:hover { background: rgba(0,240,240,0.06); }
+[data-theme='tetrastack'] .custom-select-option:hover {
+  background: rgba(0, 240, 240, 0.1) !important;
+  color: #00f0f0 !important;
+}
+
+/* Artist pill links = J-piece blue */
+[data-theme='tetrastack'] .artist-ext-link:hover {
+  background: rgba(0, 96, 240, 0.1);
+  color: #0060f0 !important;
+  border-color: rgba(0, 96, 240, 0.4) !important;
+}
+
+/* Now playing active track = Z-piece red accent */
+[data-theme='tetrastack'] .np-album-track.active .np-album-track-title,
+[data-theme='tetrastack'] .np-album-track.active .np-album-track-num {
+  color: #f02000;
+  text-shadow: 0 0 8px rgba(240, 32, 0, 0.5);
+}
+
+/* Connection indicators */
+[data-theme='tetrastack'] .connection-type,
+[data-theme='tetrastack'] .connection-server { color: #f0d000; }
 
 /* ── The Book (Social Media) ────────────────────────────────── */
 [data-theme='the-book'] {

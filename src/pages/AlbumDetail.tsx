@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { invoke } from '@tauri-apps/api/core';
 import { getAlbum, getArtist, getArtistInfo, setRating, buildCoverArtUrl, coverArtCacheKey, buildDownloadUrl, star, unstar, SubsonicSong, SubsonicAlbum } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
@@ -43,7 +44,7 @@ export default function AlbumDetail() {
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [isStarred, setIsStarred] = useState(false);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
-  const [hoveredSongId, setHoveredSongId] = useState<string | null>(null);
+  const [offlineStorageFull, setOfflineStorageFull] = useState(false);
 
   const { downloadAlbum, deleteAlbum } = useOfflineStore();
   const offlineTracks = useOfflineStore(s => s.tracks);
@@ -207,10 +208,21 @@ export default function AlbumDetail() {
     }
   };
 
-  const handleCacheOffline = () => {
+  const handleCacheOffline = useCallback(async () => {
     if (!album) return;
+    const maxBytes = auth.maxCacheMb * 1024 * 1024;
+    try {
+      const usedBytes = await invoke<number>('get_offline_cache_size');
+      if (usedBytes >= maxBytes) {
+        setOfflineStorageFull(true);
+        return;
+      }
+    } catch {
+      // If we can't check, proceed anyway
+    }
+    setOfflineStorageFull(false);
     downloadAlbum(album.album.id, album.album.name, album.album.artist, album.album.coverArt, album.album.year, album.songs, serverId);
-  };
+  }, [album, auth.maxCacheMb, downloadAlbum, serverId]);
 
   const handleRemoveOffline = () => {
     if (!album) return;
@@ -251,14 +263,24 @@ export default function AlbumDetail() {
         onCacheOffline={handleCacheOffline}
         onRemoveOffline={handleRemoveOffline}
       />
+      {offlineStorageFull && (
+        <div className="offline-storage-full-banner" role="alert">
+          <span>{t('albumDetail.offlineStorageFull', { mb: auth.maxCacheMb })}</span>
+          <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => navigate('/offline')}>
+            {t('albumDetail.offlineStorageGoToLibrary')}
+          </button>
+          <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => navigate('/settings', { state: { tab: 'library' } })}>
+            {t('albumDetail.offlineStorageGoToSettings')}
+          </button>
+          <button className="offline-storage-full-dismiss" onClick={() => setOfflineStorageFull(false)} aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       <AlbumTrackList
         songs={songs}
         hasVariousArtists={hasVariousArtists}
         currentTrack={currentTrack}
         isPlaying={isPlaying}
-        hoveredSongId={hoveredSongId}
-        setHoveredSongId={setHoveredSongId}
         ratings={ratings}
         starredSongs={new Set([
           ...[...starredSongs].filter(id => starredOverrides[id] !== false),

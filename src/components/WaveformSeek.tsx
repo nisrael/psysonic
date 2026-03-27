@@ -64,9 +64,9 @@ function drawWaveform(
   ctx.clearRect(0, 0, w, h);
 
   const style = getComputedStyle(document.documentElement);
-  const colorAccent   = style.getPropertyValue('--accent').trim()       || '#cba6f7';
-  const colorBuffered = style.getPropertyValue('--ctp-overlay0').trim() || '#6c7086';
-  const colorUnplayed = style.getPropertyValue('--ctp-surface1').trim() || '#313244';
+  const colorAccent   = style.getPropertyValue('--waveform-played').trim()   || style.getPropertyValue('--accent').trim()       || '#cba6f7';
+  const colorBuffered = style.getPropertyValue('--waveform-buffered').trim() || style.getPropertyValue('--ctp-overlay0').trim() || '#6c7086';
+  const colorUnplayed = style.getPropertyValue('--waveform-unplayed').trim() || style.getPropertyValue('--ctp-surface1').trim() || '#313244';
 
   if (!heights) {
     ctx.globalAlpha = 0.3;
