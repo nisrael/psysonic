@@ -125,6 +125,9 @@ let playGeneration = 0;
 
 // Debounce timer for seek slider drags.
 let seekDebounce: ReturnType<typeof setTimeout> | null = null;
+// Target time of the last seek — blocks stale Rust progress ticks until the
+// engine has actually caught up to the new position.
+let seekTarget: number | null = null;
 
 // Guard against rapid double-click play/pause sending two state transitions
 // to the Rust backend before it has finished the previous one.
@@ -163,6 +166,13 @@ function handleAudioProgress(current_time: number, duration: number) {
   // position.  Accepting stale progress from the Rust engine would briefly
   // snap the waveform back to the old position before the seek completes.
   if (seekDebounce) return;
+  // After the debounce fires, Rust may still emit 1–2 ticks with the old
+  // position before the seek takes effect.  Block until current_time is
+  // within 2 s of the requested target, then clear the guard.
+  if (seekTarget !== null) {
+    if (Math.abs(current_time - seekTarget) > 2.0) return;
+    seekTarget = null;
+  }
 
   const store = usePlayerStore.getState();
   const track = store.currentTrack;
@@ -489,7 +499,7 @@ export const usePlayerStore = create<PlayerState>()(
       stop: () => {
         invoke('audio_stop').catch(console.error);
         isAudioPaused = false;
-        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; }
+        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; } seekTarget = null;
         set({ isPlaying: false, progress: 0, buffered: 0, currentTime: 0 });
       },
 
@@ -504,7 +514,7 @@ export const usePlayerStore = create<PlayerState>()(
         const gen = ++playGeneration;
         isAudioPaused = false;
         gaplessPreloadingId = null; // new track — allow fresh preload for next
-        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; }
+        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; } seekTarget = null;
 
         const state = get();
         const newQueue = queue ?? state.queue;
@@ -655,6 +665,7 @@ export const usePlayerStore = create<PlayerState>()(
         if (seekDebounce) clearTimeout(seekDebounce);
         seekDebounce = setTimeout(() => {
           seekDebounce = null;
+          seekTarget = time;
           invoke('audio_seek', { seconds: time }).catch(console.error);
         }, 100);
       },
@@ -682,7 +693,7 @@ export const usePlayerStore = create<PlayerState>()(
       clearQueue: () => {
         invoke('audio_stop').catch(console.error);
         isAudioPaused = false;
-        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; }
+        if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; } seekTarget = null;
         set({ queue: [], queueIndex: 0, currentTrack: null, isPlaying: false, progress: 0, buffered: 0, currentTime: 0 });
         syncQueueToServer([], null, 0);
       },
