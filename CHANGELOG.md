@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Auto-updater endless loop on macOS / Windows**: The single-instance plugin was killing the relaunching process before it could start. Fixed by exiting the old process first (releasing the lock) and spawning the new process via a shell-based delayed restart.
+- **Auto-updater endless loop on macOS / Windows**: The single-instance plugin was killing the relaunching process before it could start. Hopefully fixed by exiting the old process first (releasing the lock) and spawning the new process via a shell-based delayed restart.
 - **Radio queue stacking**: Clicking "Start Radio" multiple times no longer appends unlimited duplicate batches — each click replaces the pending Radio section cleanly.
 - **Start Radio keeps current song playing**: Triggering Radio while a song is playing no longer stops and restarts the current track.
 - **Radio proactive loading with songs missing `artistId`**: `getSimilarSongs2` results frequently lack `artistId`. A `currentRadioArtistId` module variable now persists the original artist ID as fallback, so proactive loading always fires correctly.
