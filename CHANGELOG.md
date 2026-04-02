@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.27.2] - 2026-04-02
+
+### Fixed
+
+- **Radio broken from context menu** *(reported by [@netherguy4](https://github.com/netherguy4))*: "Start Radio" in the track and queue-item context menus had no effect. The handler was passing the artist name as the artist ID to `getSimilarSongs2`, which returned an empty result — so no tracks were queued and no error was shown. Now correctly passes `song.artistId`.
+- **CI: Windows NSIS upload**: `tauri-action` was searching `bundle/msi/` (which doesn't exist in NSIS-only builds), causing the GitHub Release upload to fail with 404. Windows artifacts are now uploaded via an explicit step using `bundle/nsis/*.exe` + `*.nsis.zip` + `*.nsis.zip.sig`.
+- **Linux/AUR build: ring linker error**: Builds on Arch/CachyOS failed with `rust-lld: undefined symbol: ring_core_*` after the Tauri updater was added. Added `.cargo/config.toml` to use the GCC linker (`cc`) for `x86_64-unknown-linux-gnu` targets, and added `clang` to the AUR `makedepends` (required by ring's bindgen step).
+
+---
+
 ## [1.27.1] - 2026-04-02
 
 ### Fixed

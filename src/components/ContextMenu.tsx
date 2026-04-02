@@ -297,7 +297,7 @@ export default function ContextMenu() {
                   <Disc3 size={14} /> {t('contextMenu.openAlbum')}
                 </div>
               )}
-              <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artist, song.artist))}>
+              <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
               <div className="context-menu-item" onClick={() => handleAction(() => {
@@ -440,7 +440,7 @@ export default function ContextMenu() {
                   </div>
                 );
               })()}
-              <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artist, song.artist))}>
+              <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
               <div className="context-menu-divider" />

@@ -122,30 +122,41 @@ jobs:
           VITE_LASTFM_API_KEY: ${{ secrets.VITE_LASTFM_API_KEY }}
           VITE_LASTFM_API_SECRET: ${{ secrets.VITE_LASTFM_API_SECRET }}
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
+          # Windows: no releaseId — tauri-action would search bundle/msi/ which doesn't exist.
+          # We upload NSIS artifacts manually in the next step.
+          releaseId: ${{ matrix.settings.platform != 'windows-latest' && needs.create-release.outputs.release_id || '' }}
           args: ${{ matrix.settings.args }}
 
-      - name: sign and upload bundle signature
+      - name: upload Windows NSIS artifacts
+        if: matrix.settings.platform == 'windows-latest'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.create-release.outputs.package_version }}
         run: |
-          if [[ "${{ matrix.settings.platform }}" == "macos-latest" ]]; then
-            if [[ "${{ matrix.settings.args }}" == *"aarch64"* ]]; then
-              BUNDLE="src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Psysonic.app.tar.gz"
-              SIG_NAME="Psysonic_aarch64.app.tar.gz.sig"
-            else
-              BUNDLE="src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Psysonic.app.tar.gz"
-              SIG_NAME="Psysonic_x64.app.tar.gz.sig"
-            fi
+          NSIS_DIR="src-tauri/target/release/bundle/nsis"
+          # Upload installer (.exe) and updater bundle (.nsis.zip + .nsis.zip.sig)
+          FILES=$(find "$NSIS_DIR" -name "*.exe" -o -name "*.nsis.zip" -o -name "*.nsis.zip.sig" 2>/dev/null)
+          if [[ -z "$FILES" ]]; then
+            echo "No NSIS artifacts found in $NSIS_DIR" >&2
+            ls -la "$NSIS_DIR" || true
+            exit 1
+          fi
+          echo "$FILES" | xargs gh release upload "app-v${VERSION}" --clobber
+
+      - name: sign and upload macOS bundle signature
+        if: matrix.settings.platform == 'macos-latest'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.create-release.outputs.package_version }}
+        run: |
+          if [[ "${{ matrix.settings.args }}" == *"aarch64"* ]]; then
+            BUNDLE="src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Psysonic.app.tar.gz"
+            SIG_NAME="Psysonic_aarch64.app.tar.gz.sig"
           else
-            BUNDLE=$(find src-tauri/target/release/bundle/nsis -name "*.nsis.zip" 2>/dev/null | head -1)
-            if [[ -z "$BUNDLE" ]]; then
-              echo "No NSIS zip bundle found — tauri-action likely signed and uploaded already. Skipping."
-              exit 0
-            fi
-            SIG_NAME="Psysonic_${VERSION}_x64-setup.nsis.zip.sig"
+            BUNDLE="src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Psysonic.app.tar.gz"
+            SIG_NAME="Psysonic_x64.app.tar.gz.sig"
           fi
           npx tauri signer sign --private-key "$TAURI_SIGNING_PRIVATE_KEY" --password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" "$BUNDLE"
           cp "${BUNDLE}.sig" "$SIG_NAME"

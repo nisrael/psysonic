@@ -1,0 +1,6 @@
+# Use the system GCC linker for Linux targets instead of rust-lld.
+# ring (pulled in by tauri-plugin-updater) contains C/assembly objects that
+# lld cannot resolve on Arch/CachyOS — switching to cc avoids the
+# "undefined symbol: ring_core_*" linker errors.
+[target.x86_64-unknown-linux-gnu]
+linker = "cc"
