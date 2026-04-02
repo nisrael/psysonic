@@ -140,7 +140,11 @@ jobs:
               SIG_NAME="Psysonic_x64.app.tar.gz.sig"
             fi
           else
-            BUNDLE=$(find src-tauri/target/release/bundle/nsis -name "*.nsis.zip" | head -1)
+            BUNDLE=$(find src-tauri/target/release/bundle/nsis -name "*.nsis.zip" 2>/dev/null | head -1)
+            if [[ -z "$BUNDLE" ]]; then
+              echo "No NSIS zip bundle found — tauri-action likely signed and uploaded already. Skipping."
+              exit 0
+            fi
             SIG_NAME="Psysonic_${VERSION}_x64-setup.nsis.zip.sig"
           fi
           npx tauri signer sign --private-key "$TAURI_SIGNING_PRIVATE_KEY" --password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" "$BUNDLE"
