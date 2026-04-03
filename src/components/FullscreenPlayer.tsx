@@ -245,11 +245,11 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
           <button className="fs-btn fs-btn-sm" onClick={stop} aria-label="Stop">
             <Square size={14} fill="currentColor" />
           </button>
-          <button className="fs-btn" onClick={previous} aria-label={t('player.prev')}>
+          <button className="fs-btn" onClick={() => previous()} aria-label={t('player.prev')}>
             <SkipBack size={20} />
           </button>
           <FsPlayBtn />
-          <button className="fs-btn" onClick={next} aria-label={t('player.next')}>
+          <button className="fs-btn" onClick={() => next()} aria-label={t('player.next')}>
             <SkipForward size={20} />
           </button>
           <button

@@ -145,7 +145,7 @@ export default function PlayerBar() {
         <button className="player-btn player-btn-sm" onClick={stop} aria-label={t('player.stop')} data-tooltip={t('player.stop')}>
           <Square size={14} fill="currentColor" />
         </button>
-        <button className="player-btn" onClick={previous} aria-label={t('player.prev')} data-tooltip={t('player.prev')}>
+        <button className="player-btn" onClick={() => previous()} aria-label={t('player.prev')} data-tooltip={t('player.prev')}>
           <SkipBack size={19} />
         </button>
         <button
@@ -156,7 +156,7 @@ export default function PlayerBar() {
         >
           {isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
         </button>
-        <button className="player-btn" onClick={next} aria-label={t('player.next')} data-tooltip={t('player.next')}>
+        <button className="player-btn" onClick={() => next()} aria-label={t('player.next')} data-tooltip={t('player.next')}>
           <SkipForward size={19} />
         </button>
         <button
