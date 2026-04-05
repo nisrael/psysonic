@@ -757,6 +757,7 @@ export default function Settings() {
                     { value: 'fr', label: t('settings.languageFr') },
                     { value: 'de', label: t('settings.languageDe') },
                     { value: 'zh', label: t('settings.languageZh') },
+                    { value: 'nb', label: t('settings.languageNb') },
                   ]}
                 />
               </div>
