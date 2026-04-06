@@ -123,9 +123,6 @@ jobs:
           VITE_LASTFM_API_SECRET: ${{ secrets.VITE_LASTFM_API_SECRET }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          tagName: app-v${{ needs.create-release.outputs.package_version }}
-          releaseName: Psysonic v${{ needs.create-release.outputs.package_version }}
-          releaseDraft: true
           args: ${{ matrix.settings.args }}
 
       # tauri-action auto-generates a latest.json using the pubkey from tauri.conf.json
