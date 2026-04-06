@@ -87,13 +87,23 @@ const CONTRIBUTORS = [
     since: '1.33.0',
     contributions: [
       'Russian translation & i18n locale split (PR #106)',
+      'Gapless manual skip: honor user-initiated play over pre-chained track (PR #119)',
     ],
   },
   {
     github: 'kilyabin',
     since: '1.34.0',
     contributions: [
-      'Alternative Russian translation (PR #107)',
+      'Russian locale improvements (PR #107, PR #120)',
+      'Auto-install script for Debian / RHEL (PR #121)',
+    ],
+  },
+  {
+    github: 'nisrael',
+    since: '1.34.0',
+    contributions: [
+      'Nightfox.nvim theme group in Open Source Classics (PR #114)',
+      'Switch reqwest to rustls-tls for cross-platform TLS (PR #112)',
     ],
   },
 ] as const;
@@ -577,6 +587,17 @@ export default function Settings() {
                   <span className="toggle-track" />
                 </label>
               </div>
+              <div className="settings-section-divider" />
+              <div className="settings-toggle-row">
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('settings.lyricsServerFirst')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.lyricsServerFirstDesc')}</div>
+                </div>
+                <label className="toggle-switch" aria-label={t('settings.lyricsServerFirst')}>
+                  <input type="checkbox" checked={auth.lyricsServerFirst} onChange={e => auth.setLyricsServerFirst(e.target.checked)} />
+                  <span className="toggle-track" />
+                </label>
+              </div>
             </div>
           </section>
 
@@ -825,7 +846,6 @@ export default function Settings() {
                     { value: 'nl', label: t('settings.languageNl') },
                     { value: 'nb', label: t('settings.languageNb') },
                     { value: 'ru', label: t('settings.languageRu') },
-                    { value: 'ru2', label: t('settings.languageRu2') },
                     { value: 'zh', label: t('settings.languageZh') },
                   ]}
                 />
@@ -1206,6 +1226,12 @@ export default function Settings() {
             </div>
           </section>
 
+          <section className="settings-section">
+            <button className="btn btn-danger" onClick={handleLogout} id="settings-logout-btn">
+              <LogOut size={16} /> {t('settings.logout')}
+            </button>
+          </section>
+
         </>
       )}
 
@@ -1335,12 +1361,6 @@ export default function Settings() {
           </section>
 
           <ChangelogSection />
-
-          <section className="settings-section">
-            <button className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={handleLogout} id="settings-logout-btn">
-              <LogOut size={16} /> {t('settings.logout')}
-            </button>
-          </section>
         </>
       )}
     </div>

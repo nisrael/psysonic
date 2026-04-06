@@ -3678,6 +3678,23 @@ body.psy-dragging * {
   border-color: var(--ctp-overlay0);
 }
 
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.btn-danger:active {
+  transform: translateY(0);
+}
+
 /* ─── Input ─── */
 .input {
   width: 100%;
