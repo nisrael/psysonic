@@ -22,7 +22,7 @@ Designed specifically for users hosting their own music via Navidrome or other S
 
 ## ✨ Features
 
-- 🎨 **Gorgeous UI**: A large selection of beautiful, lean themes for every taste — Open Source Classics (Catppuccin, Nord, Gruvbox), Operating Systems, Games, Movies, Series, Psysonic originals, and Mediaplayer — with smooth glassmorphism effects and micro-animations.
+- 🎨 **Gorgeous UI**: A large selection of beautiful, lean themes for every taste — Open Source Classics (Catppuccin, Nord, Gruvbox, Nightfox), Operating Systems, Games, Movies, Series, Psysonic originals, and Mediaplayer — with smooth glassmorphism effects and micro-animations.
 - ⚡ **Blazing Fast**: Built with Rust & Tauri — native audio engine (rodio), minimal RAM usage compared to typical Electron apps.
 - 🌍 **Internationalization (i18n)**: Fully translated into English, German, French, Dutch, and Chinese.
 - 📻 **Live "Now Playing"**: See what other users on your server are currently listening to in real-time.

@@ -548,7 +548,7 @@ export const frTranslation = {
     a11: 'La bannière en haut de la page d\'accueil sélectionne aléatoirement des albums de votre bibliothèque et les fait défiler toutes les 10 secondes. Cliquez sur les points pour accéder à un album spécifique.',
     s4: 'Paramètres',
     q12: 'Comment changer le thème ?',
-    a12: 'Paramètres → Thème. Un grand choix de thèmes en 8 groupes : Psysonic Themes, Mediaplayer, Systèmes d\'exploitation, Jeux, Films, Séries, Réseaux sociaux et Open Source Classics (Catppuccin, Nord, Gruvbox).',
+    a12: 'Paramètres → Thème. Un grand choix de thèmes en 8 groupes : Psysonic Themes, Mediaplayer, Systèmes d\'exploitation, Jeux, Films, Séries, Réseaux sociaux et Open Source Classics (Catppuccin, Nord, Gruvbox, Nightfox).',
     q13: 'Comment changer la langue ?',
     a13: 'Paramètres → Langue. L\'anglais, l\'allemand, le français, le néerlandais et le chinois sont pris en charge.',
     q15: 'Comment définir un dossier de téléchargement ?',

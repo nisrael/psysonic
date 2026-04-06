@@ -548,7 +548,7 @@ export const nlTranslation = {
     a11: 'De banner bovenaan de startpagina kiest willekeurig albums uit je bibliotheek en wisselt deze elke 10 seconden af. Klik op de puntjes om naar een specifiek album te springen.',
     s4: 'Instellingen',
     q12: 'Hoe verander ik het thema?',
-    a12: 'Instellingen → Thema. Een ruime keuze aan thema\'s in 8 groepen: Psysonic Themes, Mediaplayer, Besturingssystemen, Games, Films, Series, Social Media en Open Source Classics (Catppuccin, Nord, Gruvbox).',
+    a12: 'Instellingen → Thema. Een ruime keuze aan thema\'s in 8 groepen: Psysonic Themes, Mediaplayer, Besturingssystemen, Games, Films, Series, Social Media en Open Source Classics (Catppuccin, Nord, Gruvbox, Nightfox).',
     q13: 'Hoe verander ik de taal?',
     a13: 'Instellingen → Taal. Engels, Duits, Frans, Nederlands en Chinees worden momenteel ondersteund.',
     q15: 'Hoe stel ik een downloadmap in?',

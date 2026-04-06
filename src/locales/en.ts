@@ -548,7 +548,7 @@ export const enTranslation = {
     a11: 'The banner at the top of the home page randomly picks albums from your library and rotates through them every 10 seconds. Click the dots to jump to a specific one, or click the banner to open the album.',
     s4: 'Settings',
     q12: 'How do I change the theme?',
-    a12: 'Settings → Theme. Choose from a large selection of themes across 8 groups: Psysonic Themes, Mediaplayer, Operating Systems, Games, Movies, Series, Social Media, and Open Source Classics (Catppuccin, Nord, Gruvbox).',
+    a12: 'Settings → Theme. Choose from a large selection of themes across 8 groups: Psysonic Themes, Mediaplayer, Operating Systems, Games, Movies, Series, Social Media, and Open Source Classics (Catppuccin, Nord, Gruvbox, Nightfox).',
     q13: 'How do I change the language?',
     a13: 'Settings → Language. English, German, French, Dutch, Chinese, Norwegian, and Russian are supported.',
     q15: 'How do I set a download folder?',
