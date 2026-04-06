@@ -1,5 +1,6 @@
 <div align="center">
   <img src="public/psysonic-inapp-logo.svg" alt="Psysonic Logo" width="300"/>
+
   <p><strong>A modern, gorgeous, and blazing fast desktop client for Subsonic API compatible music servers (Navidrome, Gonic, etc.).</strong></p>
   
   <p>
