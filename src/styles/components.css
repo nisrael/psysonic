@@ -3071,7 +3071,6 @@
   font-family: var(--font-display);
   font-size: clamp(28px, 4.5vw, 68px);
   font-weight: 900;
-  letter-spacing: -0.02em;
   color: var(--accent);
   margin: 0;
   line-height: 1.05;
