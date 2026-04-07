@@ -3250,19 +3250,19 @@
 }
 
 /* ── Lyrics overlay — upper-left quadrant, strictly 5 lines tall ── */
-/*    Slot = 3.6vh  →  5 × 3.6vh = 18vh. JS reads window.innerHeight * 0.036.  */
+/*    Slot = 6vh  →  5 × 6vh = 30vh. JS reads window.innerHeight * 0.06.       */
 .fs-lyrics-overlay {
   position: absolute;
   top: 15vh;          /* pushed down into the quadrant, clear of close button */
   left: clamp(28px, 4vw, 64px);
   right: 52%;         /* stay out of portrait area */
-  height: 18vh;       /* exactly 5 × 3.6vh — never grows, never overlaps cluster */
+  height: 30vh;       /* exactly 5 × 6vh — never grows, never overlaps cluster */
   z-index: 3;
   overflow: hidden;
   pointer-events: none;
   contain: layout style;   /* isolate reflows from rest of page */
 
-  /* Fade first and last slot (each 3.6/18 = 20% of container) */
+  /* Fade first and last slot (each 6/30 = 20% of container) */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -3289,14 +3289,18 @@
   transition: transform 500ms ease-out;
 }
 
-/* Each lyric slot is exactly 3.6vh — matches JS window.innerHeight * 0.036 */
+/* Each lyric slot is exactly 6vh — matches JS window.innerHeight * 0.06.
+   Fixed height (not min-height) is intentional: keeps rail math correct
+   regardless of whether the text wraps or not. 2 wrapped lines of 2vh
+   font at 1.4 line-height = 5.6vh, comfortably inside the 6vh slot.      */
 .fs-lyric-line {
-  height: 3.6vh;
+  height: 6vh;
   display: flex;
   align-items: center;
   overflow: hidden;
-  white-space: nowrap;
-  font-size: 2.2vh;
+  white-space: normal;
+  font-size: 2vh;
+  line-height: 1.4;
   color: rgba(255, 255, 255, 0.22);
   font-weight: 400;
   cursor: pointer;

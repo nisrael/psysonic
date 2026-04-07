@@ -21,7 +21,7 @@ function formatTime(seconds: number): string {
 }
 
 // ─── Fullscreen lyrics overlay ────────────────────────────────────────────────
-// Slot height = 3.6vh = window.innerHeight * 0.036 — must match CSS height: 3.6vh.
+// Slot height = 6vh = window.innerHeight * 0.06 — must match CSS height: 6vh.
 // railY = (2 - activeIdx) * slotH centers slot `activeIdx` in a 5-slot window:
 //   activeIdx=0 → railY=+2×slotH  (line 0 at slot 2)
 //   activeIdx=2 → railY=0         (line 2 at center)
@@ -49,9 +49,9 @@ const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track 
   const seek     = usePlayerStore(s => s.seek);
 
   // Cache slotH — avoids forcing a layout read (window.innerHeight) on every render.
-  const slotH = useRef(window.innerHeight * 0.036);
+  const slotH = useRef(window.innerHeight * 0.06);
   useEffect(() => {
-    const onResize = () => { slotH.current = window.innerHeight * 0.036; };
+    const onResize = () => { slotH.current = window.innerHeight * 0.06; };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
