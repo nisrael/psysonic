@@ -423,7 +423,7 @@ function RadioCard({
     <div
       ref={cardRef}
       className={[
-        'album-card',
+        'album-card radio-card',
         isActive ? 'radio-card-active' : '',
         dropIndicator === 'before' ? 'radio-card-drop-before' : '',
         dropIndicator === 'after' ? 'radio-card-drop-after' : '',
