@@ -126,6 +126,11 @@ function AppShell() {
     };
   }, [isLoggedIn, activeServerId, setMusicFolders]);
 
+  // Reset scroll position on route change
+  useEffect(() => {
+    document.querySelector('.content-body')?.scrollTo({ top: 0 });
+  }, [location.pathname]);
+
   // Auto-navigate to offline library when no connection but cached content exists
   const prevConnStatus = useRef(connStatus);
   useEffect(() => {
