@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.2] - 2026-04-07
+
+### Added
+
+- **M4A / ALAC / AAC-LC support** *(closes [#51](https://github.com/Psychotoxical/psysonic/issues/51))*: Apple Lossless (ALAC) and AAC-LC files in M4A containers are now decoded natively by the Rust audio engine (Symphonia) without requiring server-side transcoding.
+
+- **Per-server music folder filter** *(PR [#125](https://github.com/Psychotoxical/psysonic/pull/125) by [@cucadmuh](https://github.com/cucadmuh))*: Users with multiple music libraries on their Navidrome server can now scope browsing to a single folder. A dropdown in the sidebar (visible only when more than one library exists) lets you pick a folder or switch back to "All Libraries". The selection is persisted per server and automatically resets to "All" if the selected folder is no longer available.
+
+- **Hi-Res / Bit-Perfect Playback** *(Alpha)*: New opt-in toggle in Settings → Playback. When enabled, the audio output stream is re-opened at the file's native sample rate (e.g. 88.2 kHz, 96 kHz) — bypassing rodio's internal resampler for a bit-perfect signal path. Disabled by default (safe 44.1 kHz mode). Includes ALSA/PipeWire underrun hardening: scaled quantum size, 500 ms sink pre-fill at high rates, and scheduler priority escalation only when needed.
+
+- **Hot Playback Cache** *(Alpha, PR [#123](https://github.com/Psychotoxical/psysonic/pull/123) by [@cucadmuh](https://github.com/cucadmuh))*: Configurable on-disk prefetch cache for the next track in the queue. Reduces playback latency on slow or metered connections. Toggle and directory can be configured in Settings → Storage.
+
+### Changed
+
+- **Fullscreen Player — info block reworked**: The track title is now the dominant element (large, bold, accent color) and sits above the artist name (small, muted). Matches community feedback on visual hierarchy.
+
+- **Fullscreen lyrics — line wrapping**: Long lyric lines now wrap onto a second line instead of being truncated. Slot height increased from 3.6 vh to 6 vh to accommodate two-line entries without breaking rail positioning.
+
+- **Update notifications**: Removed the Tauri auto-updater (in-app download and install). The app now shows a simple dismissible toast when a newer version is detected on GitHub, with direct links to the [GitHub Releases page](https://github.com/Psychotoxical/psysonic/releases/latest) and the [Psysonic website](https://psysonic.psychotoxic.eu/#downloads). No signing keys, no update manifests.
+
+### Fixed
+
+- **Standard mode CPU usage**: Playing a 44.1 kHz MP3 with Hi-Res disabled no longer triggers an unnecessary audio device re-open on every track start. MSS read-ahead buffer reduced from 4 MB to 512 KB for standard-rate files. Background prefetch is now throttled by 8 s to avoid competing with playback startup. Combined, these changes reduce idle CPU from ~6–10 % to ~2–3 % on a modern machine.
+
+- **Hi-Res toggle — stream rate not restored**: Toggling Hi-Res off while a track was playing at 88.2 or 96 kHz left the output stream at the high rate for subsequent tracks. The device's default rate is now restored on the next play.
+
+- **Fullscreen lyrics — CPU spikes on line transitions**: Animating `font-weight` in CSS triggered a full layout reflow on every animation frame. Removed `font-weight` from the transition list; active-line emphasis now uses `transform: scaleX(1.015)` (compositor-only). Added `contain: layout style` to the overlay to isolate reflows from the rest of the page.
+
+### i18n
+
+- New keys for Hi-Res playback settings and music folder filter added to all 7 languages (EN, DE, FR, NL, ZH, NB, RU).
+
+---
+
 ## [1.34.1] - 2026-04-06
 
 ### Added
