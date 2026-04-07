@@ -505,15 +505,17 @@ export function initAudioListeners(): () => void {
   // Discord auto-counts up the elapsed timer from the start_timestamp we set.
   let discordPrevTrackId: string | null = null;
   let discordPrevIsPlaying: boolean | null = null;
+  let discordPrevFetchCovers: boolean | null = null;
 
   function syncDiscord() {
     const { currentTrack, isPlaying, currentTime } = usePlayerStore.getState();
-    const { discordRichPresence } = useAuthStore.getState();
+    const { discordRichPresence, enableAppleMusicCoversDiscord } = useAuthStore.getState();
 
     if (!discordRichPresence || !currentTrack) {
       if (discordPrevTrackId !== null) {
         discordPrevTrackId = null;
         discordPrevIsPlaying = null;
+        discordPrevFetchCovers = null;
         invoke('discord_clear_presence').catch(() => {});
       }
       return;
@@ -521,21 +523,25 @@ export function initAudioListeners(): () => void {
 
     const trackChanged = currentTrack.id !== discordPrevTrackId;
     const playingChanged = isPlaying !== discordPrevIsPlaying;
-    if (!trackChanged && !playingChanged) return;
+    const coversSettingChanged = enableAppleMusicCoversDiscord !== discordPrevFetchCovers;
+    if (!trackChanged && !playingChanged && !coversSettingChanged) return;
 
     discordPrevTrackId = currentTrack.id;
     discordPrevIsPlaying = isPlaying;
+    discordPrevFetchCovers = enableAppleMusicCoversDiscord;
 
     invoke('discord_update_presence', {
       title: currentTrack.title,
       artist: currentTrack.artist ?? 'Unknown Artist',
       album: currentTrack.album ?? null,
+      isPlaying,
       // Pass elapsed when playing so Discord shows a live running timer.
-      // Pass null when paused — Discord shows the song/artist without a timer.
+      // Pass null when paused — Discord clears the timer.
       elapsedSecs: isPlaying ? currentTime : null,
       // coverArtUrl is intentionally not passed — Subsonic URLs require auth.
-      // Backend will fetch artwork from iTunes Search API instead.
+      // iTunes cover fetching is only done when explicitly opted in.
       coverArtUrl: null,
+      fetchItunesCovers: enableAppleMusicCoversDiscord,
     }).catch(() => {});
   }
 

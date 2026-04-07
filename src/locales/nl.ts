@@ -437,6 +437,8 @@ export const nlTranslation = {
     minimizeToTrayDesc: 'Bij het sluiten van het venster blijft Psysonic actief in het systeemvak in plaats van af te sluiten.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Toont het huidige nummer op je Discord-profiel. Discord moet daarvoor geopend zijn.',
+    discordAppleCovers: 'Hoezen ophalen via Apple Music voor Discord',
+    discordAppleCoversDesc: 'Stuurt artiest- en albumnaam naar de Apple-zoek-API om een hoes te vinden voor je Discord-profiel. Standaard uitgeschakeld vanwege privacy.',
     nowPlayingEnabled: 'Weergeven in live-venster',
     nowPlayingEnabledDesc: 'Stuurt het huidige nummer naar de live-luisteraarsweergave van de server. Uitschakelen om geen afspeelgegevens te verzenden.',
     lyricsServerFirst: 'Server-songtekst voorrang geven',

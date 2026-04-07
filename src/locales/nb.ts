@@ -436,6 +436,8 @@ export const nbTranslation = {
     minimizeToTrayDesc: 'Når vinduet lukkes, vil Psysonic bli kjørende i oppgavelinjen fremfor å bli avsluttet.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Vis sporet som spilles i din Discord-profil. Krever at Discord kjører.',
+    discordAppleCovers: 'Hent covere fra Apple Music til Discord',
+    discordAppleCoversDesc: 'Sender artist- og albumnavn til Apples søke-API for å finne cover til Discord-profilen din. Deaktivert som standard av personvernhensyn.',
     nowPlayingEnabled: 'Vis i "Nå spiller"',
     nowPlayingEnabledDesc: 'Send sporet som spilles av til tjenerens live-lyttervisning. Deaktiver for å stoppe sending av avspillingsdata.',
     lyricsServerFirst: 'Foretrekk server-sangtekst',

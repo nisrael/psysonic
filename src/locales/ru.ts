@@ -456,6 +456,8 @@ export const ruTranslation = {
     discordRichPresence: 'Статус в Discord',
     discordRichPresenceDesc:
       'Показывать текущий трек в профиле и статусе Discord. Нужен запущенный клиент Discord.',
+    discordAppleCovers: 'Загружать обложки через Apple Music для Discord',
+    discordAppleCoversDesc: 'Отправляет имя исполнителя и альбома в API поиска Apple для поиска обложки в профиле Discord. По умолчанию отключено из соображений конфиденциальности.',
     nowPlayingEnabled: 'Показывать в «Сейчас играет»',
     nowPlayingEnabledDesc:
       'Отправлять на сервер, что вы сейчас слушаете. Отключите, чтобы не делиться этим.',

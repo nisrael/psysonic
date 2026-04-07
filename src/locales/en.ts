@@ -438,6 +438,8 @@ export const enTranslation = {
     minimizeToTrayDesc: 'When closing the window, keep Psysonic running in the system tray instead of quitting.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Show the currently playing track on your Discord profile. Requires Discord to be running.',
+    discordAppleCovers: 'Fetch covers from Apple Music for Discord',
+    discordAppleCoversDesc: 'Sends the artist and album name to Apple\'s search API to find cover art for your Discord profile. Disabled by default for privacy.',
     nowPlayingEnabled: 'Show in Now Playing',
     nowPlayingEnabledDesc: 'Broadcast your currently playing track to the server\'s live listener view. Disable to stop sending playback data.',
     lyricsServerFirst: 'Prefer server lyrics',

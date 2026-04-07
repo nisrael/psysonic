@@ -637,6 +637,21 @@ export default function Settings() {
                   <span className="toggle-track" />
                 </label>
               </div>
+              {auth.discordRichPresence && (
+                <>
+                  <div className="settings-section-divider" />
+                  <div className="settings-toggle-row" style={{ paddingLeft: 16 }}>
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{t('settings.discordAppleCovers')}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.discordAppleCoversDesc')}</div>
+                    </div>
+                    <label className="toggle-switch" aria-label={t('settings.discordAppleCovers')}>
+                      <input type="checkbox" checked={auth.enableAppleMusicCoversDiscord} onChange={e => auth.setEnableAppleMusicCoversDiscord(e.target.checked)} />
+                      <span className="toggle-track" />
+                    </label>
+                  </div>
+                </>
+              )}
               <div className="settings-section-divider" />
               <div className="settings-toggle-row">
                 <div>

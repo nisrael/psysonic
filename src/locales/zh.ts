@@ -433,6 +433,8 @@ export const zhTranslation = {
     minimizeToTrayDesc: '关闭窗口时，Psysonic 将继续在系统托盘中运行，而不是退出。',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: '在 Discord 个人资料上显示当前播放的曲目。需要 Discord 处于运行状态。',
+    discordAppleCovers: '通过 Apple Music 为 Discord 获取封面',
+    discordAppleCoversDesc: '将艺术家和专辑名称发送至 Apple 搜索 API，以为 Discord 个人资料查找封面图片。出于隐私考虑，默认禁用。',
     nowPlayingEnabled: '在实时窗口中显示',
     nowPlayingEnabledDesc: '将当前播放的曲目广播到服务器的实时听众视图。禁用以停止发送播放数据。',
     lyricsServerFirst: '优先使用服务器歌词',

@@ -437,6 +437,8 @@ export const frTranslation = {
     minimizeToTrayDesc: 'Lors de la fermeture, Psysonic continue de fonctionner dans la barre système au lieu de se fermer.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Affiche le titre en cours de lecture sur votre profil Discord. Discord doit être ouvert.',
+    discordAppleCovers: 'Récupérer les pochettes via Apple Music pour Discord',
+    discordAppleCoversDesc: 'Envoie le nom de l\'artiste et de l\'album à l\'API Apple pour trouver une pochette pour votre profil Discord. Désactivé par défaut pour des raisons de confidentialité.',
     nowPlayingEnabled: 'Afficher dans la fenêtre live',
     nowPlayingEnabledDesc: 'Diffuse le titre en cours de lecture vers la vue des auditeurs en direct du serveur. Désactiver pour ne pas envoyer de données de lecture.',
     lyricsServerFirst: 'Préférer les paroles du serveur',

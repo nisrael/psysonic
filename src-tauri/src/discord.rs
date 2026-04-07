@@ -218,35 +218,45 @@ fn try_connect() -> Option<DiscordIpcClient> {
 
 /// Update the Discord Rich Presence activity.
 ///
-/// - `elapsed_secs`: seconds already played. `None` when paused — Discord shows
-///   the song/artist without a running timer.
-/// - `cover_art_url`: optional direct URL to album artwork. If None, tries to
-///   fetch from iTunes Search API using artist + album.
+/// - `is_playing`: true = playing (timer shown), false = paused (no timer, state shows "Paused").
+/// - `elapsed_secs`: seconds already played. `None` when paused — no timestamp is sent so
+///   Discord stops any running timer.
+/// - `cover_art_url`: optional direct URL to album artwork.
+/// - `fetch_itunes_covers`: if true, fetch artwork from the iTunes Search API when no
+///   `cover_art_url` is provided. If false (default), fall back to the Psysonic app icon
+///   without making any external request — required for privacy opt-in.
 #[tauri::command]
 pub async fn discord_update_presence(
     state: tauri::State<'_, DiscordState>,
     title: String,
     artist: String,
     album: Option<String>,
+    is_playing: bool,
     elapsed_secs: Option<f64>,
     cover_art_url: Option<String>,
+    fetch_itunes_covers: bool,
 ) -> Result<(), String> {
     // Resolve artwork on a dedicated blocking thread — reqwest::blocking must not
     // run on the Tokio async executor directly.
+    // Only hit the iTunes API if the user has explicitly opted in.
     let artwork_url: Option<String> = if let Some(url) = cover_art_url {
         Some(url)
-    } else if let Some(ref album_name) = album {
-        let http_client = state.http_client.clone();
-        let cache = Arc::clone(&state.artwork_cache);
-        let artist_c = artist.clone();
-        let album_c = album_name.clone();
-        let title_c = title.clone();
-        tokio::task::spawn_blocking(move || {
-            search_itunes_artwork(&http_client, &cache, &artist_c, &album_c, &title_c)
-        })
-        .await
-        .ok()
-        .flatten()
+    } else if fetch_itunes_covers {
+        if let Some(ref album_name) = album {
+            let http_client = state.http_client.clone();
+            let cache = Arc::clone(&state.artwork_cache);
+            let artist_c = artist.clone();
+            let album_c = album_name.clone();
+            let title_c = title.clone();
+            tokio::task::spawn_blocking(move || {
+                search_itunes_artwork(&http_client, &cache, &artist_c, &album_c, &title_c)
+            })
+            .await
+            .ok()
+            .flatten()
+        } else {
+            None
+        }
     } else {
         None
     };
@@ -280,21 +290,40 @@ pub async fn discord_update_presence(
             .large_text(large_text)
     };
 
+    // When paused, show "Paused" as the state text (replaces artist name).
+    let state_text: String = if is_playing {
+        artist.clone()
+    } else {
+        "Paused".to_string()
+    };
+
+    // ActivityType::Listening causes the Discord client to auto-start a running
+    // timer from "now" even when no timestamps are provided. Switch to Playing
+    // when paused — Playing only shows a timer when timestamps are explicitly set.
+    let activity_type = if is_playing {
+        ActivityType::Listening
+    } else {
+        ActivityType::Playing
+    };
+
     let mut activity = Activity::new()
-        .activity_type(ActivityType::Listening)
+        .activity_type(activity_type)
         .details(&title)
-        .state(&artist)
+        .state(&state_text)
         .assets(assets);
 
     // Start timestamp: Discord auto-counts up from this point. We back-calculate
     // it so the displayed elapsed time matches the actual playback position.
-    if let Some(elapsed) = elapsed_secs {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs() as i64;
-        let start = now - elapsed.floor() as i64;
-        activity = activity.timestamps(Timestamps::new().start(start));
+    // Only set when playing — Playing type without timestamps shows no timer.
+    if is_playing {
+        if let Some(elapsed) = elapsed_secs {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs() as i64;
+            let start = now - elapsed.floor() as i64;
+            activity = activity.timestamps(Timestamps::new().start(start));
+        }
     }
 
     if client.set_activity(activity).is_err() {

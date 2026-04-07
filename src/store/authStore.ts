@@ -41,6 +41,7 @@ interface AuthState {
   showTrayIcon: boolean;
   minimizeToTray: boolean;
   discordRichPresence: boolean;
+  enableAppleMusicCoversDiscord: boolean;
   nowPlayingEnabled: boolean;
   lyricsServerFirst: boolean;
   showFullscreenLyrics: boolean;
@@ -103,6 +104,7 @@ interface AuthState {
   setShowTrayIcon: (v: boolean) => void;
   setMinimizeToTray: (v: boolean) => void;
   setDiscordRichPresence: (v: boolean) => void;
+  setEnableAppleMusicCoversDiscord: (v: boolean) => void;
   setNowPlayingEnabled: (v: boolean) => void;
   setLyricsServerFirst: (v: boolean) => void;
   setShowFullscreenLyrics: (v: boolean) => void;
@@ -153,6 +155,7 @@ export const useAuthStore = create<AuthState>()(
       showTrayIcon: true,
       minimizeToTray: false,
       discordRichPresence: false,
+      enableAppleMusicCoversDiscord: false,
       nowPlayingEnabled: false,
       lyricsServerFirst: true,
       showFullscreenLyrics: true,
@@ -236,6 +239,7 @@ export const useAuthStore = create<AuthState>()(
       setShowTrayIcon: (v) => set({ showTrayIcon: v }),
       setMinimizeToTray: (v) => set({ minimizeToTray: v }),
       setDiscordRichPresence: (v) => set({ discordRichPresence: v }),
+      setEnableAppleMusicCoversDiscord: (v) => set({ enableAppleMusicCoversDiscord: v }),
       setNowPlayingEnabled: (v) => set({ nowPlayingEnabled: v }),
       setLyricsServerFirst: (v: boolean) => set({ lyricsServerFirst: v }),
       setShowFullscreenLyrics: (v: boolean) => set({ showFullscreenLyrics: v }),
