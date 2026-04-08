@@ -54,6 +54,10 @@ export default function Help() {
       items: [
         { q: t('help.q9'),  a: t('help.a9') },
         { q: t('help.q10'), a: t('help.a10') },
+        { q: t('help.q37'), a: t('help.a37') },
+        { q: t('help.q38'), a: t('help.a38') },
+        { q: t('help.q39'), a: t('help.a39') },
+        { q: t('help.q40'), a: t('help.a40') },
         { q: t('help.q11'), a: t('help.a11') },
         { q: t('help.q25'), a: t('help.a25') },
       ],
@@ -63,10 +67,16 @@ export default function Help() {
       title: t('help.s4'),
       items: [
         { q: t('help.q12'), a: t('help.a12') },
+        { q: t('help.q41'), a: t('help.a41') },
+        { q: t('help.q42'), a: t('help.a42') },
+        { q: t('help.q43'), a: t('help.a43') },
         { q: t('help.q13'), a: t('help.a13') },
         { q: t('help.q15'), a: t('help.a15') },
         { q: t('help.q31'), a: t('help.a31') },
         { q: t('help.q32'), a: t('help.a32') },
+        { q: t('help.q44'), a: t('help.a44') },
+        { q: t('help.q45'), a: t('help.a45') },
+        { q: t('help.q46'), a: t('help.a46') },
       ],
     },
     {
@@ -92,6 +102,7 @@ export default function Help() {
       items: [
         { q: t('help.q34'), a: t('help.a34') },
         { q: t('help.q35'), a: t('help.a35') },
+        { q: t('help.q47'), a: t('help.a47') },
         { q: t('help.q36'), a: t('help.a36') },
       ],
     },
