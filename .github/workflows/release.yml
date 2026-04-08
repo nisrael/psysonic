@@ -19,12 +19,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: lts/*
-      - name: cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-
+          cache: 'npm'
       - name: get version
         id: get-version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
@@ -97,12 +92,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: lts/*
-      - name: cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-
+          cache: 'npm'
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -141,13 +131,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: lts/*
-
-      - name: cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-
+          cache: 'npm'
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
