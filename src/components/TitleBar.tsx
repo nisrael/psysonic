@@ -3,9 +3,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { X, Minus, Square } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 
-const win = getCurrentWindow();
-
 export default function TitleBar() {
+  const win = getCurrentWindow();
   const currentTrack = usePlayerStore(s => s.currentTrack);
   const isPlaying = usePlayerStore(s => s.isPlaying);
 

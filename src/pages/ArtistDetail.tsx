@@ -8,6 +8,7 @@ import { ArrowLeft, Users, ExternalLink, Heart, Play, Shuffle, Radio, HardDriveD
 import { open } from '@tauri-apps/plugin-shell';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { useOfflineStore } from '../store/offlineStore';
+import { useOfflineJobStore } from '../store/offlineJobStore';
 import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
 import { lastfmGetSimilarArtists, lastfmIsConfigured } from '../api/lastfm';
@@ -69,7 +70,8 @@ export default function ArtistDetail() {
   const openContextMenu = usePlayerStore(state => state.openContextMenu);
   const currentTrack = usePlayerStore(state => state.currentTrack);
   const isPlaying = usePlayerStore(state => state.isPlaying);
-  const { downloadArtist, bulkProgress } = useOfflineStore();
+  const downloadArtist = useOfflineStore(s => s.downloadArtist);
+  const bulkProgress = useOfflineJobStore(s => s.bulkProgress);
   const activeServerId = useAuthStore(s => s.activeServerId) ?? '';
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
   const entityRatingSupportByServer = useAuthStore(s => s.entityRatingSupportByServer);

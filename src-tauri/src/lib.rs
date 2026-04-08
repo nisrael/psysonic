@@ -5,7 +5,7 @@ mod audio;
 mod discord;
 
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
 
 use tauri::{
@@ -17,6 +17,13 @@ use tauri::{
 /// Tracks which user-configured shortcuts are currently registered (shortcut_str → action).
 /// Prevents on_shortcut() accumulating duplicate handlers across JS reloads (HMR / StrictMode).
 type ShortcutMap = Mutex<HashMap<String, String>>;
+
+/// Maximum number of offline track downloads that can run concurrently.
+/// The frontend queues more tasks than this; Rust is the real throttle.
+const MAX_DL_CONCURRENCY: usize = 4;
+
+/// Shared semaphore that caps simultaneous `download_track_offline` executions.
+type DownloadSemaphore = Arc<tokio::sync::Semaphore>;
 
 /// Holds the live system-tray icon handle.  `None` means the tray is currently hidden/removed.
 /// Dropping the inner `TrayIcon` fully removes it from the OS notification area on all platforms.
@@ -399,7 +406,31 @@ fn mpris_set_playback(
         .map_err(|e| format!("MPRIS set_playback failed: {e:?}"))
 }
 
+/// Returns true if `path` is an accessible directory (used for pre-flight checks in the frontend).
+#[tauri::command]
+fn check_dir_accessible(path: String) -> bool {
+    std::path::Path::new(&path).is_dir()
+}
+
 // ─── Offline Track Cache ──────────────────────────────────────────────────────
+
+/// Streams an HTTP response body directly to `dest_path` in small chunks.
+/// Never buffers the full file in memory — keeps RAM flat regardless of file size.
+async fn stream_to_file(response: reqwest::Response, dest_path: &std::path::Path) -> Result<(), String> {
+    use futures_util::StreamExt;
+    use tokio::io::AsyncWriteExt;
+
+    let mut file = tokio::fs::File::create(dest_path)
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| e.to_string())?;
+        file.write_all(&chunk).await.map_err(|e| e.to_string())?;
+    }
+    file.flush().await.map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 /// Downloads a single track to the app's offline cache directory.
 /// Returns the absolute file path so TypeScript can store it and later
@@ -411,6 +442,7 @@ async fn download_track_offline(
     url: String,
     suffix: String,
     custom_dir: Option<String>,
+    dl_sem: tauri::State<'_, DownloadSemaphore>,
     app: tauri::AppHandle,
 ) -> Result<String, String> {
     // Determine base cache directory.
@@ -436,10 +468,14 @@ async fn download_track_offline(
     let file_path = cache_dir.join(format!("{}.{}", track_id, suffix));
     let path_str = file_path.to_string_lossy().to_string();
 
-    // Already cached — skip re-download.
+    // Already cached — skip re-download (no semaphore needed).
     if file_path.exists() {
         return Ok(path_str);
     }
+
+    // Acquire a download slot. The permit is held for the duration of the HTTP transfer
+    // and released automatically when this function returns (success or error).
+    let _permit = dl_sem.acquire().await.map_err(|e| e.to_string())?;
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
@@ -450,8 +486,14 @@ async fn download_track_offline(
     if !response.status().is_success() {
         return Err(format!("HTTP {}", response.status().as_u16()));
     }
-    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
-    tokio::fs::write(&file_path, &bytes)
+
+    // Stream directly to a .part file; rename on success to avoid partial files.
+    let part_path = file_path.with_extension(format!("{suffix}.part"));
+    if let Err(e) = stream_to_file(response, &part_path).await {
+        let _ = tokio::fs::remove_file(&part_path).await;
+        return Err(e);
+    }
+    tokio::fs::rename(&part_path, &file_path)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -569,6 +611,96 @@ fn resolve_hot_cache_root(
     }
 }
 
+/// Progress payload emitted to the frontend during a ZIP download.
+/// `total` is `None` when the server doesn't send a `Content-Length` header
+/// (Navidrome on-the-fly ZIPs).
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ZipProgress {
+    id: String,
+    bytes: u64,
+    total: Option<u64>,
+}
+
+/// Downloads a server-generated ZIP (album/playlist) directly to disk via streaming.
+/// Emits `download:zip:progress` events every 500 ms so the frontend can show
+/// live MB-counter without holding any binary data in the WebView process.
+/// Returns the final destination path on success.
+#[tauri::command]
+async fn download_zip(
+    id: String,
+    url: String,
+    dest_path: String,
+    app: tauri::AppHandle,
+) -> Result<String, String> {
+    use futures_util::StreamExt;
+    use std::time::{Duration, Instant};
+    use tokio::io::AsyncWriteExt;
+
+    const EMIT_INTERVAL: Duration = Duration::from_millis(500);
+
+    let client = reqwest::Client::builder()
+        .connect_timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(7200)) // up to 2 h for large on-the-fly ZIPs
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("HTTP {}", response.status().as_u16()));
+    }
+
+    let total = response.content_length(); // None for Navidrome on-the-fly ZIPs
+    let part_path = format!("{dest_path}.part");
+
+    // Stream to .part file; rename on success, delete on error.
+    let result: Result<u64, String> = async {
+        let mut file = tokio::fs::File::create(&part_path)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let mut bytes_done: u64 = 0;
+        let mut stream = response.bytes_stream();
+        let mut last_emit = Instant::now();
+
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.map_err(|e| e.to_string())?;
+            file.write_all(&chunk).await.map_err(|e| e.to_string())?;
+            bytes_done += chunk.len() as u64;
+
+            if last_emit.elapsed() >= EMIT_INTERVAL {
+                let _ = app.emit("download:zip:progress", ZipProgress {
+                    id: id.clone(),
+                    bytes: bytes_done,
+                    total,
+                });
+                last_emit = Instant::now();
+            }
+        }
+        file.flush().await.map_err(|e| e.to_string())?;
+        Ok(bytes_done)
+    }.await;
+
+    match result {
+        Err(e) => {
+            let _ = tokio::fs::remove_file(&part_path).await;
+            Err(e)
+        }
+        Ok(bytes_done) => {
+            // Final emission so the frontend sees 100 % (or final MB count).
+            let _ = app.emit("download:zip:progress", ZipProgress {
+                id: id.clone(),
+                bytes: bytes_done,
+                total: Some(bytes_done),
+            });
+            tokio::fs::rename(&part_path, &dest_path)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(dest_path)
+        }
+    }
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct HotCacheDownloadResult {
@@ -618,12 +750,21 @@ async fn download_track_hot_cache(
     if !response.status().is_success() {
         return Err(format!("HTTP {}", response.status().as_u16()));
     }
-    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
-    tokio::fs::write(&file_path, &bytes)
+
+    // Stream directly to a .part file; rename on success to avoid partial files.
+    let part_path = file_path.with_extension(format!("{suffix}.part"));
+    if let Err(e) = stream_to_file(response, &part_path).await {
+        let _ = tokio::fs::remove_file(&part_path).await;
+        return Err(e);
+    }
+    tokio::fs::rename(&part_path, &file_path)
         .await
         .map_err(|e| e.to_string())?;
 
-    let size = bytes.len() as u64;
+    let size = tokio::fs::metadata(&file_path)
+        .await
+        .map(|m| m.len())
+        .unwrap_or(0);
     Ok(HotCacheDownloadResult {
         path: path_str,
         size,
@@ -870,6 +1011,7 @@ pub fn run() {
         .manage(audio_engine)
         .manage(ShortcutMap::default())
         .manage(discord::DiscordState::new())
+        .manage(Arc::new(tokio::sync::Semaphore::new(MAX_DL_CONCURRENCY)) as DownloadSemaphore)
         .manage(TrayState::default())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -1062,6 +1204,8 @@ pub fn run() {
             delete_hot_cache_track,
             purge_hot_cache,
             toggle_tray_icon,
+            check_dir_accessible,
+            download_zip,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Psysonic");

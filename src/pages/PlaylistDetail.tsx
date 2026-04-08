@@ -12,10 +12,12 @@ import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { useShallow } from 'zustand/react/shallow';
 import { usePlaylistStore } from '../store/playlistStore';
 import { useOfflineStore } from '../store/offlineStore';
+import { useOfflineJobStore } from '../store/offlineJobStore';
 import { useAuthStore } from '../store/authStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 import { join } from '@tauri-apps/api/path';
+import { useZipDownloadStore } from '../store/zipDownloadStore';
 import { useDragDrop } from '../contexts/DragDropContext';
 import CachedImage, { useCachedUrl } from '../components/CachedImage';
 import { coverArtCacheKey, buildCoverArtUrl } from '../api/subsonic';
@@ -83,8 +85,24 @@ export default function PlaylistDetail() {
   );
   const touchPlaylist = usePlaylistStore((s) => s.touchPlaylist);
   const { startDrag, isDragging } = useDragDrop();
-  const { downloadPlaylist, isAlbumDownloading, isAlbumDownloaded, getAlbumProgress } = useOfflineStore();
+  const downloadPlaylist = useOfflineStore(s => s.downloadPlaylist);
+  const deleteAlbum = useOfflineStore(s => s.deleteAlbum);
   const activeServerId = useAuthStore(s => s.activeServerId) ?? '';
+  const isDownloading = useOfflineJobStore(s =>
+    !!id && s.jobs.some(j => j.albumId === id && (j.status === 'queued' || j.status === 'downloading'))
+  );
+  const isCached = useOfflineStore(s => {
+    if (!id) return false;
+    const meta = s.albums[`${activeServerId}:${id}`];
+    if (!meta || meta.trackIds.length === 0) return false;
+    return meta.trackIds.every(tid => !!s.tracks[`${activeServerId}:${tid}`]);
+  });
+  const offlineProgressDone = useOfflineJobStore(s => {
+    if (!id) return 0;
+    return s.jobs.filter(j => j.albumId === id && (j.status === 'done' || j.status === 'error')).length;
+  });
+  const offlineProgressTotal = useOfflineJobStore(s => (!id ? 0 : s.jobs.filter(j => j.albumId === id).length));
+  const offlineProgress = offlineProgressTotal > 0 ? { done: offlineProgressDone, total: offlineProgressTotal } : null;
   const downloadFolder = useAuthStore(s => s.downloadFolder);
   const setDownloadFolder = useAuthStore(s => s.setDownloadFolder);
   const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
@@ -100,7 +118,9 @@ export default function PlaylistDetail() {
   const [hoveredSuggestionId, setHoveredSuggestionId] = useState<string | null>(null);
   const [contextMenuSongId, setContextMenuSongId] = useState<string | null>(null);
   const contextMenuOpen = usePlayerStore(s => s.contextMenu.isOpen);
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const zipDownloads = useZipDownloadStore(s => s.downloads);
+  const [zipDownloadId, setZipDownloadId] = useState<string | null>(null);
+  const activeZip = zipDownloadId ? zipDownloads.find(d => d.id === zipDownloadId) : undefined;
 
   // ── Bulk select ───────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -299,38 +319,21 @@ export default function PlaylistDetail() {
     if (!playlist || !id) return;
     const folder = downloadFolder || await requestDownloadFolder();
     if (!folder) return;
-    setDownloadProgress(0);
+
+    const filename = `${sanitizeFilename(playlist.name)}.zip`;
+    const destPath = await join(folder, filename);
+    const url = buildDownloadUrl(id);
+    const downloadId = crypto.randomUUID();
+
+    const { start, complete, fail } = useZipDownloadStore.getState();
+    start(downloadId, filename);
+    setZipDownloadId(downloadId);
     try {
-      const url = buildDownloadUrl(id);
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const contentLength = response.headers.get('Content-Length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      const chunks: Uint8Array<ArrayBuffer>[] = [];
-      if (total && response.body) {
-        const reader = response.body.getReader();
-        let received = 0;
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.length;
-          setDownloadProgress(Math.round((received / total) * 100));
-        }
-      } else {
-        const buffer = await response.arrayBuffer() as ArrayBuffer;
-        chunks.push(new Uint8Array(buffer));
-        setDownloadProgress(100);
-      }
-      const blob = new Blob(chunks);
-      const buffer = await blob.arrayBuffer();
-      const path = await join(folder, `${sanitizeFilename(playlist.name)}.zip`);
-      await writeFile(path, new Uint8Array(buffer));
+      await invoke('download_zip', { id: downloadId, url, destPath });
+      complete(downloadId);
     } catch (e) {
-      console.error('Download failed:', e);
-      setDownloadProgress(null);
-    } finally {
-      setTimeout(() => setDownloadProgress(null), 60000);
+      fail(downloadId);
+      console.error('ZIP download failed:', e);
     }
   };
 
@@ -587,33 +590,34 @@ export default function PlaylistDetail() {
                 >
                   <Search size={16} /> {t('playlists.addSongs')}
                 </button>
-                {songs.length > 0 && id && (() => {
-                  const isDownloading = isAlbumDownloading(id);
-                  const isCached = isAlbumDownloaded(id, activeServerId);
-                  const progress = isDownloading ? getAlbumProgress(id) : null;
-                  return (
-                    <button
-                      className="btn btn-ghost"
-                      disabled={isDownloading}
-                      onClick={() => { if (playlist) downloadPlaylist(id, playlist.name, playlist.coverArt, songs, activeServerId); }}
-                      data-tooltip={isDownloading
-                        ? t('albumDetail.offlineDownloading', { n: progress?.done ?? 0, total: progress?.total ?? 0 })
-                        : isCached ? t('playlists.offlineCached') : t('playlists.cacheOffline')}
-                    >
-                      {isDownloading
-                        ? <div className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }} />
-                        : isCached ? <Check size={16} /> : <HardDriveDownload size={16} />}
-                    </button>
-                  );
-                })()}
+                {songs.length > 0 && id && (
+                  <button
+                    className={`btn btn-ghost${isCached ? ' btn-danger' : ''}`}
+                    disabled={isDownloading}
+                    onClick={() => {
+                      if (isCached) {
+                        deleteAlbum(id, activeServerId);
+                      } else if (playlist) {
+                        downloadPlaylist(id, playlist.name, playlist.coverArt, songs, activeServerId);
+                      }
+                    }}
+                    data-tooltip={isDownloading
+                      ? t('albumDetail.offlineDownloading', { n: offlineProgress?.done ?? 0, total: offlineProgress?.total ?? 0 })
+                      : isCached ? t('playlists.removeOffline') : t('playlists.cacheOffline')}
+                  >
+                    {isDownloading
+                      ? <div className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }} />
+                      : isCached ? <Trash2 size={16} /> : <HardDriveDownload size={16} />}
+                  </button>
+                )}
                 {songs.length > 0 && (
-                  downloadProgress !== null ? (
+                  activeZip && !activeZip.done && !activeZip.error ? (
                     <div className="download-progress-wrap">
                       <Download size={14} />
                       <div className="download-progress-bar">
-                        <div className="download-progress-fill" style={{ width: `${downloadProgress}%` }} />
+                        <div className="download-progress-fill" style={{ width: `${activeZip.total ? Math.round((activeZip.bytes / activeZip.total) * 100) : 0}%` }} />
                       </div>
-                      <span className="download-progress-pct">{downloadProgress}%</span>
+                      <span className="download-progress-pct">{activeZip.total ? Math.round((activeZip.bytes / activeZip.total) * 100) : '…'}%</span>
                     </div>
                   ) : (
                     <button className="btn btn-ghost" onClick={handleDownload} data-tooltip={t('playlists.downloadZip')}>

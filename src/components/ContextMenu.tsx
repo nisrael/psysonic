@@ -10,8 +10,9 @@ import { useAuthStore } from '../store/authStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
 import { usePlaylistStore } from '../store/playlistStore';
 import { open } from '@tauri-apps/plugin-shell';
-import { writeFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api/core';
+import { useZipDownloadStore } from '../store/zipDownloadStore';
 import { useTranslation } from 'react-i18next';
 
 function sanitizeFilename(name: string): string {
@@ -279,19 +280,22 @@ export default function ContextMenu() {
   };
 
   const downloadAlbum = async (albumName: string, albumId: string) => {
-    try {
-      const folder = auth.downloadFolder || await requestDownloadFolder();
-      if (!folder) return;
+    const folder = auth.downloadFolder || await requestDownloadFolder();
+    if (!folder) return;
 
-      const url = buildDownloadUrl(albumId);
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const blob = await response.blob();
-      const buffer = await blob.arrayBuffer();
-      const path = await join(folder, `${sanitizeFilename(albumName)}.zip`);
-      await writeFile(path, new Uint8Array(buffer));
+    const filename = `${sanitizeFilename(albumName)}.zip`;
+    const destPath = await join(folder, filename);
+    const url = buildDownloadUrl(albumId);
+    const id = crypto.randomUUID();
+
+    const { start, complete, fail } = useZipDownloadStore.getState();
+    start(id, filename);
+    try {
+      await invoke('download_zip', { id, url, destPath });
+      complete(id);
     } catch (e) {
-      console.error('Download failed:', e);
+      fail(id);
+      console.error('ZIP download failed:', e);
     }
   };
 

@@ -67,6 +67,8 @@ import { useFontStore } from './store/fontStore';
 import { useEqStore } from './store/eqStore';
 import { useKeybindingsStore } from './store/keybindingsStore';
 import { useGlobalShortcutsStore } from './store/globalShortcutsStore';
+import { useZipDownloadStore } from './store/zipDownloadStore';
+import ZipDownloadOverlay from './components/ZipDownloadOverlay';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, servers, activeServerId } = useAuthStore();
@@ -397,6 +399,15 @@ function TauriEventBridge() {
   const next = usePlayerStore(s => s.next);
   const previous = usePlayerStore(s => s.previous);
 
+  // ZIP download progress events from Rust
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    listen<{ id: string; bytes: number; total: number | null }>('download:zip:progress', e => {
+      useZipDownloadStore.getState().updateProgress(e.payload.id, e.payload.bytes, e.payload.total);
+    }).then(u => { unlisten = u; });
+    return () => { unlisten?.(); };
+  }, []);
+
   // Sync tray-icon visibility with the user's stored setting.
   // Runs once on mount (initial sync) and again whenever the setting changes.
   const showTrayIcon = useAuthStore(s => s.showTrayIcon);
@@ -609,6 +620,7 @@ export default function App() {
         />
       </Routes>
       {exportPickerOpen && <ExportPickerModal onConfirm={handleExport} onClose={() => setExportPickerOpen(false)} />}
+      <ZipDownloadOverlay />
     </BrowserRouter>
   );
 }

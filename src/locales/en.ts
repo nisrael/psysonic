@@ -17,6 +17,7 @@ export const enTranslation = {
     collapse: 'Collapse Sidebar',
 
     downloadingTracks: 'Caching {{n}} tracks…',
+    cancelDownload: 'Cancel download',
     offlineLibrary: 'Offline Library',
     genres: 'Genres',
     playlists: 'Playlists',
@@ -824,6 +825,7 @@ export const enTranslation = {
     addSong: 'Add to playlist',
     cacheOffline: 'Cache playlist offline',
     offlineCached: 'Playlist cached',
+    removeOffline: 'Remove from offline cache',
     offlineDownloading: 'Caching… ({{done}}/{{total}} albums)',
     publicLabel: 'Public',
     privateLabel: 'Private',

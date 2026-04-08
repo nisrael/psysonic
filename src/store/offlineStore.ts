@@ -5,6 +5,7 @@ import { buildStreamUrl, getArtist, getAlbum } from '../api/subsonic';
 import type { SubsonicSong } from '../api/subsonic';
 import { useAuthStore } from './authStore';
 import { showToast } from '../utils/toast';
+import { useOfflineJobStore, cancelledDownloads } from './offlineJobStore';
 
 export interface OfflineTrackMeta {
   id: string;
@@ -38,22 +39,12 @@ export interface OfflineAlbumMeta {
   type?: 'album' | 'playlist' | 'artist';
 }
 
-export interface DownloadJob {
-  trackId: string;
-  albumId: string;
-  albumName: string;
-  trackTitle: string;
-  trackIndex: number;
-  totalTracks: number;
-  status: 'queued' | 'downloading' | 'done' | 'error';
-}
+// Re-export for components that import DownloadJob from offlineStore.
+export type { DownloadJob } from './offlineJobStore';
 
 interface OfflineState {
   tracks: Record<string, OfflineTrackMeta>;   // key: `${serverId}:${trackId}`
   albums: Record<string, OfflineAlbumMeta>;   // key: `${serverId}:${albumId}`
-  jobs: DownloadJob[];
-  /** Progress for bulk (playlist / artist) downloads. Key = playlistId or artistId. */
-  bulkProgress: Record<string, { done: number; total: number }>;
 
   isDownloaded: (trackId: string, serverId: string) => boolean;
   isAlbumDownloaded: (albumId: string, serverId: string) => boolean;
@@ -81,8 +72,6 @@ export const useOfflineStore = create<OfflineState>()(
     (set, get) => ({
       tracks: {},
       albums: {},
-      jobs: [],
-      bulkProgress: {},
 
       isDownloaded: (trackId, serverId) =>
         !!get().tracks[`${serverId}:${trackId}`],
@@ -94,7 +83,7 @@ export const useOfflineStore = create<OfflineState>()(
       },
 
       isAlbumDownloading: (albumId) =>
-        get().jobs.some(
+        useOfflineJobStore.getState().jobs.some(
           j => j.albumId === albumId && (j.status === 'queued' || j.status === 'downloading')
         ),
 
@@ -113,22 +102,40 @@ export const useOfflineStore = create<OfflineState>()(
       },
 
       getAlbumProgress: (albumId) => {
-        const albumJobs = get().jobs.filter(j => j.albumId === albumId);
+        const albumJobs = useOfflineJobStore.getState().jobs.filter(j => j.albumId === albumId);
         if (albumJobs.length === 0) return null;
         const done = albumJobs.filter(j => j.status === 'done' || j.status === 'error').length;
         return { done, total: albumJobs.length };
       },
 
       downloadAlbum: async (albumId, albumName, albumArtist, coverArt, year, songs, serverId, type = 'album') => {
-        const CONCURRENCY = 2;
+        // Frontend fires up to 8 invoke calls at a time so Rust always has work queued.
+        // The backend Semaphore (MAX_DL_CONCURRENCY = 4) is the real throttle —
+        // at most 4 HTTP streams run simultaneously regardless of this value.
+        const CONCURRENCY = 8;
         const trackIds = songs.map(s => s.id);
+        const jobStore = useOfflineJobStore;
 
-        // Register album shell + queue jobs
+        // Pre-flight: verify the target directory is accessible before queuing anything.
+        const customDir = useAuthStore.getState().offlineDownloadDir || null;
+        if (customDir) {
+          const ok = await invoke<boolean>('check_dir_accessible', { path: customDir }).catch(() => false);
+          if (!ok) {
+            showToast('Speichermedium nicht gefunden. Bitte Verzeichnis in den Einstellungen prüfen.', 6000, 'error');
+            return;
+          }
+        }
+
+        // Register album in persisted store — 1 localStorage write.
         set(state => ({
           albums: {
             ...state.albums,
             [`${serverId}:${albumId}`]: { id: albumId, serverId, name: albumName, artist: albumArtist, coverArt, year, trackIds, type },
           },
+        }));
+
+        // Queue jobs in the non-persisted job store — zero localStorage writes.
+        jobStore.setState(state => ({
           jobs: [
             ...state.jobs.filter(j => j.albumId !== albumId),
             ...songs.map((s, i) => ({
@@ -143,82 +150,97 @@ export const useOfflineStore = create<OfflineState>()(
           ],
         }));
 
-        // Download in batches of CONCURRENCY
+        // Accumulate completed tracks locally — persisted in ONE write at the very end.
+        const completedTracks: Record<string, OfflineTrackMeta> = {};
+
         for (let i = 0; i < songs.length; i += CONCURRENCY) {
+          // Abort if the user cancelled this download.
+          if (cancelledDownloads.has(albumId)) {
+            cancelledDownloads.delete(albumId);
+            jobStore.setState(state => ({ jobs: state.jobs.filter(j => j.albumId !== albumId) }));
+            return;
+          }
+
           const batch = songs.slice(i, i + CONCURRENCY);
-          await Promise.all(
+          const batchIds = new Set(batch.map(s => s.id));
+
+          // Mark batch as downloading — job store only, no localStorage write.
+          jobStore.setState(state => ({
+            jobs: state.jobs.map(j =>
+              j.albumId === albumId && batchIds.has(j.trackId)
+                ? { ...j, status: 'downloading' }
+                : j,
+            ),
+          }));
+
+          // Run all downloads concurrently, collect results without touching any store.
+          const results = await Promise.all(
             batch.map(async song => {
-              set(state => ({
-                jobs: state.jobs.map(j =>
-                  j.trackId === song.id && j.albumId === albumId
-                    ? { ...j, status: 'downloading' }
-                    : j,
-                ),
-              }));
-
               const suffix = song.suffix || 'mp3';
-              const url = buildStreamUrl(song.id);
-              const customDir = useAuthStore.getState().offlineDownloadDir || null;
-
               try {
                 const localPath = await invoke<string>('download_track_offline', {
                   trackId: song.id,
                   serverId,
-                  url,
+                  url: buildStreamUrl(song.id),
                   suffix,
                   customDir,
                 });
-
-                set(state => ({
-                  tracks: {
-                    ...state.tracks,
-                    [`${serverId}:${song.id}`]: {
-                      id: song.id,
-                      serverId,
-                      localPath,
-                      title: song.title,
-                      artist: song.artist,
-                      album: song.album,
-                      albumId: song.albumId,
-                      artistId: song.artistId,
-                      suffix,
-                      duration: song.duration,
-                      bitRate: song.bitRate,
-                      coverArt: song.coverArt,
-                      year: song.year,
-                      genre: song.genre,
-                      replayGainTrackDb: song.replayGain?.trackGain,
-                      replayGainAlbumDb: song.replayGain?.albumGain,
-                      replayGainPeak: song.replayGain?.trackPeak,
-                      cachedAt: new Date().toISOString(),
-                    },
-                  },
-                  jobs: state.jobs.map(j =>
-                    j.trackId === song.id && j.albumId === albumId
-                      ? { ...j, status: 'done' }
-                      : j,
-                  ),
-                }));
+                return { song, suffix, localPath, error: null as string | null };
               } catch (err) {
                 const msg = typeof err === 'string' ? err : (err instanceof Error ? err.message : '');
-                if (msg === 'VOLUME_NOT_FOUND') {
+                if (msg === 'VOLUME_NOT_FOUND' && !cancelledDownloads.has(albumId)) {
+                  cancelledDownloads.add(albumId);
                   showToast('Speichermedium nicht gefunden. Bitte Verzeichnis in den Einstellungen prüfen.', 6000, 'error');
                 }
-                set(state => ({
-                  jobs: state.jobs.map(j =>
-                    j.trackId === song.id && j.albumId === albumId
-                      ? { ...j, status: 'error' }
-                      : j,
-                  ),
-                }));
+                return { song, suffix, localPath: null as string | null, error: msg };
               }
             }),
           );
+
+          // Accumulate completed tracks locally (no store write yet).
+          for (const { song, suffix, localPath } of results) {
+            if (localPath) {
+              completedTracks[`${serverId}:${song.id}`] = {
+                id: song.id,
+                serverId,
+                localPath,
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                albumId: song.albumId,
+                artistId: song.artistId,
+                suffix,
+                duration: song.duration,
+                bitRate: song.bitRate,
+                coverArt: song.coverArt,
+                year: song.year,
+                genre: song.genre,
+                replayGainTrackDb: song.replayGain?.trackGain,
+                replayGainAlbumDb: song.replayGain?.albumGain,
+                replayGainPeak: song.replayGain?.trackPeak,
+                cachedAt: new Date().toISOString(),
+              };
+            }
+          }
+
+          // Update job statuses — job store only, no localStorage write.
+          const resultMap = new Map(results.map(r => [r.song.id, r]));
+          jobStore.setState(state => ({
+            jobs: state.jobs.map(j => {
+              if (j.albumId !== albumId) return j;
+              const r = resultMap.get(j.trackId);
+              if (!r) return j;
+              return { ...j, status: r.localPath ? 'done' : 'error' };
+            }),
+          }));
         }
 
-        // Clear completed jobs after a short delay
+        // Persist all completed tracks in ONE localStorage write.
+        set(state => ({ tracks: { ...state.tracks, ...completedTracks } }));
+
+        // Clear completed jobs after a short delay.
         setTimeout(() => {
-          set(state => ({
+          jobStore.setState(state => ({
             jobs: state.jobs.filter(
               j => j.albumId !== albumId || (j.status !== 'done' && j.status !== 'error'),
             ),
@@ -236,12 +258,13 @@ export const useOfflineStore = create<OfflineState>()(
       },
 
       downloadArtist: async (artistId, artistName, serverId) => {
+        const jobStore = useOfflineJobStore;
         let albums: { id: string; name: string; artist: string; coverArt?: string; year?: number }[] = [];
         try {
           const res = await getArtist(artistId);
           albums = res.albums;
         } catch { return; }
-        set(state => ({
+        jobStore.setState(state => ({
           bulkProgress: { ...state.bulkProgress, [artistId]: { done: 0, total: albums.length } },
         }));
         for (let i = 0; i < albums.length; i++) {
@@ -250,12 +273,12 @@ export const useOfflineStore = create<OfflineState>()(
             const { songs } = await getAlbum(album.id);
             await get().downloadAlbum(album.id, album.name, album.artist || artistName, album.coverArt, album.year, songs, serverId, 'artist');
           } catch { /* skip failed album */ }
-          set(state => ({
+          jobStore.setState(state => ({
             bulkProgress: { ...state.bulkProgress, [artistId]: { done: i + 1, total: albums.length } },
           }));
         }
         setTimeout(() => {
-          set(state => {
+          jobStore.setState(state => {
             const { [artistId]: _removed, ...rest } = state.bulkProgress;
             return { bulkProgress: rest };
           });

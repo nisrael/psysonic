@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useOfflineStore } from '../store/offlineStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 import { join } from '@tauri-apps/api/path';
 import { showToast } from '../utils/toast';
+import { useZipDownloadStore } from '../store/zipDownloadStore';
 import { X, CheckSquare2, Download, HardDriveDownload } from 'lucide-react';
 
 type SortType = 'alphabeticalByName' | 'alphabeticalByArtist';
@@ -31,7 +32,7 @@ export default function Albums() {
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
   const auth = useAuthStore();
   const serverId = useAuthStore(s => s.activeServerId ?? '');
-  const { downloadAlbum } = useOfflineStore();
+  const downloadAlbum = useOfflineStore(s => s.downloadAlbum);
   const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
 
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
@@ -72,26 +73,23 @@ export default function Albums() {
     if (selectedAlbums.length === 0) return;
     const folder = auth.downloadFolder || await requestDownloadFolder();
     if (!folder) return;
-
-    let done = 0;
+    const { start, complete, fail } = useZipDownloadStore.getState();
+    clearSelection();
     for (const album of selectedAlbums) {
-      showToast(t('albums.downloadingZip', { current: done + 1, total: selectedAlbums.length, name: album.name }), 8000, 'info');
+      const downloadId = crypto.randomUUID();
+      const filename = `${sanitizeFilename(album.name)}.zip`;
+      const destPath = await join(folder, filename);
+      const url = buildDownloadUrl(album.id);
+      start(downloadId, filename);
       try {
-        const url = buildDownloadUrl(album.id);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const blob = await response.blob();
-        const buffer = await blob.arrayBuffer();
-        const path = await join(folder, `${sanitizeFilename(album.name)}.zip`);
-        await writeFile(path, new Uint8Array(buffer));
-        done++;
+        await invoke('download_zip', { id: downloadId, url, destPath });
+        complete(downloadId);
       } catch (e) {
+        fail(downloadId);
         console.error('ZIP download failed for', album.name, e);
         showToast(t('albums.downloadZipFailed', { name: album.name }), 4000, 'error');
       }
     }
-    showToast(t('albums.downloadZipDone', { count: done }), 4000, 'info');
-    clearSelection();
   };
 
   const handleAddOffline = async () => {

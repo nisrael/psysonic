@@ -2,6 +2,7 @@ import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from
 import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../store/playerStore';
 import { useOfflineStore } from '../store/offlineStore';
+import { useOfflineJobStore } from '../store/offlineJobStore';
 import { useAuthStore } from '../store/authStore';
 import { useSidebarStore } from '../store/sidebarStore';
 import { NavLink } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Disc3, Users, Music4, Radio, Settings, Heart, BarChart3, Shuffle,
   PanelLeftClose, PanelLeft, HelpCircle, Dices, AudioLines, HardDriveDownload, Tags, ListMusic, Cast,
-  ChevronDown, Check, Music2, TrendingUp, FolderOpen,
+  ChevronDown, Check, Music2, TrendingUp, FolderOpen, X,
 } from 'lucide-react';
 import PsysonicLogo from './PsysonicLogo';
 import PSmallLogo from './PSmallLogo';
@@ -44,7 +45,8 @@ export default function Sidebar({
   const { t } = useTranslation();
   const isPlaying   = usePlayerStore(s => s.isPlaying);
   const currentTrack = usePlayerStore(s => s.currentTrack);
-  const offlineJobs = useOfflineStore(s => s.jobs);
+  const offlineJobs = useOfflineJobStore(s => s.jobs);
+  const cancelAllDownloads = useOfflineJobStore(s => s.cancelAllDownloads);
   const activeJobs = offlineJobs.filter(j => j.status === 'queued' || j.status === 'downloading');
   const offlineAlbums = useOfflineStore(s => s.albums);
   const serverId = useAuthStore(s => s.activeServerId ?? '');
@@ -288,6 +290,15 @@ export default function Sidebar({
             {!isCollapsed && (
               <span>{t('sidebar.downloadingTracks', { n: activeJobs.length })}</span>
             )}
+            <button
+              className="sidebar-offline-cancel"
+              onClick={cancelAllDownloads}
+              data-tooltip={t('sidebar.cancelDownload')}
+              data-tooltip-pos="right"
+              aria-label={t('sidebar.cancelDownload')}
+            >
+              <X size={12} />
+            </button>
           </div>
         )}
       </nav>
