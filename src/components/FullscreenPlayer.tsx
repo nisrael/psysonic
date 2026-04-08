@@ -245,6 +245,10 @@ interface FullscreenPlayerProps {
   onClose: () => void;
 }
 
+// Module-level cache: artKey → accent color string.
+// Survives track changes so same-album songs reuse the extracted color instantly.
+const coverAccentCache = new Map<string, string>();
+
 export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
   const { t } = useTranslation();
   const currentTrack       = usePlayerStore(s => s.currentTrack);
@@ -291,18 +295,35 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
   // Reset to null on track change so the previous color doesn't linger while
   // the new one is being extracted.
   const [dynamicAccent, setDynamicAccent] = useState<string | null>(null);
-  // Reset immediately on track change so the previous color doesn't linger.
-  useEffect(() => { setDynamicAccent(null); }, [artKey]);
-  // Extract as soon as the display blob is ready — reuses resolvedCoverUrl so
-  // no redundant network request for a separate cover size.
+
+  // On cover change: hit cache for instant result, or fetch → extract → cache.
+  // Cache hit avoids re-fetching for same-album tracks. Reset only when uncached.
   useEffect(() => {
-    if (!resolvedCoverUrl) return;
+    if (!artKey || !artUrl) { setDynamicAccent(null); return; }
+    const cached = coverAccentCache.get(artKey);
+    if (cached) { setDynamicAccent(cached); return; }
+    // No cache hit — keep the previous color visible until extraction completes.
     let cancelled = false;
-    extractCoverColors(resolvedCoverUrl).then(colors => {
-      if (!cancelled && colors.accent) setDynamicAccent(colors.accent);
-    });
+    let blobUrl = '';
+    (async () => {
+      try {
+        const resp = await fetch(artUrl);
+        if (cancelled) return;
+        const blob = await resp.blob();
+        if (cancelled) return;
+        blobUrl = URL.createObjectURL(blob);
+        const colors = await extractCoverColors(blobUrl);
+        if (cancelled) return;
+        if (colors.accent) {
+          coverAccentCache.set(artKey, colors.accent);
+          setDynamicAccent(colors.accent);
+        }
+      } catch { /* ignore */ } finally {
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+      }
+    })();
     return () => { cancelled = true; };
-  }, [resolvedCoverUrl]);
+  }, [artKey]);
 
   // Artist image → portrait on right. Falls back to cover art.
   const [artistBgUrl, setArtistBgUrl] = useState<string>('');
