@@ -1,11 +1,21 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { CheckSquare2, Download, HardDriveDownload } from 'lucide-react';
 import AlbumCard from '../components/AlbumCard';
 import GenreFilterBar from '../components/GenreFilterBar';
-import { getAlbumList, getAlbumsByGenre, SubsonicAlbum } from '../api/subsonic';
+import { getAlbumList, getAlbumsByGenre, getAlbum, SubsonicAlbum, buildDownloadUrl } from '../api/subsonic';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
+import { useOfflineStore } from '../store/offlineStore';
+import { useDownloadModalStore } from '../store/downloadModalStore';
+import { writeFile } from '@tauri-apps/plugin-fs';
+import { join } from '@tauri-apps/api/path';
+import { showToast } from '../utils/toast';
 
 const PAGE_SIZE = 30;
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim() || 'download';
+}
 
 async function fetchByGenres(genres: string[]): Promise<SubsonicAlbum[]> {
   const results = await Promise.all(genres.map(g => getAlbumsByGenre(g, 500, 0)));
@@ -17,6 +27,11 @@ async function fetchByGenres(genres: string[]): Promise<SubsonicAlbum[]> {
 export default function NewReleases() {
   const { t } = useTranslation();
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const auth = useAuthStore();
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const { downloadAlbum } = useOfflineStore();
+  const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
+
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -24,6 +39,53 @@ export default function NewReleases() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const observerTarget = useRef<HTMLDivElement>(null);
   const filtered = selectedGenres.length > 0;
+
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectionMode = () => { setSelectionMode(v => !v); setSelectedIds(new Set()); };
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }, []);
+  const clearSelection = () => { setSelectionMode(false); setSelectedIds(new Set()); };
+  const selectedAlbums = albums.filter(a => selectedIds.has(a.id));
+
+  const handleDownloadZips = async () => {
+    if (selectedAlbums.length === 0) return;
+    const folder = auth.downloadFolder || await requestDownloadFolder();
+    if (!folder) return;
+    let done = 0;
+    for (const album of selectedAlbums) {
+      showToast(t('albums.downloadingZip', { current: done + 1, total: selectedAlbums.length, name: album.name }), 8000, 'info');
+      try {
+        const blob = await fetch(buildDownloadUrl(album.id)).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob(); });
+        const path = await join(folder, `${sanitizeFilename(album.name)}.zip`);
+        await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
+        done++;
+      } catch (e) {
+        console.error('ZIP download failed for', album.name, e);
+        showToast(t('albums.downloadZipFailed', { name: album.name }), 4000, 'error');
+      }
+    }
+    showToast(t('albums.downloadZipDone', { count: done }), 4000, 'info');
+    clearSelection();
+  };
+
+  const handleAddOffline = async () => {
+    if (selectedAlbums.length === 0) return;
+    let queued = 0;
+    for (const album of selectedAlbums) {
+      try {
+        const detail = await getAlbum(album.id);
+        downloadAlbum(album.id, album.name, album.artist, album.coverArt, album.year, detail.songs, serverId);
+        queued++;
+      } catch {
+        showToast(t('albums.offlineFailed', { name: album.name }), 3000, 'error');
+      }
+    }
+    if (queued > 0) showToast(t('albums.offlineQueuing', { count: queued }), 3000, 'info');
+    clearSelection();
+  };
 
   const load = useCallback(async (offset: number, append = false) => {
     setLoading(true);
@@ -71,8 +133,37 @@ export default function NewReleases() {
   return (
     <div className="content-body animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>{t('sidebar.newReleases')}</h1>
-        <GenreFilterBar selected={selectedGenres} onSelectionChange={setSelectedGenres} />
+        <h1 className="page-title" style={{ marginBottom: 0 }}>
+          {selectionMode && selectedIds.size > 0
+            ? t('albums.selectionCount', { count: selectedIds.size })
+            : t('sidebar.newReleases')}
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {selectionMode && selectedIds.size > 0 ? (
+            <>
+              <button className="btn btn-surface albums-selection-action-btn" onClick={handleAddOffline}>
+                <HardDriveDownload size={15} />
+                {t('albums.addOffline')}
+              </button>
+              <button className="btn btn-surface albums-selection-action-btn" onClick={handleDownloadZips}>
+                <Download size={15} />
+                {t('albums.downloadZips')}
+              </button>
+            </>
+          ) : (
+            <GenreFilterBar selected={selectedGenres} onSelectionChange={setSelectedGenres} />
+          )}
+          <button
+            className={`btn btn-surface${selectionMode ? ' btn-sort-active' : ''}`}
+            onClick={toggleSelectionMode}
+            data-tooltip={selectionMode ? t('albums.cancelSelect') : t('albums.startSelect')}
+            data-tooltip-pos="bottom"
+            style={selectionMode ? { background: 'var(--accent)', color: 'var(--ctp-crust)' } : {}}
+          >
+            <CheckSquare2 size={15} />
+            {selectionMode ? t('albums.cancelSelect') : t('albums.select')}
+          </button>
+        </div>
       </div>
 
       {loading && albums.length === 0 ? (
@@ -82,7 +173,15 @@ export default function NewReleases() {
       ) : (
         <>
           <div className="album-grid-wrap">
-            {albums.map(a => <AlbumCard key={a.id} album={a} />)}
+            {albums.map(a => (
+              <AlbumCard
+                key={a.id}
+                album={a}
+                selectionMode={selectionMode}
+                selected={selectedIds.has(a.id)}
+                onToggleSelect={toggleSelect}
+              />
+            ))}
           </div>
           {!filtered && (
             <div ref={observerTarget} style={{ height: '20px', margin: '2rem 0', display: 'flex', justifyContent: 'center' }}>

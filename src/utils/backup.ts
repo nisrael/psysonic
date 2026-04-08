@@ -14,6 +14,7 @@ const BACKUP_KEYS = [
   'psysonic-eq',
   'psysonic_global_shortcuts',
   'psysonic-player',
+  'psysonic_home',
 ];
 
 export async function exportBackup(): Promise<string | null> {

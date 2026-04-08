@@ -18,7 +18,8 @@ import { lastfmGetToken, lastfmAuthUrl, lastfmGetSession, lastfmGetUserInfo, Las
 import LastfmIcon from '../components/LastfmIcon';
 import CustomSelect from '../components/CustomSelect';
 import ThemePicker from '../components/ThemePicker';
-import { useAuthStore, ServerProfile, MIX_MIN_RATING_FILTER_MAX_STARS } from '../store/authStore';
+import { useAuthStore, ServerProfile, MIX_MIN_RATING_FILTER_MAX_STARS, type SeekbarStyle } from '../store/authStore';
+import { SeekbarPreview } from '../components/WaveformSeek';
 import { IS_LINUX } from '../utils/platform';
 import { useThemeStore } from '../store/themeStore';
 import { useFontStore, FontId } from '../store/fontStore';
@@ -1248,6 +1249,29 @@ export default function Settings() {
                   >
                     {f.label}
                   </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Sliders size={18} />
+              <h2>{t('settings.seekbarStyle')}</h2>
+            </div>
+            <div className="settings-card">
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                {t('settings.seekbarStyleDesc')}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {(['waveform', 'linedot', 'bar', 'thick', 'segmented'] as SeekbarStyle[]).map(style => (
+                  <SeekbarPreview
+                    key={style}
+                    style={style}
+                    label={t(`settings.seekbar${style.charAt(0).toUpperCase() + style.slice(1)}` as any)}
+                    selected={auth.seekbarStyle === style}
+                    onClick={() => auth.setSeekbarStyle(style)}
+                  />
                 ))}
               </div>
             </div>

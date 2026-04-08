@@ -1,15 +1,24 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import AlbumCard from '../components/AlbumCard';
 import GenreFilterBar from '../components/GenreFilterBar';
-import { getAlbumList, getAlbumsByGenre, SubsonicAlbum } from '../api/subsonic';
+import { getAlbumList, getAlbumsByGenre, getAlbum, SubsonicAlbum, buildDownloadUrl } from '../api/subsonic';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { X } from 'lucide-react';
+import { useOfflineStore } from '../store/offlineStore';
+import { useDownloadModalStore } from '../store/downloadModalStore';
+import { writeFile } from '@tauri-apps/plugin-fs';
+import { join } from '@tauri-apps/api/path';
+import { showToast } from '../utils/toast';
+import { X, CheckSquare2, Download, HardDriveDownload } from 'lucide-react';
 
 type SortType = 'alphabeticalByName' | 'alphabeticalByArtist';
 
 const PAGE_SIZE = 30;
 const CURRENT_YEAR = new Date().getFullYear();
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim() || 'download';
+}
 
 async function fetchByGenres(genres: string[]): Promise<SubsonicAlbum[]> {
   const results = await Promise.all(genres.map(g => getAlbumsByGenre(g, 500, 0)));
@@ -20,6 +29,11 @@ async function fetchByGenres(genres: string[]): Promise<SubsonicAlbum[]> {
 export default function Albums() {
   const { t } = useTranslation();
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const auth = useAuthStore();
+  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const { downloadAlbum } = useOfflineStore();
+  const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
+
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
   const [sort, setSort] = useState<SortType>('alphabeticalByName');
   const [loading, setLoading] = useState(true);
@@ -30,6 +44,73 @@ export default function Albums() {
   const [yearTo, setYearTo] = useState('');
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // ── Multi-selection ──────────────────────────────────────────────────────
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(v => !v);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const selectedAlbums = albums.filter(a => selectedIds.has(a.id));
+
+  const handleDownloadZips = async () => {
+    if (selectedAlbums.length === 0) return;
+    const folder = auth.downloadFolder || await requestDownloadFolder();
+    if (!folder) return;
+
+    let done = 0;
+    for (const album of selectedAlbums) {
+      showToast(t('albums.downloadingZip', { current: done + 1, total: selectedAlbums.length, name: album.name }), 8000, 'info');
+      try {
+        const url = buildDownloadUrl(album.id);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const buffer = await blob.arrayBuffer();
+        const path = await join(folder, `${sanitizeFilename(album.name)}.zip`);
+        await writeFile(path, new Uint8Array(buffer));
+        done++;
+      } catch (e) {
+        console.error('ZIP download failed for', album.name, e);
+        showToast(t('albums.downloadZipFailed', { name: album.name }), 4000, 'error');
+      }
+    }
+    showToast(t('albums.downloadZipDone', { count: done }), 4000, 'info');
+    clearSelection();
+  };
+
+  const handleAddOffline = async () => {
+    if (selectedAlbums.length === 0) return;
+    let queued = 0;
+    for (const album of selectedAlbums) {
+      try {
+        const detail = await getAlbum(album.id);
+        downloadAlbum(album.id, album.name, album.artist, album.coverArt, album.year, detail.songs, serverId);
+        queued++;
+      } catch {
+        showToast(t('albums.offlineFailed', { name: album.name }), 3000, 'error');
+      }
+    }
+    if (queued > 0) showToast(t('albums.offlineQueuing', { count: queued }), 3000, 'info');
+    clearSelection();
+  };
+
+  // ── Data loading ─────────────────────────────────────────────────────────
   const genreFiltered = selectedGenres.length > 0;
   const fromNum = parseInt(yearFrom, 10);
   const toNum = parseInt(yearTo, 10);
@@ -108,58 +189,87 @@ export default function Albums() {
   return (
     <div className="content-body animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>{t('albums.title')}</h1>
+        <h1 className="page-title" style={{ marginBottom: 0 }}>
+          {selectionMode && selectedIds.size > 0
+            ? t('albums.selectionCount', { count: selectedIds.size })
+            : t('albums.title')}
+        </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {!yearActive && sortOptions.map(o => (
-            <button
-              key={o.value}
-              className={`btn btn-surface ${sort === o.value ? 'btn-sort-active' : ''}`}
-              onClick={() => setSort(o.value)}
-              style={sort === o.value ? { background: 'var(--accent)', color: 'var(--ctp-crust)' } : {}}
-            >
-              {o.label}
-            </button>
-          ))}
-
-          {/* Year range filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-              {t('albums.yearFilterLabel')}
-            </span>
-            <input
-              className="input"
-              type="number"
-              min={1900}
-              max={CURRENT_YEAR}
-              placeholder={t('albums.yearFrom')}
-              value={yearFrom}
-              onChange={e => setYearFrom(e.target.value)}
-              style={{ width: 68, padding: '4px 6px', fontSize: 12 }}
-            />
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>–</span>
-            <input
-              className="input"
-              type="number"
-              min={1900}
-              max={CURRENT_YEAR}
-              placeholder={t('albums.yearTo')}
-              value={yearTo}
-              onChange={e => setYearTo(e.target.value)}
-              style={{ width: 68, padding: '4px 6px', fontSize: 12 }}
-            />
-            {yearActive && (
-              <button
-                className="btn btn-ghost"
-                onClick={clearYear}
-                data-tooltip={t('albums.yearFilterClear')}
-                style={{ padding: '4px 6px' }}
-              >
-                <X size={13} />
+          {selectionMode && selectedIds.size > 0 ? (
+            <>
+              <button className="btn btn-surface albums-selection-action-btn" onClick={handleAddOffline}>
+                <HardDriveDownload size={15} />
+                {t('albums.addOffline')}
               </button>
-            )}
-          </div>
+              <button className="btn btn-surface albums-selection-action-btn" onClick={handleDownloadZips}>
+                <Download size={15} />
+                {t('albums.downloadZips')}
+              </button>
+            </>
+          ) : (
+            <>
+              {!yearActive && sortOptions.map(o => (
+                <button
+                  key={o.value}
+                  className={`btn btn-surface ${sort === o.value ? 'btn-sort-active' : ''}`}
+                  onClick={() => setSort(o.value)}
+                  style={sort === o.value ? { background: 'var(--accent)', color: 'var(--ctp-crust)' } : {}}
+                >
+                  {o.label}
+                </button>
+              ))}
 
-          <GenreFilterBar selected={selectedGenres} onSelectionChange={setSelectedGenres} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {t('albums.yearFilterLabel')}
+                </span>
+                <input
+                  className="input"
+                  type="number"
+                  min={1900}
+                  max={CURRENT_YEAR}
+                  placeholder={t('albums.yearFrom')}
+                  value={yearFrom}
+                  onChange={e => setYearFrom(e.target.value)}
+                  style={{ width: 68, padding: '4px 6px', fontSize: 12 }}
+                />
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>–</span>
+                <input
+                  className="input"
+                  type="number"
+                  min={1900}
+                  max={CURRENT_YEAR}
+                  placeholder={t('albums.yearTo')}
+                  value={yearTo}
+                  onChange={e => setYearTo(e.target.value)}
+                  style={{ width: 68, padding: '4px 6px', fontSize: 12 }}
+                />
+                {yearActive && (
+                  <button
+                    className="btn btn-ghost"
+                    onClick={clearYear}
+                    data-tooltip={t('albums.yearFilterClear')}
+                    style={{ padding: '4px 6px' }}
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+
+              <GenreFilterBar selected={selectedGenres} onSelectionChange={setSelectedGenres} />
+            </>
+          )}
+
+          <button
+            className={`btn btn-surface${selectionMode ? ' btn-sort-active' : ''}`}
+            onClick={toggleSelectionMode}
+            data-tooltip={selectionMode ? t('albums.cancelSelect') : t('albums.startSelect')}
+            data-tooltip-pos="bottom"
+            style={selectionMode ? { background: 'var(--accent)', color: 'var(--ctp-crust)' } : {}}
+          >
+            <CheckSquare2 size={15} />
+            {selectionMode ? t('albums.cancelSelect') : t('albums.select')}
+          </button>
         </div>
       </div>
 
@@ -170,7 +280,15 @@ export default function Albums() {
       ) : (
         <>
           <div className="album-grid-wrap">
-            {albums.map(a => <AlbumCard key={a.id} album={a} />)}
+            {albums.map(a => (
+              <AlbumCard
+                key={a.id}
+                album={a}
+                selectionMode={selectionMode}
+                selected={selectedIds.has(a.id)}
+                onToggleSelect={toggleSelect}
+              />
+            ))}
           </div>
           {!genreFiltered && (
             <div ref={observerTarget} style={{ height: '20px', margin: '2rem 0', display: 'flex', justifyContent: 'center' }}>
@@ -179,6 +297,7 @@ export default function Albums() {
           )}
         </>
       )}
+
     </div>
   );
 }

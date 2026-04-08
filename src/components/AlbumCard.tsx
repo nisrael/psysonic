@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, HardDriveDownload } from 'lucide-react';
+import { Play, HardDriveDownload, Check } from 'lucide-react';
 import { SubsonicAlbum, buildCoverArtUrl, coverArtCacheKey } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
 import { useOfflineStore } from '../store/offlineStore';
@@ -11,9 +11,12 @@ import { useDragDrop } from '../contexts/DragDropContext';
 
 interface AlbumCardProps {
   album: SubsonicAlbum;
+  selected?: boolean;
+  selectionMode?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-function AlbumCard({ album }: AlbumCardProps) {
+function AlbumCard({ album, selected, selectionMode, onToggleSelect }: AlbumCardProps) {
   const navigate = useNavigate();
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const serverId = useAuthStore(s => s.activeServerId ?? '');
@@ -25,20 +28,26 @@ function AlbumCard({ album }: AlbumCardProps) {
   const coverUrl = album.coverArt ? buildCoverArtUrl(album.coverArt, 300) : '';
   const psyDrag = useDragDrop();
 
+  const handleClick = () => {
+    if (selectionMode) { onToggleSelect?.(album.id); return; }
+    navigate(`/album/${album.id}`);
+  };
+
   return (
     <div
-      className="album-card card"
-      onClick={() => navigate(`/album/${album.id}`)}
+      className={`album-card card${selectionMode ? ' album-card--selectable' : ''}${selected ? ' album-card--selected' : ''}`}
+      onClick={handleClick}
       role="button"
       tabIndex={0}
       aria-label={`${album.name} von ${album.artist}`}
-      onKeyDown={e => e.key === 'Enter' && navigate(`/album/${album.id}`)}
+      onKeyDown={e => e.key === 'Enter' && handleClick()}
       onContextMenu={(e) => {
+        if (selectionMode) { e.preventDefault(); return; }
         e.preventDefault();
         openContextMenu(e.clientX, e.clientY, album, 'album');
       }}
       onMouseDown={e => {
-        if (e.button !== 0) return;
+        if (selectionMode || e.button !== 0) return;
         e.preventDefault();
         const sx = e.clientX, sy = e.clientY;
         const onMove = (me: MouseEvent) => {
@@ -64,20 +73,27 @@ function AlbumCard({ album }: AlbumCardProps) {
             </svg>
           </div>
         )}
-        {isOffline && (
+        {isOffline && !selectionMode && (
           <div className="album-card-offline-badge" aria-label="Offline available">
             <HardDriveDownload size={12} />
           </div>
         )}
-        <div className="album-card-play-overlay">
-          <button
-            className="album-card-details-btn"
-            onClick={e => { e.stopPropagation(); playAlbum(album.id); }}
-            aria-label={`${album.name} abspielen`}
-          >
-            <Play size={15} fill="currentColor" />
-          </button>
-        </div>
+        {selectionMode && (
+          <div className={`album-card-select-check${selected ? ' album-card-select-check--on' : ''}`}>
+            {selected && <Check size={14} strokeWidth={3} />}
+          </div>
+        )}
+        {!selectionMode && (
+          <div className="album-card-play-overlay">
+            <button
+              className="album-card-details-btn"
+              onClick={e => { e.stopPropagation(); playAlbum(album.id); }}
+              aria-label={`${album.name} abspielen`}
+            >
+              <Play size={15} fill="currentColor" />
+            </button>
+          </div>
+        )}
       </div>
       <div className="album-card-info">
         <p className="album-card-title truncate">{album.name}</p>
