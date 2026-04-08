@@ -64,6 +64,15 @@ export interface SubsonicAlbum {
   starred?: string;
   recordLabel?: string;
   created?: string;
+  /** Present on some servers (e.g. OpenSubsonic) for album-level rating. */
+  userRating?: number;
+}
+
+/** OpenSubsonic `artists` / `albumArtists` entries on a child song (may include `userRating`). */
+export interface SubsonicOpenArtistRef {
+  id?: string;
+  name?: string;
+  userRating?: number;
 }
 
 export interface SubsonicSong {
@@ -79,6 +88,11 @@ export interface SubsonicSong {
   coverArt?: string;
   year?: number;
   userRating?: number;
+  /** Some OpenSubsonic responses attach parent ratings on child songs. */
+  albumUserRating?: number;
+  artistUserRating?: number;
+  artists?: SubsonicOpenArtistRef[];
+  albumArtists?: SubsonicOpenArtistRef[];
   // Audio technical info
   bitRate?: number;
   suffix?: string;
@@ -141,6 +155,8 @@ export interface SubsonicArtist {
   albumCount?: number;
   coverArt?: string;
   starred?: string;
+  /** Present on some servers (e.g. OpenSubsonic) for artist-level rating. */
+  userRating?: number;
 }
 
 export interface SubsonicGenre {
@@ -251,6 +267,71 @@ export async function getAlbum(id: string): Promise<{ album: SubsonicAlbum; song
   const data = await api<{ album: SubsonicAlbum & { song: SubsonicSong[] } }>('getAlbum.view', { id });
   const { song, ...album } = data.album;
   return { album, songs: song ?? [] };
+}
+
+const MIX_RATING_PREFETCH_CONCURRENCY = 8;
+
+function parseEntityUserRating(v: unknown): number | undefined {
+  if (v === null || v === undefined) return undefined;
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isFinite(n)) return undefined;
+  return n;
+}
+
+/** Parallel `getArtist` calls to fill mix/album filters when list endpoints omit ratings. */
+export async function prefetchArtistUserRatings(
+  ids: string[],
+  concurrency = MIX_RATING_PREFETCH_CONCURRENCY,
+): Promise<Map<string, number>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const out = new Map<string, number>();
+  if (!unique.length) return out;
+  let next = 0;
+  async function worker() {
+    for (;;) {
+      const i = next++;
+      if (i >= unique.length) return;
+      const id = unique[i];
+      try {
+        const { artist } = await getArtist(id);
+        const r = parseEntityUserRating(artist.userRating);
+        if (r !== undefined) out.set(id, r);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  const nWorkers = Math.min(concurrency, unique.length);
+  await Promise.all(Array.from({ length: nWorkers }, () => worker()));
+  return out;
+}
+
+/** Parallel `getAlbum` calls when `albumList2` entries lack `userRating`. */
+export async function prefetchAlbumUserRatings(
+  ids: string[],
+  concurrency = MIX_RATING_PREFETCH_CONCURRENCY,
+): Promise<Map<string, number>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const out = new Map<string, number>();
+  if (!unique.length) return out;
+  let next = 0;
+  async function worker() {
+    for (;;) {
+      const i = next++;
+      if (i >= unique.length) return;
+      const id = unique[i];
+      try {
+        const { album } = await getAlbum(id);
+        const r = parseEntityUserRating(album.userRating);
+        if (r !== undefined) out.set(id, r);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  const nWorkers = Math.min(concurrency, unique.length);
+  await Promise.all(Array.from({ length: nWorkers }, () => worker()));
+  return out;
 }
 
 export async function getArtists(): Promise<SubsonicArtist[]> {
@@ -372,6 +453,28 @@ export async function search(query: string, options?: { albumCount?: number; art
 
 export async function setRating(id: string, rating: number): Promise<void> {
   await api('setRating.view', { id, rating });
+}
+
+/** How aggressively we assume `setRating` accepts album/artist ids (OpenSubsonic-style). */
+export type EntityRatingSupportLevel = 'track_only' | 'full';
+
+/**
+ * Probe server for OpenSubsonic extensions. When `openSubsonic: true`, we treat album/artist
+ * rating as supported (same `setRating.view` + entity id); otherwise track-only.
+ */
+export async function probeEntityRatingSupport(): Promise<EntityRatingSupportLevel> {
+  try {
+    const data = await api<{ openSubsonic?: boolean; openSubsonicExtensions?: unknown[] }>(
+      'getOpenSubsonicExtensions.view',
+      {},
+      8000,
+    );
+    if (data.openSubsonic === true) return 'full';
+    if (Array.isArray(data.openSubsonicExtensions)) return 'full';
+    return 'track_only';
+  } catch {
+    return 'track_only';
+  }
 }
 
 export async function scrobbleSong(id: string, time: number): Promise<void> {

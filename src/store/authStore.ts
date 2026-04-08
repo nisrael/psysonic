@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
+import type { EntityRatingSupportLevel } from '../api/subsonic';
 import { usePlayerStore } from './playerStore';
 
 export interface ServerProfile {
@@ -11,7 +12,7 @@ export interface ServerProfile {
   password: string;
 }
 
-export type SeekbarStyle = 'waveform' | 'linedot' | 'bar' | 'thick' | 'segmented';
+export type SeekbarStyle = 'waveform' | 'linedot' | 'bar' | 'thick' | 'segmented' | 'neon' | 'pulsewave' | 'particletrail' | 'liquidfill' | 'retrotape';
 
 interface AuthState {
   // Multi-server
@@ -63,6 +64,29 @@ interface AuthState {
   /** Parent directory; actual cache is `<dir>/psysonic-hot-cache/`. Empty = app data. */
   hotCacheDownloadDir: string;
 
+  /** After this many manual skips of the same track, set track rating to 1 if still unrated (below 1 star). */
+  skipStarOnManualSkipsEnabled: boolean;
+  /** Manual skips per track before applying rating 1 (when enabled). */
+  skipStarManualSkipThreshold: number;
+  /**
+   * Manual Next-count per track for skip→1★. Key = `${serverId}\\u001f${trackId}`
+   * (empty serverId when none). Persisted; cleared when the track finishes naturally or when threshold is reached.
+   */
+  skipStarManualSkipCountsByKey: Record<string, number>;
+  /** Increment skip count for current server + track; clears stored count when threshold reached. */
+  recordSkipStarManualAdvance: (trackId: string) => { crossedThreshold: boolean } | null;
+  /** Drop persisted skip count for this track on the active server (e.g. natural playback end). */
+  clearSkipStarManualCountForTrack: (trackId: string) => void;
+
+  /** Random mixes, random albums, home hero: drop non‑zero ratings at or below per‑axis thresholds (0 = unrated, kept). */
+  mixMinRatingFilterEnabled: boolean;
+  /** 0 = ignore; 1–3 = cutoff (UI); exclude track rating r when 0 < r ≤ cutoff. */
+  mixMinRatingSong: number;
+  /** 0 = ignore; album entity rating from payload or `getAlbum` when missing. */
+  mixMinRatingAlbum: number;
+  /** 0 = ignore; artist rating from payload / nested OpenSubsonic fields or `getArtist`. */
+  mixMinRatingArtist: number;
+
   /** Subsonic music folders for the active server (not persisted; refetched on login / server change). */
   musicFolders: Array<{ id: string; name: string }>;
   /**
@@ -72,6 +96,13 @@ interface AuthState {
   musicLibraryFilterByServer: Record<string, 'all' | string>;
   /** Bumps when `setMusicLibraryFilter` runs so pages refetch catalog data. */
   musicLibraryFilterVersion: number;
+
+  /**
+   * Per server: whether `setRating` is assumed to work for album/artist ids (OpenSubsonic-style).
+   * Absent key = not probed yet (`unknown` in UI).
+   */
+  entityRatingSupportByServer: Record<string, EntityRatingSupportLevel>;
+  setEntityRatingSupport: (serverId: string, level: EntityRatingSupportLevel) => void;
 
   // Status
   isLoggedIn: boolean;
@@ -122,6 +153,12 @@ interface AuthState {
   setHotCacheMaxMb: (v: number) => void;
   setHotCacheDebounceSec: (v: number) => void;
   setHotCacheDownloadDir: (v: string) => void;
+  setSkipStarOnManualSkipsEnabled: (v: boolean) => void;
+  setSkipStarManualSkipThreshold: (v: number) => void;
+  setMixMinRatingFilterEnabled: (v: boolean) => void;
+  setMixMinRatingSong: (v: number) => void;
+  setMixMinRatingAlbum: (v: number) => void;
+  setMixMinRatingArtist: (v: number) => void;
   setMusicFolders: (folders: Array<{ id: string; name: string }>) => void;
   setMusicLibraryFilter: (folderId: 'all' | string) => void;
   logout: () => void;
@@ -133,6 +170,33 @@ interface AuthState {
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+/** Upper bound for mix min-rating thresholds (UI shows five stars, only 1…this many are selectable). */
+export const MIX_MIN_RATING_FILTER_MAX_STARS = 3;
+
+function clampMixFilterMinStars(v: number): number {
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(MIX_MIN_RATING_FILTER_MAX_STARS, Math.round(v)));
+}
+
+function clampSkipStarThreshold(v: number): number {
+  if (!Number.isFinite(v)) return 3;
+  return Math.max(1, Math.min(99, Math.round(v)));
+}
+
+function skipStarCountStorageKey(serverId: string | null | undefined, trackId: string): string {
+  return `${serverId ?? ''}\u001f${trackId}`;
+}
+
+function sanitizeSkipStarCounts(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const next: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) next[k] = Math.min(Math.floor(n), 1_000_000);
+  }
+  return next;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -175,9 +239,17 @@ export const useAuthStore = create<AuthState>()(
       hotCacheMaxMb: 256,
       hotCacheDebounceSec: 30,
       hotCacheDownloadDir: '',
+      skipStarOnManualSkipsEnabled: false,
+      skipStarManualSkipThreshold: 3,
+      skipStarManualSkipCountsByKey: {},
+      mixMinRatingFilterEnabled: false,
+      mixMinRatingSong: 0,
+      mixMinRatingAlbum: 0,
+      mixMinRatingArtist: 0,
       musicFolders: [],
       musicLibraryFilterByServer: {},
       musicLibraryFilterVersion: 0,
+      entityRatingSupportByServer: {},
       isLoggedIn: false,
       isConnecting: false,
       connectionError: null,
@@ -199,10 +271,12 @@ export const useAuthStore = create<AuthState>()(
         set(s => {
           const newServers = s.servers.filter(srv => srv.id !== id);
           const switchedAway = s.activeServerId === id;
+          const { [id]: _r, ...entityRatingRest } = s.entityRatingSupportByServer;
           return {
             servers: newServers,
             activeServerId: switchedAway ? (newServers[0]?.id ?? null) : s.activeServerId,
             isLoggedIn: switchedAway ? false : s.isLoggedIn,
+            entityRatingSupportByServer: entityRatingRest,
           };
         });
       },
@@ -263,6 +337,44 @@ export const useAuthStore = create<AuthState>()(
       setHotCacheDebounceSec: (v) => set({ hotCacheDebounceSec: v }),
       setHotCacheDownloadDir: (v) => set({ hotCacheDownloadDir: v }),
 
+      setSkipStarOnManualSkipsEnabled: (v) =>
+        set({
+          skipStarOnManualSkipsEnabled: v,
+          ...(v ? {} : { skipStarManualSkipCountsByKey: {} }),
+        }),
+      setSkipStarManualSkipThreshold: (v) => set({ skipStarManualSkipThreshold: clampSkipStarThreshold(v) }),
+
+      recordSkipStarManualAdvance: (trackId: string) => {
+        const s = get();
+        if (!s.skipStarOnManualSkipsEnabled || s.skipStarManualSkipThreshold < 1) return null;
+        const key = skipStarCountStorageKey(s.activeServerId, trackId);
+        const prev = s.skipStarManualSkipCountsByKey[key] ?? 0;
+        const threshold = s.skipStarManualSkipThreshold;
+        const next = prev + 1;
+        if (next >= threshold) {
+          const { [key]: _removed, ...rest } = s.skipStarManualSkipCountsByKey;
+          set({ skipStarManualSkipCountsByKey: rest });
+          return { crossedThreshold: true };
+        }
+        set({
+          skipStarManualSkipCountsByKey: { ...s.skipStarManualSkipCountsByKey, [key]: next },
+        });
+        return { crossedThreshold: false };
+      },
+
+      clearSkipStarManualCountForTrack: (trackId: string) => {
+        const s = get();
+        const key = skipStarCountStorageKey(s.activeServerId, trackId);
+        if (s.skipStarManualSkipCountsByKey[key] === undefined) return;
+        const { [key]: _removed, ...rest } = s.skipStarManualSkipCountsByKey;
+        set({ skipStarManualSkipCountsByKey: rest });
+      },
+
+      setMixMinRatingFilterEnabled: (v) => set({ mixMinRatingFilterEnabled: v }),
+      setMixMinRatingSong: (v) => set({ mixMinRatingSong: clampMixFilterMinStars(v) }),
+      setMixMinRatingAlbum: (v) => set({ mixMinRatingAlbum: clampMixFilterMinStars(v) }),
+      setMixMinRatingArtist: (v) => set({ mixMinRatingArtist: clampMixFilterMinStars(v) }),
+
       setMusicFolders: (folders) => {
         const sid = get().activeServerId;
         set(s => {
@@ -286,6 +398,11 @@ export const useAuthStore = create<AuthState>()(
         }));
       },
 
+      setEntityRatingSupport: (serverId, level) =>
+        set(s => ({
+          entityRatingSupportByServer: { ...s.entityRatingSupportByServer, [serverId]: level },
+        })),
+
       logout: () => set({ isLoggedIn: false, musicFolders: [] }),
 
       getBaseUrl: () => {
@@ -306,6 +423,17 @@ export const useAuthStore = create<AuthState>()(
       partialize: state => {
         const { musicFolders: _mf, musicLibraryFilterVersion: _fv, ...rest } = state;
         return rest;
+      },
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) return;
+        useAuthStore.setState({
+          mixMinRatingSong: clampMixFilterMinStars(state.mixMinRatingSong as number),
+          mixMinRatingAlbum: clampMixFilterMinStars(state.mixMinRatingAlbum as number),
+          mixMinRatingArtist: clampMixFilterMinStars(state.mixMinRatingArtist as number),
+          skipStarManualSkipCountsByKey: sanitizeSkipStarCounts(
+            (state as { skipStarManualSkipCountsByKey?: unknown }).skipStarManualSkipCountsByKey,
+          ),
+        });
       },
     }
   )

@@ -147,6 +147,13 @@ export const ruTranslation = {
     ratingLabel: 'Оценка',
     enlargeCover: 'Увеличить обложку',
   },
+  entityRating: {
+    albumShort: 'Оценка альбома',
+    artistShort: 'Оценка исполнителя',
+    albumAriaLabel: 'Оценка альбома',
+    artistAriaLabel: 'Оценка исполнителя',
+    saveFailed: 'Не удалось сохранить оценку.',
+  },
   artistDetail: {
     back: 'Назад',
     albums: 'Альбомы',
@@ -464,6 +471,9 @@ export const ruTranslation = {
     showTrayIconDesc: 'Показывать Psysonic в области уведомлений / строке меню.',
     minimizeToTray: 'Сворачивать в трей',
     minimizeToTrayDesc: 'При закрытии окна не выходить из приложения, а оставаться в трее.',
+    useCustomTitlebar: 'Своя строка заголовка',
+    useCustomTitlebarDesc:
+      'Заменить системную строку заголовка встроенной, в стиле темы приложения. Отключите, чтобы использовать родную строку GNOME/GTK.',
     discordRichPresence: 'Статус в Discord',
     discordRichPresenceDesc:
       'Показывать текущий трек в профиле и статусе Discord. Нужен запущенный клиент Discord.',
@@ -515,6 +525,18 @@ export const ruTranslation = {
     tabServer: 'Сервер',
     tabSystem: 'Система',
     tabGeneral: 'Общие',
+    ratingsSectionTitle: 'Рейтинги',
+    ratingsSkipStarTitle: 'Скипнуть для 1 звезды',
+    ratingsSkipStarDesc:
+      'При N скипов подряд ставить 1★ треку. Только для не оцененных ранее.',
+    ratingsSkipStarThresholdLabel: 'Скипов',
+    ratingsMixFilterTitle: 'Фильтрация по рейтингу',
+    ratingsMixFilterDesc:
+      'Фильтровать с низким рейтингом в «{{mix}}» и «{{albums}}». Повторный клик по выбранной звезде отключает порог.',
+    ratingsMixMinSong: 'Песни',
+    ratingsMixMinAlbum: 'Альбомы',
+    ratingsMixMinArtist: 'Исполнители',
+    ratingsMixMinThresholdAria: 'Минимум звёзд: {{label}}',
     backupTitle: 'Резервная копия',
     backupExport: 'Экспорт настроек',
     backupExportDesc:
@@ -571,6 +593,11 @@ export const ruTranslation = {
     seekbarBar: 'Полоса',
     seekbarThick: 'Толстая полоса',
     seekbarSegmented: 'Сегменты',
+    seekbarNeon: 'Неон',
+    seekbarPulsewave: 'Пульс-волна',
+    seekbarParticletrail: 'Частицы',
+    seekbarLiquidfill: 'Жидкость',
+    seekbarRetrotape: 'Ретро-лента',
   },
   changelog: {
     modalTitle: 'Что нового',

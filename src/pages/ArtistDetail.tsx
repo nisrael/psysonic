@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getArtist, getArtistInfo, getTopSongs, getSimilarSongs2, getAlbum, search, SubsonicArtist, SubsonicAlbum, SubsonicSong, SubsonicArtistInfo, buildCoverArtUrl, coverArtCacheKey, star, unstar, uploadArtistImage } from '../api/subsonic';
+import { getArtist, getArtistInfo, getTopSongs, getSimilarSongs2, getAlbum, search, setRating, SubsonicArtist, SubsonicAlbum, SubsonicSong, SubsonicArtistInfo, buildCoverArtUrl, coverArtCacheKey, star, unstar, uploadArtistImage } from '../api/subsonic';
 import AlbumCard from '../components/AlbumCard';
 import CachedImage from '../components/CachedImage';
 import CoverLightbox from '../components/CoverLightbox';
@@ -14,6 +14,7 @@ import { lastfmGetSimilarArtists, lastfmIsConfigured } from '../api/lastfm';
 import LastfmIcon from '../components/LastfmIcon';
 import { invalidateCoverArt } from '../utils/imageCache';
 import { showToast } from '../utils/toast';
+import StarRating from '../components/StarRating';
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -71,6 +72,11 @@ export default function ArtistDetail() {
   const { downloadArtist, bulkProgress } = useOfflineStore();
   const activeServerId = useAuthStore(s => s.activeServerId) ?? '';
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const entityRatingSupportByServer = useAuthStore(s => s.entityRatingSupportByServer);
+  const setEntityRatingSupport = useAuthStore(s => s.setEntityRatingSupport);
+  const artistEntityRatingSupport = entityRatingSupportByServer[activeServerId] ?? 'unknown';
+
+  const [artistEntityRating, setArtistEntityRating] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -93,6 +99,34 @@ export default function ArtistDetail() {
       setLoading(false);
     });
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    if (artist && artist.id === id) setArtistEntityRating(artist.userRating ?? 0);
+  }, [id, artist?.id, artist?.userRating]);
+
+  const handleArtistEntityRating = async (rating: number) => {
+    if (!artist || artist.id !== id) return;
+    const artistId = artist.id;
+    const ratingAtStart = artist.userRating ?? 0;
+
+    setArtistEntityRating(rating);
+
+    if (artistEntityRatingSupport !== 'full') return;
+
+    try {
+      await setRating(artistId, rating);
+      setArtist(a => (a && a.id === artistId ? { ...a, userRating: rating } : a));
+    } catch (err) {
+      setArtistEntityRating(ratingAtStart);
+      setEntityRatingSupport(activeServerId, 'track_only');
+      showToast(
+        typeof err === 'string' ? err : err instanceof Error ? err.message : t('entityRating.saveFailed'),
+        4500,
+        'error',
+      );
+    }
+  };
 
   // "Also Featured On" — loaded in background after main content renders
   useEffect(() => {
@@ -349,6 +383,16 @@ export default function ArtistDetail() {
           </h1>
           <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '1rem' }}>
             {t('artistDetail.albumCount_other', { count: artist.albumCount ?? 0 })}
+          </div>
+
+          <div className="artist-detail-entity-rating">
+            <span className="artist-detail-entity-rating-label">{t('entityRating.artistShort')}</span>
+            <StarRating
+              value={artistEntityRating}
+              onChange={handleArtistEntityRating}
+              disabled={artistEntityRatingSupport === 'track_only'}
+              labelKey="entityRating.artistAriaLabel"
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

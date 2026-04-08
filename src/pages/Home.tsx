@@ -7,10 +7,19 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useHomeStore } from '../store/homeStore';
 import { useAuthStore } from '../store/authStore';
+import { filterAlbumsByMixRatings, getMixMinRatingsConfigFromAuth } from '../utils/mixRatingFilter';
+
+/** Match Random Albums overshoot when mix filter uses album/artist axes so hero + discover row can still fill. */
+const HOME_RANDOM_FETCH = 100;
+const HOME_HERO_COUNT = 8;
+const HOME_DISCOVER_SLICE = 20;
 
 export default function Home() {
   const homeSections = useHomeStore(s => s.sections);
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const mixMinRatingFilterEnabled = useAuthStore(s => s.mixMinRatingFilterEnabled);
+  const mixMinRatingAlbum = useAuthStore(s => s.mixMinRatingAlbum);
+  const mixMinRatingArtist = useAuthStore(s => s.mixMinRatingArtist);
   const isVisible = (id: string) => homeSections.find(s => s.id === id)?.visible ?? true;
 
   const [starred, setStarred] = useState<SubsonicAlbum[]>([]);
@@ -23,30 +32,50 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      getAlbumList('starred', 12).catch(() => []),
-      getAlbumList('newest', 12).catch(() => []),
-      getAlbumList('random', 20).catch(() => []),
-      getAlbumList('frequent', 12).catch(() => []),
-      getAlbumList('recent', 12).catch(() => []),
-      isVisible('discoverArtists') ? getArtists().catch(() => []) : Promise.resolve<SubsonicArtist[]>([]),
-    ]).then(([s, n, r, f, rp, artists]) => {
-      setStarred(s);
-      setRecent(n);
-      setHeroAlbums(r.slice(0, 8));
-      setRandom(r.slice(8));
-      setMostPlayed(f);
-      setRecentlyPlayed(rp);
-      // Pick 16 random artists via Fisher-Yates shuffle
-      const shuffled = [...artists];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const mixCfg = getMixMinRatingsConfigFromAuth();
+        const albumMix =
+          mixCfg.enabled && (mixCfg.minAlbum > 0 || mixCfg.minArtist > 0);
+        const randomSize = albumMix ? HOME_RANDOM_FETCH : HOME_DISCOVER_SLICE;
+        const [s, n, rRaw, f, rp, artists] = await Promise.all([
+          getAlbumList('starred', 12).catch(() => []),
+          getAlbumList('newest', 12).catch(() => []),
+          getAlbumList('random', randomSize).catch(() => []),
+          getAlbumList('frequent', 12).catch(() => []),
+          getAlbumList('recent', 12).catch(() => []),
+          isVisible('discoverArtists') ? getArtists().catch(() => []) : Promise.resolve<SubsonicArtist[]>([]),
+        ]);
+        if (cancelled) return;
+        const r = await filterAlbumsByMixRatings(rRaw, mixCfg);
+        setStarred(s);
+        setRecent(n);
+        setHeroAlbums(r.slice(0, HOME_HERO_COUNT));
+        setRandom(r.slice(HOME_HERO_COUNT, HOME_DISCOVER_SLICE));
+        setMostPlayed(f);
+        setRecentlyPlayed(rp);
+        const shuffled = [...artists];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setRandomArtists(shuffled.slice(0, 16));
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setRandomArtists(shuffled.slice(0, 16));
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [musicLibraryFilterVersion, homeSections]);
+    })();
+    return () => { cancelled = true; };
+  }, [
+    musicLibraryFilterVersion,
+    homeSections,
+    mixMinRatingFilterEnabled,
+    mixMinRatingAlbum,
+    mixMinRatingArtist,
+  ]);
 
   const loadMore = async (
     type: 'starred' | 'newest' | 'random' | 'frequent' | 'recent',
@@ -55,7 +84,10 @@ export default function Home() {
   ) => {
     try {
       const more = await getAlbumList(type, 12, currentList.length);
-      const newItems = more.filter(m => !currentList.find(c => c.id === m.id));
+      const mixCfg = getMixMinRatingsConfigFromAuth();
+      const batch =
+        type === 'random' ? await filterAlbumsByMixRatings(more, mixCfg) : more;
+      const newItems = batch.filter(m => !currentList.find(c => c.id === m.id));
       if (newItems.length > 0) setter(prev => [...prev, ...newItems]);
     } catch (e) {
       console.error('Failed to load more', e);

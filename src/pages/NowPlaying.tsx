@@ -211,6 +211,7 @@ export default function NowPlaying() {
   const navigate = useNavigate();
 
   const currentTrack    = usePlayerStore(s => s.currentTrack);
+  const userRatingOverrides = usePlayerStore(s => s.userRatingOverrides);
   const isPlaying       = usePlayerStore(s => s.isPlaying);
   const showLyrics      = useLyricsStore(s => s.showLyrics);
   const activeTab       = useLyricsStore(s => s.activeTab);
@@ -292,7 +293,7 @@ export default function NowPlaying() {
                     {currentTrack.suffix && <span className="np-badge">{currentTrack.suffix.toUpperCase()}</span>}
                     {currentTrack.bitRate && <span className="np-badge">{currentTrack.bitRate} kbps</span>}
                     {currentTrack.duration && <span className="np-badge">{formatTime(currentTrack.duration)}</span>}
-                    {renderStars(currentTrack.userRating)}
+                    {renderStars(userRatingOverrides[currentTrack.id] ?? currentTrack.userRating)}
                     <button onClick={toggleStar} className="np-star-btn"
                       data-tooltip={starred ? t('contextMenu.unfavorite') : t('contextMenu.favorite')}
                     >

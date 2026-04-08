@@ -1067,7 +1067,50 @@
   gap: var(--space-2);
   color: var(--text-muted);
   font-size: 13px;
-  margin: var(--space-2) 0 var(--space-4);
+  margin: var(--space-2) 0 var(--space-2);
+}
+
+.album-detail-entity-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* Inline with label: do not stretch to full row width */
+.album-detail-entity-rating .star-rating {
+  width: auto;
+  justify-content: flex-start;
+}
+
+.album-detail-entity-rating-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.artist-detail-entity-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.artist-detail-entity-rating .star-rating {
+  width: auto;
+  justify-content: flex-start;
+}
+
+.artist-detail-entity-rating-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .album-detail-actions {

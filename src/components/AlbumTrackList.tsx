@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDragDrop } from '../contexts/DragDropContext';
 import { AddToPlaylistSubmenu } from './ContextMenu';
 import { useIsMobile } from '../hooks/useIsMobile';
+import StarRating from './StarRating';
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -24,29 +25,6 @@ function codecLabel(song: { suffix?: string; bitRate?: number }): string {
   return parts.join(' ');
 }
 
-function StarRating({ value, onChange }: { value: number; onChange: (r: number) => void }) {
-  const { t } = useTranslation();
-  const [hover, setHover] = React.useState(0);
-  return (
-    <div className="star-rating" role="radiogroup" aria-label={t('albumDetail.ratingLabel')}>
-      {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          className={`star ${(hover || value) >= n ? 'filled' : ''}`}
-          onMouseEnter={() => setHover(n)}
-          onMouseLeave={() => setHover(0)}
-          onClick={() => onChange(n)}
-          aria-label={`${n}`}
-          role="radio"
-          aria-checked={(hover || value) >= n}
-        >
-          ★
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // ── Column configuration ──────────────────────────────────────────────────────
 // 'num'   → always 60 px fixed, no resize handle
 // 'title' → minmax(150px, 1fr) via flex:true, absorbs window-resize changes
@@ -58,14 +36,14 @@ const COLUMNS: readonly ColDef[] = [
   { key: 'artist',   i18nKey: 'trackArtist',   minWidth: 80,  defaultWidth: 180, required: false },
   { key: 'favorite', i18nKey: 'trackFavorite', minWidth: 50,  defaultWidth: 70,  required: false },
   { key: 'rating',   i18nKey: 'trackRating',   minWidth: 80,  defaultWidth: 120, required: false },
-  { key: 'duration', i18nKey: 'trackDuration', minWidth: 50,  defaultWidth: 65,  required: false },
+  { key: 'duration', i18nKey: 'trackDuration', minWidth: 72,  defaultWidth: 92,  required: false },
   { key: 'format',   i18nKey: 'trackFormat',   minWidth: 60,  defaultWidth: 90,  required: false },
   { key: 'genre',    i18nKey: 'trackGenre',    minWidth: 60,  defaultWidth: 90,  required: false },
 ];
 
 type ColKey = 'num' | 'title' | 'artist' | 'favorite' | 'rating' | 'duration' | 'format' | 'genre';
 
-// Columns where cell content should be centred (both header and rows)
+// Columns where header label is centred in the cell (matches row controls below)
 const CENTERED_COLS = new Set<ColKey>(['favorite', 'rating', 'duration']);
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -76,6 +54,8 @@ interface AlbumTrackListProps {
   currentTrack: Track | null;
   isPlaying: boolean;
   ratings: Record<string, number>;
+  /** Merged after local `ratings` (e.g. skip→1★ optimistic updates). */
+  userRatingOverrides: Record<string, number>;
   starredSongs: Set<string>;
   onPlaySong: (song: SubsonicSong) => void;
   onRate: (songId: string, rating: number) => void;
@@ -89,6 +69,7 @@ export default function AlbumTrackList({
   currentTrack,
   isPlaying,
   ratings,
+  userRatingOverrides,
   starredSongs,
   onPlaySong,
   onRate,
@@ -193,13 +174,21 @@ export default function AlbumTrackList({
       );
     }
 
-    // px-width columns: centred or left-aligned label + right-edge divider (except last col)
-    // direction=1: drag right → this column grows, title (1fr) shrinks
+    // px-width columns: centred (compact controls) or left-aligned label + right-edge divider
     const isResizable = !isLastCol;
     return (
-      <div key={key} data-align={isCentered ? 'center' : 'start'} style={{ position: 'relative', padding: 0, margin: 0, minWidth: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: isCentered ? 'center' : 'flex-start', paddingLeft: isCentered ? 0 : 12 }}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <div key={key} style={{ position: 'relative', padding: 0, margin: 0, minWidth: 0, overflow: 'hidden' }}>
+        <div
+          style={{
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            alignItems: 'center',
+            justifyContent: isCentered ? 'center' : 'flex-start',
+            paddingLeft: isCentered ? 0 : 12,
+          }}
+        >
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
         </div>
         {isResizable && (
           <div className="col-resize-handle" onMouseDown={e => startResize(e, colIndex, 1)} />
@@ -266,7 +255,7 @@ export default function AlbumTrackList({
         return (
           <StarRating
             key="rating"
-            value={ratings[song.id] ?? song.userRating ?? 0}
+            value={ratings[song.id] ?? userRatingOverrides[song.id] ?? song.userRating ?? 0}
             onChange={r => onRate(song.id, r)}
           />
         );

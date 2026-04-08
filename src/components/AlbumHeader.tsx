@@ -6,6 +6,8 @@ import CachedImage from './CachedImage';
 import CoverLightbox from './CoverLightbox';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '../hooks/useIsMobile';
+import StarRating from './StarRating';
+import type { EntityRatingSupportLevel } from '../api/subsonic';
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -85,6 +87,10 @@ interface AlbumHeaderProps {
   onEnqueueAll: () => void;
   onBio: () => void;
   onCloseBio: () => void;
+  entityRatingValue: number;
+  onEntityRatingChange: (rating: number) => void;
+  /** `unknown` = probe pending or not run; from `entityRatingSupportByServer`. */
+  entityRatingSupport: EntityRatingSupportLevel | 'unknown';
 }
 
 export default function AlbumHeader({
@@ -107,6 +113,9 @@ export default function AlbumHeader({
   onEnqueueAll,
   onBio,
   onCloseBio,
+  entityRatingValue,
+  onEntityRatingChange,
+  entityRatingSupport,
 }: AlbumHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -185,6 +194,15 @@ export default function AlbumHeader({
                     </button>
                   </>
                 )}
+              </div>
+              <div className="album-detail-entity-rating">
+                <span className="album-detail-entity-rating-label">{t('entityRating.albumShort')}</span>
+                <StarRating
+                  value={entityRatingValue}
+                  onChange={onEntityRatingChange}
+                  disabled={entityRatingSupport === 'track_only'}
+                  labelKey="entityRating.albumAriaLabel"
+                />
               </div>
               {isMobile ? (
                 <div className="album-detail-actions-mobile">

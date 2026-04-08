@@ -56,7 +56,7 @@ import { IS_LINUX } from './utils/platform';
 import { version } from '../package.json';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 import { useAuthStore } from './store/authStore';
-import { getMusicFolders } from './api/subsonic';
+import { getMusicFolders, probeEntityRatingSupport } from './api/subsonic';
 import { useOfflineStore } from './store/offlineStore';
 import { initHotCachePrefetch } from './hotCachePrefetch';
 import { usePlayerStore, initAudioListeners } from './store/playerStore';
@@ -101,6 +101,7 @@ function AppShell() {
   const activeServerId = useAuthStore(s => s.activeServerId);
   const setMusicFolders = useAuthStore(s => s.setMusicFolders);
   const useCustomTitlebar = useAuthStore(s => s.useCustomTitlebar);
+  const setEntityRatingSupport = useAuthStore(s => s.setEntityRatingSupport);
   const offlineAlbums = useOfflineStore(s => s.albums);
   const hasOfflineContent = Object.values(offlineAlbums).some(a => a.serverId === serverId);
 
@@ -112,19 +113,27 @@ function AppShell() {
 
   useEffect(() => {
     if (!isLoggedIn || !activeServerId) return;
+    const serverAtStart = activeServerId;
     let cancelled = false;
     (async () => {
+      const stillThisServer = () => !cancelled && useAuthStore.getState().activeServerId === serverAtStart;
       try {
         const folders = await getMusicFolders();
-        if (!cancelled) setMusicFolders(folders);
+        if (stillThisServer()) setMusicFolders(folders);
       } catch {
-        if (!cancelled) setMusicFolders([]);
+        if (stillThisServer()) setMusicFolders([]);
+      }
+      try {
+        const level = await probeEntityRatingSupport();
+        if (stillThisServer()) setEntityRatingSupport(serverAtStart, level);
+      } catch {
+        if (stillThisServer()) setEntityRatingSupport(serverAtStart, 'track_only');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, activeServerId, setMusicFolders]);
+  }, [isLoggedIn, activeServerId, setMusicFolders, setEntityRatingSupport]);
 
   // Reset scroll position on route change
   useEffect(() => {

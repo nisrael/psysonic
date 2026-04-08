@@ -13,6 +13,7 @@ import AlbumHeader from '../components/AlbumHeader';
 import AlbumTrackList from '../components/AlbumTrackList';
 import { useCachedUrl } from '../components/CachedImage';
 import { useTranslation } from 'react-i18next';
+import { showToast } from '../utils/toast';
 
 function sanitizeFilename(name: string): string {
   return name
@@ -33,6 +34,7 @@ export default function AlbumDetail() {
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const starredOverrides = usePlayerStore(s => s.starredOverrides);
   const setStarredOverride = usePlayerStore(s => s.setStarredOverride);
+  const userRatingOverrides = usePlayerStore(s => s.userRatingOverrides);
   const currentTrack = usePlayerStore(s => s.currentTrack);
   const isPlaying = usePlayerStore(s => s.isPlaying);
 
@@ -52,6 +54,11 @@ export default function AlbumDetail() {
   const offlineAlbums = useOfflineStore(s => s.albums);
   const offlineJobs = useOfflineStore(s => s.jobs);
   const serverId = auth.activeServerId ?? '';
+  const entityRatingSupportByServer = useAuthStore(s => s.entityRatingSupportByServer);
+  const setEntityRatingSupport = useAuthStore(s => s.setEntityRatingSupport);
+  const albumEntityRatingSupport = entityRatingSupportByServer[serverId] ?? 'unknown';
+
+  const [albumEntityRating, setAlbumEntityRating] = useState(0);
 
   const offlineStatus: 'none' | 'downloading' | 'cached' = (() => {
     if (!album) return 'none';
@@ -90,6 +97,11 @@ export default function AlbumDetail() {
     }).catch(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+    if (album && album.album.id === id) setAlbumEntityRating(album.album.userRating ?? 0);
+  }, [id, album?.album.id, album?.album.userRating]);
+
 const handlePlayAll = () => {
      if (!album) return;
      const albumGenre = album.album.genre;
@@ -126,7 +138,35 @@ const handleEnqueueAll = () => {
 
   const handleRate = async (songId: string, rating: number) => {
     setRatings(r => ({ ...r, [songId]: rating }));
+    usePlayerStore.getState().setUserRatingOverride(songId, rating);
     await setRating(songId, rating);
+  };
+
+  const handleAlbumEntityRating = async (rating: number) => {
+    if (!album || album.album.id !== id) return;
+    const albumId = album.album.id;
+    const ratingAtStart = album.album.userRating ?? 0;
+
+    setAlbumEntityRating(rating);
+
+    if (albumEntityRatingSupport !== 'full') return;
+
+    try {
+      await setRating(albumId, rating);
+      setAlbum(cur =>
+        cur && cur.album.id === albumId
+          ? { ...cur, album: { ...cur.album, userRating: rating } }
+          : cur,
+      );
+    } catch (err) {
+      setAlbumEntityRating(ratingAtStart);
+      setEntityRatingSupport(serverId, 'track_only');
+      showToast(
+        typeof err === 'string' ? err : err instanceof Error ? err.message : t('entityRating.saveFailed'),
+        4500,
+        'error',
+      );
+    }
   };
 
   const handleBio = async () => {
@@ -270,6 +310,9 @@ const handleEnqueueAll = () => {
         offlineProgress={offlineProgress}
         onCacheOffline={handleCacheOffline}
         onRemoveOffline={handleRemoveOffline}
+        entityRatingValue={albumEntityRating}
+        onEntityRatingChange={handleAlbumEntityRating}
+        entityRatingSupport={albumEntityRatingSupport}
       />
       {offlineStorageFull && (
         <div className="offline-storage-full-banner" role="alert">
@@ -290,6 +333,7 @@ const handleEnqueueAll = () => {
         currentTrack={currentTrack}
         isPlaying={isPlaying}
         ratings={ratings}
+        userRatingOverrides={userRatingOverrides}
         starredSongs={new Set([
           ...[...starredSongs].filter(id => starredOverrides[id] !== false),
           ...Object.entries(starredOverrides).filter(([, v]) => v).map(([k]) => k),

@@ -10,6 +10,28 @@ function fmt(s: number): string {
 const BAR_COUNT = 500;
 const SEG_COUNT = 60;
 
+// ── animation state ───────────────────────────────────────────────────────────
+
+type Particle = {
+  x: number; y: number;
+  vx: number; vy: number;
+  life: number; maxLife: number;
+  size: number;
+};
+
+export type AnimState = {
+  particles: Particle[];
+  time: number;
+  lastProgress: number;
+  angle: number;
+};
+
+export function makeAnimState(): AnimState {
+  return { particles: [], time: 0, lastProgress: 0, angle: 0 };
+}
+
+const ANIMATED_STYLES = new Set<SeekbarStyle>(['particletrail', 'pulsewave', 'liquidfill', 'retrotape']);
+
 // ── color helper ──────────────────────────────────────────────────────────────
 
 function getColors() {
@@ -275,6 +297,390 @@ function drawSegmented(canvas: HTMLCanvasElement, progress: number, buffered: nu
   ctx.globalAlpha = 1;
 }
 
+// ── new styles ────────────────────────────────────────────────────────────────
+
+function drawNeon(canvas: HTMLCanvasElement, progress: number, buffered: number) {
+  const r = setupCanvas(canvas);
+  if (!r) return;
+  const { ctx, w, h } = r;
+  const { played, unplayed } = getColors();
+  const cy = h / 2;
+
+  // Ghost track — barely visible
+  ctx.globalAlpha = 0.07;
+  ctx.fillStyle = unplayed;
+  ctx.fillRect(0, cy - 1, w, 2);
+
+  if (buffered > 0) {
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = unplayed;
+    ctx.fillRect(0, cy - 1, buffered * w, 2);
+  }
+
+  if (progress <= 0) return;
+
+  const px = progress * w;
+
+  // Wide outer glow
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = played;
+  ctx.shadowColor = played;
+  ctx.shadowBlur = 22;
+  ctx.fillRect(0, cy - 5, px, 10);
+
+  // Mid glow
+  ctx.globalAlpha = 0.45;
+  ctx.shadowBlur = 12;
+  ctx.fillRect(0, cy - 2.5, px, 5);
+
+  // Inner glow
+  ctx.globalAlpha = 0.85;
+  ctx.shadowBlur = 5;
+  ctx.fillRect(0, cy - 1.5, px, 3);
+
+  // Bright white core
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = played;
+  ctx.shadowBlur = 4;
+  ctx.fillRect(0, cy - 0.75, px, 1.5);
+
+  // End-cap flare
+  ctx.shadowBlur = 16;
+  ctx.beginPath();
+  ctx.arc(px, cy, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+}
+
+function drawPulseWave(
+  canvas: HTMLCanvasElement,
+  progress: number,
+  buffered: number,
+  animState: AnimState,
+) {
+  const r = setupCanvas(canvas);
+  if (!r) return;
+  const { ctx, w, h } = r;
+  const { played, buffered: buffCol, unplayed } = getColors();
+  const cy = h / 2;
+  const px = progress * w;
+  const t = animState.time;
+
+  // Base line
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = unplayed;
+  ctx.fillRect(0, cy - 1, w, 2);
+
+  if (buffered > 0) {
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = buffCol;
+    ctx.fillRect(0, cy - 1, buffered * w, 2);
+  }
+
+  // Played flat line
+  if (progress > 0) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = played;
+    ctx.shadowColor = played;
+    ctx.shadowBlur = 3;
+    ctx.fillRect(0, cy - 1, px, 2);
+    ctx.shadowBlur = 0;
+  }
+
+  // Animated pulse centered at playhead
+  const pulseR = Math.min(38, w * 0.13);
+  const amp = Math.min(h * 0.42, 5.5);
+  const sigma = pulseR * 0.42;
+  const startX = Math.max(0, px - pulseR);
+  const endX   = Math.min(w, px + pulseR);
+
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = played;
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = played;
+  ctx.shadowBlur = 7;
+  ctx.lineJoin = 'round';
+  ctx.lineCap  = 'round';
+  ctx.beginPath();
+  ctx.moveTo(startX, cy);
+  for (let x = startX; x <= endX; x += 0.75) {
+    const dx  = x - px;
+    const env = Math.exp(-(dx * dx) / (2 * sigma * sigma));
+    const wave = env * amp * Math.sin(dx * 0.28 - t * 18);
+    ctx.lineTo(x, cy - wave);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+}
+
+function drawParticleTrail(
+  canvas: HTMLCanvasElement,
+  progress: number,
+  buffered: number,
+  animState: AnimState,
+) {
+  const r = setupCanvas(canvas);
+  if (!r) return;
+  const { ctx, w, h } = r;
+  const { played, buffered: buffCol, unplayed } = getColors();
+  const cy = h / 2;
+  const px = progress * w;
+
+  // Spawn particles at playhead based on movement
+  const prevPx = animState.lastProgress * w;
+  const moved  = Math.abs(px - prevPx);
+  const spawnN = Math.min(5, 1 + Math.floor(moved * 1.5));
+  for (let i = 0; i < spawnN; i++) {
+    animState.particles.push({
+      x:       px + (Math.random() - 0.5) * 3,
+      y:       cy + (Math.random() - 0.5) * (h * 0.55),
+      vx:      -(Math.random() * 1.0 + 0.3),
+      vy:      (Math.random() - 0.5) * 0.6,
+      life:    1,
+      maxLife: 25 + Math.random() * 35,
+      size:    Math.random() * 1.8 + 0.8,
+    });
+  }
+  animState.lastProgress = progress;
+
+  // Update + cull
+  for (const p of animState.particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy *= 0.97;
+    p.life -= 1 / p.maxLife;
+  }
+  animState.particles = animState.particles.filter(p => p.life > 0);
+  if (animState.particles.length > 180) {
+    animState.particles = animState.particles.slice(-180);
+  }
+
+  // Background line
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = unplayed;
+  ctx.fillRect(0, cy - 1, w, 2);
+
+  if (buffered > 0) {
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = buffCol;
+    ctx.fillRect(0, cy - 1, buffered * w, 2);
+  }
+
+  // Played line
+  if (progress > 0) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = played;
+    ctx.shadowColor = played;
+    ctx.shadowBlur = 4;
+    ctx.fillRect(0, cy - 1, px, 2);
+    ctx.shadowBlur = 0;
+  }
+
+  // Particles
+  ctx.shadowColor = played;
+  for (const p of animState.particles) {
+    ctx.globalAlpha = p.life * 0.85;
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = played;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Playhead dot
+  if (progress > 0) {
+    const dx = Math.max(5, Math.min(w - 5, px));
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = played;
+    ctx.shadowColor = played;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(dx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function drawLiquidFill(
+  canvas: HTMLCanvasElement,
+  progress: number,
+  buffered: number,
+  animState: AnimState,
+) {
+  const r = setupCanvas(canvas);
+  if (!r) return;
+  const { ctx, w, h } = r;
+  const { played, buffered: buffCol, unplayed } = getColors();
+  const t = animState.time;
+
+  const tubeH = Math.min(13, Math.max(6, h * 0.62));
+  const tubeR = tubeH / 2;
+  const y0    = (h - tubeH) / 2;
+  const y1    = y0 + tubeH;
+
+  // Glass tube background
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = unplayed;
+  ctx.beginPath();
+  ctx.roundRect(0, y0, w, tubeH, tubeR);
+  ctx.fill();
+  ctx.globalAlpha = 0.3;
+  ctx.strokeStyle = unplayed;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  if (buffered > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(0, y0, w, tubeH, tubeR);
+    ctx.clip();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = buffCol;
+    ctx.fillRect(0, y0, buffered * w, tubeH);
+    ctx.restore();
+  }
+
+  if (progress > 0) {
+    const px = progress * w;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(0, y0, w, tubeH, tubeR);
+    ctx.clip();
+
+    // Liquid body with animated wave on top surface
+    const surfaceY  = y0 + tubeH * 0.22; // liquid surface ~78% full
+    const waveAmp   = Math.min(2.0, tubeH * 0.14);
+    const waveFreq  = 0.09;
+
+    ctx.beginPath();
+    ctx.moveTo(-1, y1 + 1);
+    ctx.lineTo(-1, surfaceY);
+
+    for (let x = 0; x <= px + 1; x += 1) {
+      const wave = waveAmp * Math.sin(x * waveFreq + t * 2.2);
+      ctx.lineTo(x, surfaceY + wave);
+    }
+    ctx.lineTo(px + 1, y1 + 1);
+    ctx.closePath();
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = played;
+    ctx.shadowColor = played;
+    ctx.shadowBlur = 9;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Glass highlight on top
+    const hl = ctx.createLinearGradient(0, y0, 0, y0 + tubeH * 0.45);
+    hl.addColorStop(0, 'rgba(255,255,255,0.28)');
+    hl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = hl;
+    ctx.fillRect(0, y0, px, tubeH * 0.45);
+
+    ctx.restore();
+  }
+
+  // Tube outline (on top)
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = unplayed;
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.roundRect(0, y0, w, tubeH, tubeR);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+}
+
+function drawRetroTape(
+  canvas: HTMLCanvasElement,
+  progress: number,
+  _buffered: number,
+  animState: AnimState,
+) {
+  const r = setupCanvas(canvas);
+  if (!r) return;
+  const { ctx, w, h } = r;
+  const { played, unplayed } = getColors();
+  const cy = h / 2;
+
+  animState.angle += 0.042;
+
+  const maxR = Math.floor(h / 2) - 1;
+  const minR = Math.max(2, maxR * 0.28);
+  // supply reel (left): shrinks as progress increases
+  const rL = minR + (maxR - minR) * (1 - progress);
+  // takeup reel (right): grows as progress increases
+  const rR = minR + (maxR - minR) * progress;
+  const lx = maxR + 1;
+  const rx = w - maxR - 1;
+
+  // Tape between reels
+  const tapeLeft  = lx + rL + 0.5;
+  const tapeRight = rx - rR - 0.5;
+  if (tapeRight > tapeLeft) {
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = unplayed;
+    ctx.fillRect(tapeLeft, cy - 1.5, tapeRight - tapeLeft, 3);
+  }
+
+  const drawReel = (
+    cx: number,
+    radius: number,
+    angle: number,
+    isRight: boolean,
+  ) => {
+    const color = isRight ? played : unplayed;
+    const alpha = isRight ? (progress > 0 ? 1 : 0.35) : (progress < 1 ? 0.55 : 0.35);
+    const glowing = isRight && progress > 0;
+
+    ctx.globalAlpha = alpha;
+    if (glowing) { ctx.shadowColor = played; ctx.shadowBlur = 6; }
+
+    // Outer ring
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Hub
+    const hubR = Math.max(1.5, radius * 0.3);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spokes (only if reel is large enough)
+    if (radius > hubR + 2.5) {
+      ctx.lineWidth   = 0.9;
+      ctx.strokeStyle = color;
+      for (let s = 0; s < 3; s++) {
+        const a = angle + (s * Math.PI * 2) / 3;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * (hubR + 0.5), cy + Math.sin(a) * (hubR + 0.5));
+        ctx.lineTo(cx + Math.cos(a) * (radius - 0.5), cy + Math.sin(a) * (radius - 0.5));
+        ctx.stroke();
+      }
+    }
+  };
+
+  drawReel(lx, rL, -animState.angle, false);
+  drawReel(rx, rR,  animState.angle, true);
+
+  ctx.globalAlpha = 1;
+}
+
 // ── dispatcher ────────────────────────────────────────────────────────────────
 
 export function drawSeekbar(
@@ -283,13 +689,20 @@ export function drawSeekbar(
   heights: Float32Array | null,
   progress: number,
   buffered: number,
+  animState?: AnimState,
 ) {
+  const anim = animState ?? makeAnimState();
   switch (style) {
-    case 'waveform':  drawWaveform(canvas, heights, progress, buffered); break;
-    case 'linedot':   drawLineDot(canvas, progress, buffered); break;
-    case 'bar':       drawBar(canvas, progress, buffered); break;
-    case 'thick':     drawThick(canvas, progress, buffered); break;
-    case 'segmented': drawSegmented(canvas, progress, buffered); break;
+    case 'waveform':      drawWaveform(canvas, heights, progress, buffered); break;
+    case 'linedot':       drawLineDot(canvas, progress, buffered); break;
+    case 'bar':           drawBar(canvas, progress, buffered); break;
+    case 'thick':         drawThick(canvas, progress, buffered); break;
+    case 'segmented':     drawSegmented(canvas, progress, buffered); break;
+    case 'neon':          drawNeon(canvas, progress, buffered); break;
+    case 'pulsewave':     drawPulseWave(canvas, progress, buffered, anim); break;
+    case 'particletrail': drawParticleTrail(canvas, progress, buffered, anim); break;
+    case 'liquidfill':    drawLiquidFill(canvas, progress, buffered, anim); break;
+    case 'retrotape':     drawRetroTape(canvas, progress, buffered, anim); break;
   }
 }
 
@@ -312,13 +725,15 @@ export function SeekbarPreview({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const heights = style === 'waveform' ? makeHeights('seekbar-preview-demo') : null;
+    const heights   = style === 'waveform' ? makeHeights('seekbar-preview-demo') : null;
+    const animState = makeAnimState();
     let t = 0;
     const tick = () => {
-      t += 0.012;
+      t += 0.016;
+      animState.time = t;
       const progress = 0.15 + 0.65 * (0.5 + 0.5 * Math.sin(t));
       const buffered  = Math.min(1, progress + 0.18);
-      drawSeekbar(canvas, style, heights, progress, buffered);
+      drawSeekbar(canvas, style, heights, progress, buffered, animState);
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -367,11 +782,12 @@ interface Props {
 }
 
 export default function WaveformSeek({ trackId }: Props) {
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const heightsRef  = useRef<Float32Array | null>(null);
-  const progressRef = useRef(0);
-  const bufferedRef = useRef(0);
-  const isDragging  = useRef(false);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const heightsRef   = useRef<Float32Array | null>(null);
+  const progressRef  = useRef(0);
+  const bufferedRef  = useRef(0);
+  const isDragging   = useRef(false);
+  const animStateRef = useRef<AnimState>(makeAnimState());
 
   const [hoverPct, setHoverPct] = useState<number | null>(null);
 
@@ -388,17 +804,43 @@ export default function WaveformSeek({ trackId }: Props) {
     heightsRef.current = trackId ? makeHeights(trackId) : null;
   }, [trackId]);
 
+  // Static styles: redraw on progress / buffered / track changes
   useEffect(() => {
+    if (ANIMATED_STYLES.has(seekbarStyle)) return;
     if (canvasRef.current) {
       drawSeekbar(canvasRef.current, seekbarStyle, heightsRef.current, progress, buffered);
     }
   }, [progress, buffered, trackId, seekbarStyle]);
 
+  // Animated styles: rAF loop
+  useEffect(() => {
+    if (!ANIMATED_STYLES.has(seekbarStyle)) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    animStateRef.current = makeAnimState();
+    let rafId: number;
+    const tick = () => {
+      animStateRef.current.time += 0.016;
+      drawSeekbar(
+        canvas,
+        seekbarStyle,
+        heightsRef.current,
+        progressRef.current,
+        bufferedRef.current,
+        animStateRef.current,
+      );
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [seekbarStyle]);
+
+  // Resize observer
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ro = new ResizeObserver(() => {
-      drawSeekbar(canvas, seekbarStyle, heightsRef.current, progressRef.current, bufferedRef.current);
+      drawSeekbar(canvas, seekbarStyle, heightsRef.current, progressRef.current, bufferedRef.current, animStateRef.current);
     });
     ro.observe(canvas);
     return () => ro.disconnect();

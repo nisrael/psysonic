@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Wifi, WifiOff, Globe, Music2, Sliders, LogOut, CheckCircle2, FolderOpen,
   Palette, Server, Plus, Trash2, Eye, EyeOff, Info, ExternalLink, Shuffle, X, Play, Type, Keyboard, ChevronDown,
-  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves
+  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves, Star
 } from 'lucide-react';
 import { exportBackup, importBackup } from '../utils/backup';
 import { showToast } from '../utils/toast';
@@ -18,7 +18,7 @@ import { lastfmGetToken, lastfmAuthUrl, lastfmGetSession, lastfmGetUserInfo, Las
 import LastfmIcon from '../components/LastfmIcon';
 import CustomSelect from '../components/CustomSelect';
 import ThemePicker from '../components/ThemePicker';
-import { useAuthStore, ServerProfile, type SeekbarStyle } from '../store/authStore';
+import { useAuthStore, ServerProfile, MIX_MIN_RATING_FILTER_MAX_STARS, type SeekbarStyle } from '../store/authStore';
 import { SeekbarPreview } from '../components/WaveformSeek';
 import { IS_LINUX } from '../utils/platform';
 import { useThemeStore } from '../store/themeStore';
@@ -33,6 +33,7 @@ import { pingWithCredentials } from '../api/subsonic';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { useTranslation } from 'react-i18next';
 import Equalizer from '../components/Equalizer';
+import StarRating from '../components/StarRating';
 
 const AUDIOBOOK_GENRES_DISPLAY = ['Hörbuch', 'Hoerbuch', 'Hörspiel', 'Hoerspiel', 'Audiobook', 'Audio Book', 'Spoken Word', 'Spokenword', 'Podcast', 'Kapitel', 'Thriller', 'Krimi', 'Speech', 'Fantasy', 'Comedy', 'Literature'];
 
@@ -778,6 +779,111 @@ export default function Settings() {
             </div>
           </section>
 
+          {/* Ratings (single block under Random Mix) */}
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Star size={18} />
+              <h2>{t('settings.ratingsSectionTitle')}</h2>
+            </div>
+            <div className="settings-card">
+              <div className="settings-toggle-row">
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('settings.ratingsSkipStarTitle')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.ratingsSkipStarDesc')}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  {auth.skipStarOnManualSkipsEnabled && (
+                    <>
+                      <label htmlFor="settings-skip-star-threshold" style={{ fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        {t('settings.ratingsSkipStarThresholdLabel')}
+                      </label>
+                      <input
+                        id="settings-skip-star-threshold"
+                        className="input"
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={auth.skipStarManualSkipThreshold}
+                        onChange={e => auth.setSkipStarManualSkipThreshold(Number(e.target.value))}
+                        style={{ width: 72, padding: '6px 10px', fontSize: 13 }}
+                        aria-label={t('settings.ratingsSkipStarThresholdLabel')}
+                      />
+                    </>
+                  )}
+                  <label className="toggle-switch" aria-label={t('settings.ratingsSkipStarTitle')}>
+                    <input
+                      type="checkbox"
+                      checked={auth.skipStarOnManualSkipsEnabled}
+                      onChange={e => auth.setSkipStarOnManualSkipsEnabled(e.target.checked)}
+                    />
+                    <span className="toggle-track" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="settings-section-divider" />
+
+              <div className="settings-toggle-row">
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('settings.ratingsMixFilterTitle')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {t('settings.ratingsMixFilterDesc', {
+                      mix: t('sidebar.randomMix'),
+                      albums: t('sidebar.randomAlbums'),
+                    })}
+                  </div>
+                </div>
+                <label className="toggle-switch" aria-label={t('settings.ratingsMixFilterTitle')}>
+                  <input
+                    type="checkbox"
+                    checked={auth.mixMinRatingFilterEnabled}
+                    onChange={e => auth.setMixMinRatingFilterEnabled(e.target.checked)}
+                  />
+                  <span className="toggle-track" />
+                </label>
+              </div>
+              {auth.mixMinRatingFilterEnabled && (
+                <>
+                  <div className="settings-section-divider" />
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gap: '1rem 0.75rem',
+                      alignItems: 'start',
+                    }}
+                  >
+                    {([
+                      { key: 'song', label: t('settings.ratingsMixMinSong'), value: auth.mixMinRatingSong, set: auth.setMixMinRatingSong },
+                      { key: 'album', label: t('settings.ratingsMixMinAlbum'), value: auth.mixMinRatingAlbum, set: auth.setMixMinRatingAlbum },
+                      { key: 'artist', label: t('settings.ratingsMixMinArtist'), value: auth.mixMinRatingArtist, set: auth.setMixMinRatingArtist },
+                    ] as const).map(row => (
+                      <div
+                        key={row.key}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 8,
+                          minWidth: 0,
+                          textAlign: 'center',
+                        }}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>{row.label}</span>
+                        <StarRating
+                          maxSelectable={MIX_MIN_RATING_FILTER_MAX_STARS}
+                          value={row.value}
+                          onChange={row.set}
+                          ariaLabel={t('settings.ratingsMixMinThresholdAria', { label: row.label })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
           <HomeCustomizer />
         </>
       )}
@@ -1158,7 +1264,7 @@ export default function Settings() {
                 {t('settings.seekbarStyleDesc')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {(['waveform', 'linedot', 'bar', 'thick', 'segmented'] as SeekbarStyle[]).map(style => (
+                {(['waveform', 'linedot', 'bar', 'thick', 'segmented', 'neon', 'pulsewave', 'particletrail', 'liquidfill', 'retrotape'] as SeekbarStyle[]).map(style => (
                   <SeekbarPreview
                     key={style}
                     style={style}

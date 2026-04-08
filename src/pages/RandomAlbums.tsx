@@ -5,6 +5,7 @@ import AlbumCard from '../components/AlbumCard';
 import GenreFilterBar from '../components/GenreFilterBar';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
+import { filterAlbumsByMixRatings, getMixMinRatingsConfigFromAuth } from '../utils/mixRatingFilter';
 import { useOfflineStore } from '../store/offlineStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
 import { writeFile } from '@tauri-apps/plugin-fs';
@@ -12,6 +13,10 @@ import { join } from '@tauri-apps/api/path';
 import { showToast } from '../utils/toast';
 
 const ALBUM_COUNT = 30;
+/** Extra pool when mix rating filter is on so we can still fill the grid after filtering. */
+const ALBUM_FETCH_OVERSHOOT = 100;
+/** Cap genre-union size before rating prefetch (avoids hundreds of `getArtist` calls). */
+const GENRE_UNION_PREFILTER_CAP = 250;
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim() || 'download';
@@ -25,17 +30,21 @@ async function fetchByGenres(genres: string[]): Promise<SubsonicAlbum[]> {
     const j = Math.floor(Math.random() * (i + 1));
     [union[i], union[j]] = [union[j], union[i]];
   }
-  return union.slice(0, ALBUM_COUNT);
+  const pool = union.slice(0, GENRE_UNION_PREFILTER_CAP);
+  const filtered = await filterAlbumsByMixRatings(pool, getMixMinRatingsConfigFromAuth());
+  return filtered.slice(0, ALBUM_COUNT);
 }
 
 export default function RandomAlbums() {
   const { t } = useTranslation();
-  const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
   const auth = useAuthStore();
-  const serverId = useAuthStore(s => s.activeServerId ?? '');
+  const musicLibraryFilterVersion = auth.musicLibraryFilterVersion;
+  const mixMinRatingFilterEnabled = auth.mixMinRatingFilterEnabled;
+  const mixMinRatingAlbum = auth.mixMinRatingAlbum;
+  const mixMinRatingArtist = auth.mixMinRatingArtist;
+  const serverId = auth.activeServerId ?? '';
   const { downloadAlbum } = useOfflineStore();
   const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
-
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -94,7 +103,13 @@ export default function RandomAlbums() {
     loadingRef.current = true;
     setLoading(true);
     try {
-      const data = genres.length > 0 ? await fetchByGenres(genres) : await getAlbumList('random', ALBUM_COUNT);
+      const mixCfg = getMixMinRatingsConfigFromAuth();
+      const albumMixActive =
+        mixCfg.enabled && (mixCfg.minAlbum > 0 || mixCfg.minArtist > 0);
+      const randomSize = albumMixActive ? Math.max(ALBUM_COUNT * 3, ALBUM_FETCH_OVERSHOOT) : ALBUM_COUNT;
+      const data = genres.length > 0
+        ? await fetchByGenres(genres)
+        : (await filterAlbumsByMixRatings(await getAlbumList('random', randomSize), mixCfg)).slice(0, ALBUM_COUNT);
       setAlbums(data);
     } catch (e) {
       console.error(e);
@@ -102,7 +117,12 @@ export default function RandomAlbums() {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [musicLibraryFilterVersion]);
+  }, [
+    musicLibraryFilterVersion,
+    mixMinRatingFilterEnabled,
+    mixMinRatingAlbum,
+    mixMinRatingArtist,
+  ]);
 
   useEffect(() => { load(selectedGenres); }, [selectedGenres, load]);
 

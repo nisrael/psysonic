@@ -20,7 +20,7 @@ const FAV_COLUMNS: readonly ColDef[] = [
   { key: 'num',      i18nKey: null,            minWidth: 60,  defaultWidth: 60,  required: true  },
   { key: 'title',    i18nKey: 'trackTitle',    minWidth: 150, defaultWidth: 0,   required: true,  flex: true },
   { key: 'artist',   i18nKey: 'trackArtist',   minWidth: 80,  defaultWidth: 180, required: false },
-  { key: 'duration', i18nKey: 'trackDuration', minWidth: 50,  defaultWidth: 65,  required: false },
+  { key: 'duration', i18nKey: 'trackDuration', minWidth: 72,  defaultWidth: 92,  required: false },
   { key: 'remove',   i18nKey: null,            minWidth: 36,  defaultWidth: 36,  required: true  },
 ];
 
@@ -182,8 +182,17 @@ export default function Favorites() {
                       const isCentered = key === 'duration';
                       return (
                         <div key={key} style={{ position: 'relative', padding: 0, margin: 0, minWidth: 0, overflow: 'hidden' }}>
-                          <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: isCentered ? 'center' : 'flex-start', paddingLeft: isCentered ? 0 : 12 }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                          <div
+                            style={{
+                              display: 'flex',
+                              width: '100%',
+                              height: '100%',
+                              alignItems: 'center',
+                              justifyContent: isCentered ? 'center' : 'flex-start',
+                              paddingLeft: isCentered ? 0 : 12,
+                            }}
+                          >
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
                           </div>
                           {!isLastCol && <div className="col-resize-handle" onMouseDown={e => startResize(e, colIndex, 1)} />}
                         </div>

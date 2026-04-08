@@ -24,8 +24,13 @@ function loadPrefs(
     const parsed = JSON.parse(raw) as { widths?: Record<string, number>; visible?: string[] };
     const visible = new Set<string>(parsed.visible ?? [...defaultVisible]);
     columns.filter(c => c.required).forEach(c => visible.add(c.key));
+    const widths = { ...defaultWidths, ...(parsed.widths ?? {}) };
+    const durationCol = columns.find(c => c.key === 'duration');
+    if (durationCol && typeof widths.duration === 'number' && widths.duration < durationCol.minWidth) {
+      widths.duration = defaultWidths.duration;
+    }
     return {
-      widths: { ...defaultWidths, ...(parsed.widths ?? {}) },
+      widths,
       visible,
     };
   } catch {

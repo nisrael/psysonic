@@ -8,8 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { playAlbum } from '../utils/playAlbum';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuthStore } from '../store/authStore';
+import { filterAlbumsByMixRatings, getMixMinRatingsConfigFromAuth } from '../utils/mixRatingFilter';
 
 const INTERVAL_MS = 10000;
+const HERO_ALBUM_COUNT = 8;
+/** Larger pool when mix rating filter is on so we can still fill the hero strip. */
+const HERO_RANDOM_POOL = 32;
 
 // Crossfading background — same layer pattern as FullscreenPlayer
 function HeroBg({ url }: { url: string }) {
@@ -54,14 +58,33 @@ export default function Hero({ albums: albumsProp }: HeroProps = {}) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const mixMinRatingFilterEnabled = useAuthStore(s => s.mixMinRatingFilterEnabled);
+  const mixMinRatingAlbum = useAuthStore(s => s.mixMinRatingAlbum);
+  const mixMinRatingArtist = useAuthStore(s => s.mixMinRatingArtist);
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (albumsProp?.length) { setAlbums(albumsProp); return; }
-    getRandomAlbums(8).then(a => { if (a.length) setAlbums(a); }).catch(() => {});
-  }, [albumsProp, musicLibraryFilterVersion]);
+    const cfg = { ...getMixMinRatingsConfigFromAuth(), minSong: 0 };
+    const albumMix = cfg.enabled && (cfg.minAlbum > 0 || cfg.minArtist > 0);
+    const pool = albumMix ? HERO_RANDOM_POOL : HERO_ALBUM_COUNT;
+    getRandomAlbums(pool)
+      .then(async raw => {
+        const list = albumMix
+          ? (await filterAlbumsByMixRatings(raw, cfg)).slice(0, HERO_ALBUM_COUNT)
+          : raw;
+        setAlbums(list);
+      })
+      .catch(() => {});
+  }, [
+    albumsProp,
+    musicLibraryFilterVersion,
+    mixMinRatingFilterEnabled,
+    mixMinRatingAlbum,
+    mixMinRatingArtist,
+  ]);
 
   // Start / restart auto-advance timer
   const startTimer = useCallback((len: number) => {

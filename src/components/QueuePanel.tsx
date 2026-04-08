@@ -214,6 +214,7 @@ export default function QueuePanel() {
   const queue = usePlayerStore(s => s.queue);
   const queueIndex = usePlayerStore(s => s.queueIndex);
   const currentTrack = usePlayerStore(s => s.currentTrack);
+  const userRatingOverrides = usePlayerStore(s => s.userRatingOverrides);
   const currentCoverFetchUrl = useMemo(
     () => currentTrack?.coverArt ? buildCoverArtUrl(currentTrack.coverArt, 128) : '',
     [currentTrack?.coverArt]
@@ -447,7 +448,7 @@ export default function QueuePanel() {
               {currentTrack.year && (
                 <div className="queue-current-sub">{currentTrack.year}</div>
               )}
-              {renderStars(currentTrack.userRating)}
+              {renderStars(userRatingOverrides[currentTrack.id] ?? currentTrack.userRating)}
             </div>
           </div>
         </div>
