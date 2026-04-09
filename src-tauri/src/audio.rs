@@ -1149,7 +1149,7 @@ impl Iterator for SizedDecoder {
                         self.current_frame_offset = 0;
                         break;
                     }
-                    Err(symphonia::core::errors::Error::DecodeError(ref msg)) => {
+                    Err(symphonia::core::errors::Error::DecodeError(ref _msg)) => {
                         self.consecutive_decode_errors += 1;
                         // Log sparingly: first drop, then every 10th to avoid spam.
                         #[cfg(debug_assertions)]
