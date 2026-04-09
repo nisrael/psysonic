@@ -12,6 +12,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.2.8",
+    "@fontsource-variable/figtree": "^5.2.10",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/lexend": "^5.2.11",
+    "@fontsource-variable/manrope": "^5.2.8",
+    "@fontsource-variable/nunito": "^5.2.7",
+    "@fontsource-variable/outfit": "^5.2.8",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
+    "@fontsource-variable/rubik": "^5.2.8",
+    "@fontsource-variable/space-grotesk": "^5.2.10",
     "@tanstack/react-virtual": "^3.13.23",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.6.0",
