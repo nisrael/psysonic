@@ -8,41 +8,31 @@ use std::sync::atomic::{AtomicIsize, Ordering};
 
 use tauri::{AppHandle, Emitter};
 use windows::{
-    core::Interface,
     Win32::{
         Foundation::{HWND, LPARAM, LRESULT, WPARAM},
-        Graphics::Gdi::{
-            CreateCompatibleDC, CreateSolidBrush, DeleteDC, DeleteObject, GetStockObject,
-            Polygon, Rectangle as GdiRectangle, SelectObject, SetPolyFillMode,
-            WHITE_BRUSH, WINDING, HGDIOBJ,
-        },
         System::Com::{
             CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
         },
         UI::{
-            Controls::{DefSubclassProc, RemoveWindowSubclass, SetWindowSubclass},
             Shell::{
-                CLSID_TaskbarList, ITaskbarList3,
-                THUMBBUTTON, THUMBBUTTONFLAGS, THUMBBUTTONMASK, THBN_CLICKED,
+                DefSubclassProc, ITaskbarList3, RemoveWindowSubclass, SetWindowSubclass,
+                TaskbarList, THUMBBUTTON, THUMBBUTTONFLAGS, THUMBBUTTONMASK, THBN_CLICKED,
                 THB_FLAGS, THB_ICON, THB_TOOLTIP,
             },
             WindowsAndMessaging::{
-                CreateIconIndirect, DestroyIcon, ICONINFO,
+                CreateIconFromResourceEx, DestroyIcon, HICON, LR_DEFAULTCOLOR,
                 WM_COMMAND, WM_NCDESTROY,
             },
         },
     },
 };
-use windows::Win32::Graphics::Gdi::{
-    CreateBitmap, RGBQUAD,
-};
-use windows::Win32::UI::WindowsAndMessaging::HICON;
 
-// ── Icon indices (positions in the per-button assignment) ────────────────────
-const IDX_PREV:  u32 = 0;
-const IDX_PLAY:  u32 = 1;
-const IDX_PAUSE: u32 = 2;
-const IDX_NEXT:  u32 = 3;
+// ── Embedded ICO assets ──────────────────────────────────────────────────────
+
+static PREV_ICO:  &[u8] = include_bytes!("../icons/windows/prev.ico");
+static PLAY_ICO:  &[u8] = include_bytes!("../icons/windows/play.ico");
+static PAUSE_ICO: &[u8] = include_bytes!("../icons/windows/pause.ico");
+static NEXT_ICO:  &[u8] = include_bytes!("../icons/windows/next.ico");
 
 // Button IDs — arbitrary u32 values, must fit in WPARAM low-word.
 const BTN_PREV: u32 = 0xE001;
@@ -56,125 +46,64 @@ const SUBCLASS_ID: usize = 0xC0DE_7A8B;
 // COM object and icons without managed state.
 static TASKBAR_PTR: AtomicIsize = AtomicIsize::new(0);
 static HWND_VAL:    AtomicIsize = AtomicIsize::new(0);
-// HICONs for play and pause, stored so update_taskbar_icon can swap them.
+
+// All four HICONs stored for WM_NCDESTROY cleanup and play/pause swapping.
+static HICON_PREV:  AtomicIsize = AtomicIsize::new(0);
 static HICON_PLAY:  AtomicIsize = AtomicIsize::new(0);
 static HICON_PAUSE: AtomicIsize = AtomicIsize::new(0);
+static HICON_NEXT:  AtomicIsize = AtomicIsize::new(0);
 
-// ── GDI icon generation ──────────────────────────────────────────────────────
+// ── ICO resource loader ──────────────────────────────────────────────────────
 
-// Icon size used for all thumbnail toolbar buttons.
-const ICON_SIZE: i32 = 16;
+/// Load the best-match image from a raw `.ico` file in memory and return an HICON.
+///
+/// Parses the ICO directory to pick the entry with the highest bit depth
+/// (32 bpp = true-colour + alpha), then passes the image bits directly to
+/// `CreateIconFromResourceEx`.
+///
+/// Note: `LookupIconIdFromDirectoryEx` operates on Win32 *resource* group-icon
+/// format (GRPICONDIR), not raw `.ico` files, so we parse the ICO header ourselves.
+unsafe fn load_icon_from_memory(bytes: &[u8]) -> HICON {
+    // ICO file layout:
+    //   ICONDIR        : reserved(2) + type(2) + count(2)
+    //   ICONDIRENTRY[] : width(1) height(1) color_count(1) reserved(1)
+    //                    planes(2) bit_count(2) bytes_in_res(4) image_offset(4)
+    if bytes.len() < 6 {
+        return HICON::default();
+    }
+    let count = u16::from_le_bytes([bytes[4], bytes[5]]) as usize;
+    if count == 0 || bytes.len() < 6 + count * 16 {
+        return HICON::default();
+    }
 
-/// Draw `f` onto a monochrome bitmap, then wrap it in an HICON with a
-/// transparent background.  The closure receives an HDC sized ICON_SIZE×ICON_SIZE.
-unsafe fn make_icon<F: FnOnce(windows::Win32::Graphics::Gdi::HDC)>(draw: F) -> HICON {
-    // XOR mask: white pixels become the icon colour against dark taskbar.
-    // AND mask: all zeros → every pixel is drawn (no transparency punch-out needed
-    // for the shape itself; the taskbar composites onto its own bg).
-    let xor_bits = vec![0xFFFFFFFFu32; (ICON_SIZE * ICON_SIZE) as usize]; // white canvas
-    let and_bits = vec![0u32; (ICON_SIZE * ICON_SIZE) as usize];          // fully opaque mask
+    // Pick the entry with the highest bit depth; 32 bpp carries alpha.
+    let mut best_idx = 0usize;
+    let mut best_bpp = 0u16;
+    for i in 0..count {
+        let base = 6 + i * 16;
+        let bpp = u16::from_le_bytes([bytes[base + 6], bytes[base + 7]]);
+        if bpp >= best_bpp {
+            best_bpp = bpp;
+            best_idx = i;
+        }
+    }
 
-    // Create a 32-bpp colour bitmap we can GDI-draw into, then copy to xor_bits.
-    // Simpler: build a 1bpp monochrome bitmap directly from bit arrays.
-    // We use a colour DC approach: draw white shapes on black, extract as the XOR mask.
-    let hdc_screen = CreateCompatibleDC(None);
-    // 1-bpp monochrome DIB: width=ICON_SIZE, height=ICON_SIZE, planes=1, bpp=1
-    // For simplicity use CreateBitmap with 1bpp.
-    let hbm_xor = CreateBitmap(ICON_SIZE, ICON_SIZE, 1, 32, Some(xor_bits.as_ptr() as *const _));
-    let hbm_and = CreateBitmap(ICON_SIZE, ICON_SIZE, 1, 1, Some(and_bits.as_ptr() as *const _));
+    let entry      = &bytes[6 + best_idx * 16..];
+    let img_size   = u32::from_le_bytes(entry[8..12].try_into().unwrap_or([0; 4]));
+    let img_offset = u32::from_le_bytes(entry[12..16].try_into().unwrap_or([0; 4])) as usize;
 
-    // Select xor bitmap into DC and draw.
-    let old = SelectObject(hdc_screen, hbm_xor);
-    // Fill black background.
-    let black_brush = CreateSolidBrush(windows::Win32::Foundation::COLORREF(0x00000000));
-    GdiRectangle(hdc_screen, 0, 0, ICON_SIZE, ICON_SIZE);
-    DeleteObject(black_brush);
+    if img_size == 0 || img_offset + img_size as usize > bytes.len() {
+        return HICON::default();
+    }
 
-    // Let caller draw white shapes.
-    draw(hdc_screen);
-
-    SelectObject(hdc_screen, old);
-    DeleteDC(hdc_screen);
-
-    let info = ICONINFO {
-        fIcon: true.into(),
-        xHotspot: 0,
-        yHotspot: 0,
-        hbmMask: hbm_and,
-        hbmColor: hbm_xor,
-    };
-    let hicon = CreateIconIndirect(&info).unwrap_or_default();
-    // Bitmaps are now owned by the HICON; do NOT DeleteObject them.
-    hicon
-}
-
-/// ▶ single filled triangle pointing right.
-unsafe fn icon_play() -> HICON {
-    make_icon(|hdc| {
-        let brush = CreateSolidBrush(windows::Win32::Foundation::COLORREF(0x00FFFFFF));
-        let old   = SelectObject(hdc, brush);
-        SetPolyFillMode(hdc, WINDING);
-        let pts = [
-            windows::Win32::Foundation::POINT { x: 3,              y: 1 },
-            windows::Win32::Foundation::POINT { x: 3,              y: ICON_SIZE - 2 },
-            windows::Win32::Foundation::POINT { x: ICON_SIZE - 2,  y: ICON_SIZE / 2 },
-        ];
-        Polygon(hdc, &pts);
-        SelectObject(hdc, old);
-        DeleteObject(brush);
-    })
-}
-
-/// ⏸ two filled rectangles.
-unsafe fn icon_pause() -> HICON {
-    make_icon(|hdc| {
-        let brush = CreateSolidBrush(windows::Win32::Foundation::COLORREF(0x00FFFFFF));
-        let old   = SelectObject(hdc, brush);
-        GdiRectangle(hdc, 2, 1, 6, ICON_SIZE - 1);
-        GdiRectangle(hdc, 8, 1, 12, ICON_SIZE - 1);
-        SelectObject(hdc, old);
-        DeleteObject(brush);
-    })
-}
-
-/// ⏮ vertical bar + filled triangle pointing left.
-unsafe fn icon_prev() -> HICON {
-    make_icon(|hdc| {
-        let brush = CreateSolidBrush(windows::Win32::Foundation::COLORREF(0x00FFFFFF));
-        let old   = SelectObject(hdc, brush);
-        SetPolyFillMode(hdc, WINDING);
-        // Bar
-        GdiRectangle(hdc, 1, 1, 4, ICON_SIZE - 1);
-        // Triangle pointing left
-        let pts = [
-            windows::Win32::Foundation::POINT { x: ICON_SIZE - 2, y: 1 },
-            windows::Win32::Foundation::POINT { x: ICON_SIZE - 2, y: ICON_SIZE - 2 },
-            windows::Win32::Foundation::POINT { x: 5,             y: ICON_SIZE / 2 },
-        ];
-        Polygon(hdc, &pts);
-        SelectObject(hdc, old);
-        DeleteObject(brush);
-    })
-}
-
-/// ⏭ filled triangle pointing right + vertical bar.
-unsafe fn icon_next() -> HICON {
-    make_icon(|hdc| {
-        let brush = CreateSolidBrush(windows::Win32::Foundation::COLORREF(0x00FFFFFF));
-        let old   = SelectObject(hdc, brush);
-        SetPolyFillMode(hdc, WINDING);
-        // Triangle pointing right
-        let pts = [
-            windows::Win32::Foundation::POINT { x: 1,            y: 1 },
-            windows::Win32::Foundation::POINT { x: 1,            y: ICON_SIZE - 2 },
-            windows::Win32::Foundation::POINT { x: ICON_SIZE - 5, y: ICON_SIZE / 2 },
-        ];
-        Polygon(hdc, &pts);
-        // Bar
-        GdiRectangle(hdc, ICON_SIZE - 4, 1, ICON_SIZE - 1, ICON_SIZE - 1);
-        SelectObject(hdc, old);
-        DeleteObject(brush);
-    })
+    CreateIconFromResourceEx(
+        &bytes[img_offset..img_offset + img_size as usize],
+        true,        // fIcon = TRUE
+        0x0003_0000, // dwVer = 3.0 (required by the API)
+        0, 0,        // cxDesired / cyDesired — 0 lets the system choose
+        LR_DEFAULTCOLOR,
+    )
+    .unwrap_or_default()
 }
 
 // ── Button descriptors ───────────────────────────────────────────────────────
@@ -252,11 +181,11 @@ unsafe extern "system" fn subclass_proc(
             drop(Box::from_raw(raw as *mut ITaskbarList3));
         }
         HWND_VAL.store(0, Ordering::SeqCst);
-        // Destroy stored HICONs.
-        let hp = HICON_PLAY.swap(0, Ordering::SeqCst);
-        if hp != 0 { let _ = DestroyIcon(HICON(hp as *mut _)); }
-        let hpa = HICON_PAUSE.swap(0, Ordering::SeqCst);
-        if hpa != 0 { let _ = DestroyIcon(HICON(hpa as *mut _)); }
+        // Destroy all stored HICONs.
+        for cell in [&HICON_PREV, &HICON_PLAY, &HICON_PAUSE, &HICON_NEXT] {
+            let h = cell.swap(0, Ordering::SeqCst);
+            if h != 0 { let _ = DestroyIcon(HICON(h as *mut _)); }
+        }
     }
 
     DefSubclassProc(hwnd, msg, wparam, lparam)
@@ -271,7 +200,7 @@ pub fn init(app: &AppHandle, hwnd_raw: isize) {
         let hwnd = HWND(hwnd_raw as *mut _);
 
         let taskbar: ITaskbarList3 = match CoCreateInstance(
-            &CLSID_TaskbarList, None, CLSCTX_INPROC_SERVER,
+            &TaskbarList, None, CLSCTX_INPROC_SERVER,
         ) {
             Ok(t)  => t,
             Err(e) => { eprintln!("[psysonic] taskbar: CoCreateInstance failed: {e}"); return; }
@@ -282,14 +211,16 @@ pub fn init(app: &AppHandle, hwnd_raw: isize) {
             return;
         }
 
-        let h_prev  = icon_prev();
-        let h_play  = icon_play();
-        let h_pause = icon_pause();
-        let h_next  = icon_next();
+        let h_prev  = load_icon_from_memory(PREV_ICO);
+        let h_play  = load_icon_from_memory(PLAY_ICO);
+        let h_pause = load_icon_from_memory(PAUSE_ICO);
+        let h_next  = load_icon_from_memory(NEXT_ICO);
 
-        // Store play/pause HICONs for later swapping.
+        // Store all HICONs for cleanup and play/pause swapping.
+        HICON_PREV .store(h_prev .0 as isize, Ordering::SeqCst);
         HICON_PLAY .store(h_play .0 as isize, Ordering::SeqCst);
         HICON_PAUSE.store(h_pause.0 as isize, Ordering::SeqCst);
+        HICON_NEXT .store(h_next .0 as isize, Ordering::SeqCst);
 
         let mut buttons = make_buttons(h_prev, h_play, h_next);
         if let Err(e) = taskbar.ThumbBarAddButtons(hwnd, &mut buttons) {
@@ -302,7 +233,7 @@ pub fn init(app: &AppHandle, hwnd_raw: isize) {
         HWND_VAL   .store(hwnd_raw,     Ordering::SeqCst);
 
         let data = Box::into_raw(Box::new(SubclassData { app: app.clone() }));
-        if SetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, data as usize).is_err() {
+        if !SetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, data as usize).as_bool() {
             eprintln!("[psysonic] taskbar: SetWindowSubclass failed");
             drop(Box::from_raw(data));
         }
