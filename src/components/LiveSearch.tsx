@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Disc3, Users, Music, SlidersHorizontal } from 'lucide-react';
+import { Search, Disc3, Users, Music, SlidersVertical } from 'lucide-react';
 import { search, SearchResults, buildCoverArtUrl } from '../api/subsonic';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
@@ -126,7 +126,7 @@ export default function LiveSearch() {
           data-tooltip-pos="bottom"
           aria-label={t('search.advanced')}
         >
-          <SlidersHorizontal size={14} />
+          <SlidersVertical size={14} />
         </button>
       </div>
 

@@ -1386,6 +1386,13 @@ pub fn run() {
                 }
             }
 
+            // ── Audio device-change watcher ───────────────────────────────
+            {
+                use tauri::Manager;
+                let engine = app.state::<audio::AudioEngine>();
+                audio::start_device_watcher(&engine, app.handle().clone());
+            }
+
             Ok(())
         })
         .on_window_event(|window, event| {

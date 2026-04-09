@@ -413,6 +413,28 @@ function TauriEventBridge() {
     return () => { unlisten?.(); };
   }, []);
 
+  // Audio output device changed (Bluetooth headphones, USB DAC, etc.)
+  // The Rust device-watcher has already reopened the stream on the new device
+  // and dropped the old Sink, so we just need to restart playback.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    listen('audio:device-changed', () => {
+      const { currentTrack, currentTime, isPlaying, playTrack, resetAudioPause } = usePlayerStore.getState();
+      if (!currentTrack) return;
+      if (isPlaying) {
+        const pos = currentTime;
+        const dur = currentTrack.duration || 1;
+        playTrack(currentTrack);
+        setTimeout(() => usePlayerStore.getState().seek(pos / dur), 600);
+      } else {
+        // Paused: clear warm-pause flag so the next resume uses the cold path
+        // (audio_play + seek) which creates a new Sink on the new device.
+        resetAudioPause();
+      }
+    }).then(u => { unlisten = u; });
+    return () => { unlisten?.(); };
+  }, []);
+
   // Sync tray-icon visibility with the user's stored setting.
   // Runs once on mount (initial sync) and again whenever the setting changes.
   const showTrayIcon = useAuthStore(s => s.showTrayIcon);

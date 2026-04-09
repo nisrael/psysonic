@@ -117,6 +117,7 @@ interface PlayerState {
   setLastfmLovedForSong: (title: string, artist: string, v: boolean) => void;
   syncLastfmLovedTracks: () => Promise<void>;
 
+  resetAudioPause: () => void;
   initializeFromServerQueue: () => Promise<void>;
 
   contextMenu: {
@@ -861,6 +862,10 @@ export const usePlayerStore = create<PlayerState>()(
           isAudioPaused = true;
         }
         set({ isPlaying: false });
+      },
+
+      resetAudioPause: () => {
+        isAudioPaused = false;
       },
 
       resume: () => {

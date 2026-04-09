@@ -2883,3 +2883,75 @@ pub fn audio_set_crossfade(enabled: bool, secs: f32, state: State<'_, AudioEngin
 pub fn audio_set_gapless(enabled: bool, state: State<'_, AudioEngine>) {
     state.gapless_enabled.store(enabled, Ordering::Relaxed);
 }
+
+// ─── Device-change watcher ────────────────────────────────────────────────────
+//
+// Polls the OS default output device every 3 s.  When it changes (Bluetooth
+// headphones connecting, USB DAC plugging in, etc.) the stream is reopened on
+// the new device and `audio:device-changed` is emitted so the frontend can
+// restart playback.  The old Sink is dropped here — it was bound to the
+// now-closed OutputStream and can no longer produce audio on any device.
+
+pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
+    let reopen_tx     = engine.stream_reopen_tx.clone();
+    let stream_handle = engine.stream_handle.clone();
+    let stream_rate   = engine.stream_sample_rate.clone();
+    let current       = engine.current.clone();
+    let fading_out    = engine.fading_out_sink.clone();
+
+    tauri::async_runtime::spawn(async move {
+        let mut last_name: Option<String> = tauri::async_runtime::spawn_blocking(|| {
+            use rodio::cpal::traits::{DeviceTrait, HostTrait};
+            rodio::cpal::default_host()
+                .default_output_device()
+                .and_then(|d| d.name().ok())
+        }).await.unwrap_or(None);
+
+        loop {
+            tokio::time::sleep(Duration::from_secs(3)).await;
+
+            let current_name: Option<String> = tauri::async_runtime::spawn_blocking(|| {
+                use rodio::cpal::traits::{DeviceTrait, HostTrait};
+                rodio::cpal::default_host()
+                    .default_output_device()
+                    .and_then(|d| d.name().ok())
+            }).await.unwrap_or(None);
+
+            if current_name == last_name {
+                continue;
+            }
+
+            last_name = current_name.clone();
+
+            // Only act if there is actually a device to open.
+            let Some(_new_name) = current_name else { continue };
+
+            // Debounce: give the OS time to finish configuring the new device.
+            tokio::time::sleep(Duration::from_millis(500)).await;
+
+            let rate = stream_rate.load(Ordering::Relaxed);
+            let reopen_tx2 = reopen_tx.clone();
+            let new_handle = tauri::async_runtime::spawn_blocking(move || {
+                let (reply_tx, reply_rx) =
+                    std::sync::mpsc::sync_channel::<rodio::OutputStreamHandle>(0);
+                if reopen_tx2.send((rate, false, reply_tx)).is_err() {
+                    return None; // audio thread exited
+                }
+                reply_rx.recv_timeout(Duration::from_secs(5)).ok()
+            }).await.unwrap_or(None);
+
+            let Some(handle) = new_handle else {
+                eprintln!("[psysonic] device-watcher: stream reopen timed out");
+                continue;
+            };
+
+            *stream_handle.lock().unwrap() = handle;
+
+            // Drop the old Sink — it was bound to the now-closed OutputStream.
+            if let Some(s) = current.lock().unwrap().sink.take() { s.stop(); }
+            if let Some(s) = fading_out.lock().unwrap().take()   { s.stop(); }
+
+            app.emit("audio:device-changed", ()).ok();
+        }
+    });
+}

@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music,
-  Square, Repeat, Repeat1, Maximize2, SlidersHorizontal, X, Heart, MicVocal, Cast
+  Square, Repeat, Repeat1, Maximize2, SlidersVertical, X, Heart, MicVocal, Cast
 } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
@@ -241,7 +241,7 @@ export default function PlayerBar() {
         aria-label="Equalizer"
         data-tooltip="Equalizer"
       >
-        <SlidersHorizontal size={15} />
+        <SlidersVertical size={15} />
       </button>
 
       {/* Volume */}

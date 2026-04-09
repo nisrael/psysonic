@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Play, SlidersHorizontal } from 'lucide-react';
+import { Play, SlidersVertical } from 'lucide-react';
 import {
   search, getGenres, getAlbumsByGenre, getAlbumList, getRandomSongs,
   SubsonicGenre, SubsonicArtist, SubsonicAlbum, SubsonicSong,
@@ -140,7 +140,7 @@ export default function AdvancedSearch() {
     <div className="content-body animate-fade-in">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <SlidersHorizontal size={22} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <SlidersVertical size={22} style={{ color: 'var(--accent)', flexShrink: 0 }} />
           {t('search.advanced')}
         </h1>
       </div>
