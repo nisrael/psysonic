@@ -2901,6 +2901,8 @@ pub async fn audio_play_radio(
     state.current_channels.store(channels as u32, Ordering::Relaxed);
     state.viz_tap.sample_rate.store(sample_rate, Ordering::Relaxed);
 
+    app.emit("audio:playing", 0.0f64).ok();
+
     spawn_progress_task(
         gen,
         state.generation.clone(),

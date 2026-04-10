@@ -122,7 +122,7 @@ const CircularVisualizer = memo(function CircularVisualizer({ enabled }: Props) 
         pendingRef.current = true;
         invoke<number[]>('audio_get_viz_bands')
           .then(b => { bandsRef.current = b; })
-          .catch(() => {})
+          .catch(e => { console.warn('[viz] audio_get_viz_bands failed:', e); })
           .finally(() => { pendingRef.current = false; });
       }
 
