@@ -522,6 +522,11 @@ export const useAuthStore = create<AuthState>()(
       },
       onRehydrateStorage: () => (state, error) => {
         if (error || !state) return;
+        // If both hot cache and preload were enabled before mutual exclusion was enforced, reset both.
+        const conflictingLegacyState =
+          state.hotCacheEnabled && state.preloadMode !== 'off'
+            ? { hotCacheEnabled: false, preloadMode: 'off' as const }
+            : {};
         useAuthStore.setState({
           mixMinRatingSong: clampMixFilterMinStars(state.mixMinRatingSong as number),
           mixMinRatingAlbum: clampMixFilterMinStars(state.mixMinRatingAlbum as number),
@@ -529,6 +534,7 @@ export const useAuthStore = create<AuthState>()(
           skipStarManualSkipCountsByKey: sanitizeSkipStarCounts(
             (state as { skipStarManualSkipCountsByKey?: unknown }).skipStarManualSkipCountsByKey,
           ),
+          ...conflictingLegacyState,
         });
       },
     }
