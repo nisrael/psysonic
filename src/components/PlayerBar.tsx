@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLyricsStore } from '../store/lyricsStore';
 import MarqueeText from './MarqueeText';
 import LastfmIcon from './LastfmIcon';
+import { useRadioMetadata } from '../hooks/useRadioMetadata';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -43,6 +44,9 @@ export default function PlayerBar() {
   const { lastfmSessionKey } = useAuthStore();
 
   const isRadio = !!currentRadio;
+
+  // Radio metadata (ICY or AzuraCast) — only active while a radio station is playing.
+  const radioMeta = useRadioMetadata(currentRadio ?? null);
 
   const isStarred = currentTrack
     ? (currentTrack.id in starredOverrides ? starredOverrides[currentTrack.id] : !!currentTrack.starred)
@@ -129,13 +133,23 @@ export default function PlayerBar() {
         </div>
         <div className="player-track-meta">
           <MarqueeText
-            text={isRadio ? (currentRadio?.name ?? '—') : (currentTrack?.title ?? t('player.noTitle'))}
+            text={isRadio
+              ? (radioMeta.currentTitle
+                  ? (radioMeta.currentArtist
+                      ? `${radioMeta.currentArtist} — ${radioMeta.currentTitle}`
+                      : radioMeta.currentTitle)
+                  : (currentRadio?.name ?? '—'))
+              : (currentTrack?.title ?? t('player.noTitle'))}
             className="player-track-name"
             style={{ cursor: !isRadio && currentTrack?.albumId ? 'pointer' : 'default' }}
             onClick={() => !isRadio && currentTrack?.albumId && navigate(`/album/${currentTrack.albumId}`)}
           />
           <MarqueeText
-            text={isRadio ? t('radio.liveStream') : (currentTrack?.artist ?? '—')}
+            text={isRadio
+              ? (radioMeta.currentTitle && currentRadio?.name
+                  ? currentRadio.name
+                  : t('radio.liveStream'))
+              : (currentTrack?.artist ?? '—')}
             className="player-track-artist"
             style={{ cursor: !isRadio && currentTrack?.artistId ? 'pointer' : 'default' }}
             onClick={() => !isRadio && currentTrack?.artistId && navigate(`/artist/${currentTrack.artistId}`)}
@@ -147,6 +161,11 @@ export default function PlayerBar() {
               className="player-track-rating"
               ariaLabel={t('albumDetail.ratingLabel')}
             />
+          )}
+          {isRadio && radioMeta.listeners != null && (
+            <span className="player-radio-listeners">
+              {t('radio.listeners', { count: radioMeta.listeners })}
+            </span>
           )}
         </div>
         {currentTrack && !isRadio && (
@@ -207,11 +226,28 @@ export default function PlayerBar() {
       <div className="player-waveform-section">
         {isRadio ? (
           <>
-            <span className="player-time">{formatTime(currentTime)}</span>
-            <div className="player-waveform-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="radio-live-badge">{t('radio.live')}</span>
-            </div>
-            <span className="player-time" style={{ opacity: 0 }}>0:00</span>
+            {radioMeta.source === 'azuracast' && radioMeta.elapsed != null && radioMeta.duration != null && radioMeta.duration > 0 ? (
+              <>
+                <span className="player-time">{formatTime(radioMeta.elapsed)}</span>
+                <div className="player-waveform-wrap">
+                  <div className="radio-progress-bar">
+                    <div
+                      className="radio-progress-fill"
+                      style={{ width: `${Math.min(100, (radioMeta.elapsed / radioMeta.duration) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="player-time">{formatTime(radioMeta.duration)}</span>
+              </>
+            ) : (
+              <>
+                <span className="player-time">{formatTime(currentTime)}</span>
+                <div className="player-waveform-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span className="radio-live-badge">{t('radio.live')}</span>
+                </div>
+                <span className="player-time" style={{ opacity: 0 }}>0:00</span>
+              </>
+            )}
           </>
         ) : (
           <>

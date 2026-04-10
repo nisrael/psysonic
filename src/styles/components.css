@@ -4687,6 +4687,121 @@
   padding: 40px 0;
 }
 
+/* ─ Radio NowPlaying section ─ */
+.np-radio-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.np-badge-live {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  display: inline-flex;
+  align-items: center;
+}
+
+.np-badge-azuracast {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+.np-radio-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.np-radio-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 32px;
+}
+
+.np-radio-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.np-radio-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+.np-radio-next-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.np-radio-track-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.np-radio-track-art--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.np-radio-track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.np-radio-track-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-radio-track-artist {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Radio progress bar in PlayerBar */
+.radio-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.radio-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* Listener count in PlayerBar */
+.player-radio-listeners {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
 /* Queue section */
 .np-queue-section {
   flex: 1;

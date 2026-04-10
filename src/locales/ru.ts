@@ -974,6 +974,11 @@ export const ruTranslation = {
     favorite: 'В избранное',
     unfavorite: 'Убрать из избранного',
     noFavorites: 'Избранных станций нет.',
+    listeners: '{{count}} слушатель',
+    listeners_plural: '{{count}} слушателей',
+    listenerCount: '{{count}} слушателей',
+    recentlyPlayed: 'Недавно сыгранное',
+    upNext: 'Следующий',
   },
   folderBrowser: {
     empty: 'Папка пуста',

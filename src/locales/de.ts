@@ -920,6 +920,11 @@ export const deTranslation = {
     favorite: 'Zu Favoriten hinzufügen',
     unfavorite: 'Aus Favoriten entfernen',
     noFavorites: 'Keine Lieblingssender.',
+    listeners: '{{count}} Hörer',
+    listeners_plural: '{{count}} Hörer',
+    listenerCount: '{{count}} Hörer',
+    recentlyPlayed: 'Zuletzt gespielt',
+    upNext: 'Als Nächstes',
   },
   folderBrowser: {
     empty: 'Leerer Ordner',

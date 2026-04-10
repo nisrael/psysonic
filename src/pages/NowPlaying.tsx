@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music, Star, ExternalLink, MicVocal, Heart } from 'lucide-react';
+import { Music, Star, ExternalLink, MicVocal, Heart, Cast, Users, Radio, Clock, SkipForward } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useLyricsStore } from '../store/lyricsStore';
 import {
@@ -10,6 +10,7 @@ import {
   SubsonicSong, SubsonicArtistInfo,
 } from '../api/subsonic';
 import { useCachedUrl } from '../components/CachedImage';
+import { useRadioMetadata } from '../hooks/useRadioMetadata';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -211,6 +212,7 @@ export default function NowPlaying() {
   const navigate = useNavigate();
 
   const currentTrack    = usePlayerStore(s => s.currentTrack);
+  const currentRadio    = usePlayerStore(s => s.currentRadio);
   const userRatingOverrides = usePlayerStore(s => s.userRatingOverrides);
   const isPlaying       = usePlayerStore(s => s.isPlaying);
   const showLyrics      = useLyricsStore(s => s.showLyrics);
@@ -219,6 +221,9 @@ export default function NowPlaying() {
   const toggleQueue     = usePlayerStore(s => s.toggleQueue);
 
   const stableNavigate = useCallback((path: string) => navigate(path), [navigate]);
+
+  // Radio metadata (ICY or AzuraCast)
+  const radioMeta = useRadioMetadata(currentRadio ?? null);
 
   // Extra song metadata
   const [songMeta, setSongMeta] = useState<SubsonicSong | null>(null);
@@ -259,15 +264,136 @@ export default function NowPlaying() {
   const coverKey      = currentTrack?.coverArt ? coverArtCacheKey(currentTrack.coverArt, 800) : '';
   const resolvedCover = useCachedUrl(coverFetchUrl, coverKey);
 
-
+  // Radio cover
+  const radioCoverFetchUrl = currentRadio?.coverArt ? buildCoverArtUrl(`ra-${currentRadio.id}`, 800) : '';
+  const radioCoverKey      = currentRadio?.coverArt ? coverArtCacheKey(`ra-${currentRadio.id}`, 800) : '';
+  const resolvedRadioCover = useCachedUrl(radioCoverFetchUrl, radioCoverKey);
 
   const similarArtists = artistInfo?.similarArtist ?? [];
+
+  // ── Radio now-playing section ────────────────────────────────────────────────
+  const RadioNowPlaying = currentRadio && !currentTrack && (
+    <div className="np-radio-section">
+
+      {/* Station hero */}
+      <div className="np-hero-card">
+        <div className="np-hero-left">
+          <div className="np-hero-info">
+            <div className="np-title" style={{ color: 'var(--accent)' }}>
+              {currentRadio.name}
+            </div>
+            {radioMeta.currentTitle && (
+              <div className="np-artist-album">
+                {radioMeta.currentArtist && (
+                  <><span className="np-link">{radioMeta.currentArtist}</span><span className="np-sep">·</span></>
+                )}
+                <span>{radioMeta.currentTitle}</span>
+                {radioMeta.currentAlbum && (
+                  <><span className="np-sep">·</span><span style={{ opacity: 0.6 }}>{radioMeta.currentAlbum}</span></>
+                )}
+              </div>
+            )}
+            <div className="np-tech-row">
+              <span className="np-badge np-badge-live">
+                <Radio size={10} style={{ marginRight: 3 }} />{t('radio.live')}
+              </span>
+              {radioMeta.source === 'azuracast' && (
+                <span className="np-badge np-badge-azuracast">AzuraCast</span>
+              )}
+              {radioMeta.listeners != null && (
+                <span className="np-badge">
+                  <Users size={10} style={{ marginRight: 3 }} />
+                  {t('radio.listenerCount', { count: radioMeta.listeners })}
+                </span>
+              )}
+            </div>
+
+            {/* AzuraCast progress bar */}
+            {radioMeta.source === 'azuracast' && radioMeta.elapsed != null && radioMeta.duration != null && radioMeta.duration > 0 && (
+              <div className="np-radio-progress-wrap">
+                <span className="np-radio-time">{formatTime(radioMeta.elapsed)}</span>
+                <div className="np-radio-progress-bar">
+                  <div
+                    className="np-radio-progress-fill"
+                    style={{ width: `${Math.min(100, (radioMeta.elapsed / radioMeta.duration) * 100)}%` }}
+                  />
+                </div>
+                <span className="np-radio-time">{formatTime(radioMeta.duration)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Cover */}
+        <div className="np-hero-cover-wrap">
+          {resolvedRadioCover
+            ? <img src={resolvedRadioCover} alt={currentRadio.name} className="np-cover" />
+            : radioMeta.currentArt
+              ? <img src={radioMeta.currentArt} alt="" className="np-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              : <div className="np-cover np-cover-fallback"><Cast size={52} /></div>
+          }
+        </div>
+
+        {/* Placeholder to keep 3-column layout */}
+        <div style={{ flex: 1 }} />
+      </div>
+
+      {/* Upcoming track */}
+      {radioMeta.nextSong && (
+        <div className="np-info-card">
+          <div className="np-card-header">
+            <h3 className="np-card-title">
+              <SkipForward size={13} style={{ marginRight: 5 }} />{t('radio.upNext')}
+            </h3>
+          </div>
+          <div className="np-radio-next-track">
+            {radioMeta.nextSong.art && (
+              <img src={radioMeta.nextSong.art} alt="" className="np-radio-track-art"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            )}
+            <div className="np-radio-track-info">
+              <span className="np-radio-track-title">{radioMeta.nextSong.title}</span>
+              {radioMeta.nextSong.artist && (
+                <span className="np-radio-track-artist">{radioMeta.nextSong.artist}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Song history */}
+      {radioMeta.history.length > 0 && (
+        <div className="np-info-card">
+          <div className="np-card-header">
+            <h3 className="np-card-title">
+              <Clock size={13} style={{ marginRight: 5 }} />{t('radio.recentlyPlayed')}
+            </h3>
+          </div>
+          <div className="np-album-tracklist">
+            {radioMeta.history.map((item, idx) => (
+              <div key={idx} className="np-album-track">
+                {item.song.art && (
+                  <img src={item.song.art} alt="" className="np-radio-track-art np-radio-track-art--sm"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                )}
+                <span className="np-album-track-title truncate">
+                  {item.song.artist ? `${item.song.artist} — ${item.song.title}` : item.song.title}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="np-page">
 
       <div className="np-main">
-        {currentTrack ? (
+        {RadioNowPlaying ? (
+          RadioNowPlaying
+        ) : currentTrack ? (
           <>
             {/* ── Hero Card ── */}
             <div className="np-hero-card">
