@@ -227,18 +227,27 @@ export default function AlbumTrackList({
             <span className="track-title">{song.title}</span>
           </div>
         );
-      case 'artist':
+      case 'artist': {
+        const artistRefs = song.artists && song.artists.length > 0
+          ? song.artists
+          : [{ id: song.artistId, name: song.artist }];
         return (
           <div key="artist" className="track-artist-cell">
-            <span
-              className={`track-artist${song.artistId ? ' track-artist-link' : ''}`}
-              style={{ cursor: song.artistId ? 'pointer' : 'default' }}
-              onClick={e => { if (song.artistId) { e.stopPropagation(); navigate(`/artist/${song.artistId}`); } }}
-            >
-              {song.artist}
-            </span>
+            {artistRefs.map((a, i) => (
+              <React.Fragment key={a.id ?? a.name ?? i}>
+                {i > 0 && <span className="track-artist-sep">&nbsp;·&nbsp;</span>}
+                <span
+                  className={`track-artist${a.id ? ' track-artist-link' : ''}`}
+                  style={{ cursor: a.id ? 'pointer' : 'default' }}
+                  onClick={e => { if (a.id) { e.stopPropagation(); navigate(`/artist/${a.id}`); } }}
+                >
+                  {a.name ?? song.artist}
+                </span>
+              </React.Fragment>
+            ))}
           </div>
         );
+      }
       case 'favorite':
         return (
           <div key="favorite" className="track-star-cell">
