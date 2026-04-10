@@ -272,7 +272,7 @@ export default function NowPlaying() {
   const similarArtists = artistInfo?.similarArtist ?? [];
 
   // ── Radio now-playing section ────────────────────────────────────────────────
-  const RadioNowPlaying = currentRadio && !currentTrack && (
+  const radioNowPlaying = currentRadio && !currentTrack && (
     <div className="np-radio-section">
 
       {/* Station hero */}
@@ -391,8 +391,8 @@ export default function NowPlaying() {
     <div className="np-page">
 
       <div className="np-main">
-        {RadioNowPlaying ? (
-          RadioNowPlaying
+        {radioNowPlaying ? (
+          radioNowPlaying
         ) : currentTrack ? (
           <>
             {/* ── Hero Card ── */}

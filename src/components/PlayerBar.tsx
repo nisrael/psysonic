@@ -164,7 +164,7 @@ export default function PlayerBar() {
           )}
           {isRadio && radioMeta.listeners != null && (
             <span className="player-radio-listeners">
-              {t('radio.listeners', { count: radioMeta.listeners })}
+              {t('radio.listenerCount', { count: radioMeta.listeners })}
             </span>
           )}
         </div>
