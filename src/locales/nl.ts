@@ -801,6 +801,7 @@ export const nlTranslation = {
     toggleQueue: 'Wachtrij in-/uitschakelen',
     lyrics: 'Songtekst',
     fsLyricsToggle: 'Songtekst in volledig scherm',
+    vizToggle: 'Visualizer',
     lyricsLoading: 'Songtekst laden…',
     lyricsNotFound: 'Geen songtekst gevonden voor dit nummer',
     lyricsSourceServer: 'Bron: Server',

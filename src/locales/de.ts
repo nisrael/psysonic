@@ -803,6 +803,7 @@ export const deTranslation = {
     toggleQueue: 'Warteschlange umschalten',
     lyrics: 'Lyrics',
     fsLyricsToggle: 'Lyrics im Vollbild',
+    vizToggle: 'Visualizer',
     lyricsLoading: 'Lyrics werden geladen…',
     lyricsNotFound: 'Keine Lyrics für diesen Titel gefunden',
     lyricsSourceServer: 'Quelle: Server',

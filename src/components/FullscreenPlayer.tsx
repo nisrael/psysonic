@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef, memo, useMemo } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward,
-  ChevronDown, Repeat, Repeat1, Square, Music, Heart, MicVocal
+  ChevronDown, Repeat, Repeat1, Square, Music, Heart, MicVocal, AudioWaveform
 } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { buildCoverArtUrl, coverArtCacheKey, getArtistInfo, star, unstar } from '../api/subsonic';
@@ -11,6 +11,7 @@ import { extractCoverColors } from '../utils/dynamicColors';
 import { useTranslation } from 'react-i18next';
 import { useLyrics } from '../hooks/useLyrics';
 import { useAuthStore } from '../store/authStore';
+import CircularVisualizer from './CircularVisualizer';
 import type { LrcLine } from '../api/lrclib';
 import type { Track } from '../store/playerStore';
 
@@ -340,6 +341,8 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
 
   const portraitUrl = artistBgUrl || resolvedCoverUrl;
   const showFullscreenLyrics = useAuthStore(s => s.showFullscreenLyrics);
+  const showVisualizer       = useAuthStore(s => s.showVisualizer);
+  const isPlaying            = usePlayerStore(s => s.isPlaying);
 
   // Pre-fetch next track's 300px cover into the IndexedDB cache.
   // Selector returns only the coverArt id, so it only re-runs on actual changes.
@@ -418,6 +421,11 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
       {/* Layer 2 — horizontal scrim: dark left → transparent right */}
       <div className="fs-scrim" aria-hidden="true" />
 
+      {/* Layer 3 — circular visualizer — centered, behind cluster */}
+      <div className="fs-viz-wrap" aria-hidden="true">
+        <CircularVisualizer enabled={showVisualizer && isPlaying} />
+      </div>
+
       {/* Close */}
       <button className="fs-close" onClick={onClose} aria-label={t('player.closeFullscreen')}>
         <ChevronDown size={28} />
@@ -482,6 +490,15 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
               <Heart size={14} fill={isStarred ? 'currentColor' : 'none'} />
             </button>
           )}
+          <button
+            className="fs-btn fs-btn-sm"
+            onClick={() => useAuthStore.getState().setShowVisualizer(!showVisualizer)}
+            aria-label={t('player.vizToggle')}
+            data-tooltip={t('player.vizToggle')}
+            style={{ color: showVisualizer ? (dynamicAccent ?? 'var(--accent)') : 'rgba(255,255,255,0.35)' }}
+          >
+            <AudioWaveform size={14} />
+          </button>
           <button
             className="fs-btn fs-btn-sm"
             onClick={() => useAuthStore.getState().setShowFullscreenLyrics(!showFullscreenLyrics)}

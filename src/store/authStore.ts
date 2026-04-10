@@ -49,6 +49,7 @@ interface AuthState {
   nowPlayingEnabled: boolean;
   lyricsServerFirst: boolean;
   showFullscreenLyrics: boolean;
+  showVisualizer: boolean;
   showChangelogOnUpdate: boolean;
   lastSeenChangelogVersion: string;
 
@@ -145,6 +146,7 @@ interface AuthState {
   setNowPlayingEnabled: (v: boolean) => void;
   setLyricsServerFirst: (v: boolean) => void;
   setShowFullscreenLyrics: (v: boolean) => void;
+  setShowVisualizer: (v: boolean) => void;
   setShowChangelogOnUpdate: (v: boolean) => void;
   setLastSeenChangelogVersion: (v: string) => void;
   setSeekbarStyle: (v: SeekbarStyle) => void;
@@ -231,6 +233,7 @@ export const useAuthStore = create<AuthState>()(
       nowPlayingEnabled: false,
       lyricsServerFirst: true,
       showFullscreenLyrics: true,
+      showVisualizer: true,
       showChangelogOnUpdate: true,
       lastSeenChangelogVersion: '',
       seekbarStyle: 'waveform',
@@ -327,6 +330,7 @@ export const useAuthStore = create<AuthState>()(
       setNowPlayingEnabled: (v) => set({ nowPlayingEnabled: v }),
       setLyricsServerFirst: (v: boolean) => set({ lyricsServerFirst: v }),
       setShowFullscreenLyrics: (v: boolean) => set({ showFullscreenLyrics: v }),
+      setShowVisualizer: (v: boolean) => set({ showVisualizer: v }),
       setShowChangelogOnUpdate: (v) => set({ showChangelogOnUpdate: v }),
       setLastSeenChangelogVersion: (v) => set({ lastSeenChangelogVersion: v }),
 

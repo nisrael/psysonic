@@ -797,6 +797,7 @@ export const zhTranslation = {
     toggleQueue: '切换队列',
     lyrics: '歌词',
     fsLyricsToggle: '全屏歌词',
+    vizToggle: '可视化',
     lyricsLoading: '正在加载歌词…',
     lyricsNotFound: '未找到此曲目的歌词',
     lyricsSourceServer: '来源：服务器',

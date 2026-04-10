@@ -3,6 +3,7 @@
 
 mod audio;
 mod discord;
+mod visualizer;
 #[cfg(target_os = "windows")]
 mod taskbar_win;
 
@@ -1581,6 +1582,7 @@ pub fn run() {
             audio::audio_set_crossfade,
             audio::audio_set_gapless,
             audio::audio_chain_preload,
+            audio::audio_get_viz_bands,
             discord::discord_update_presence,
             discord::discord_clear_presence,
             lastfm_request,

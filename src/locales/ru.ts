@@ -862,6 +862,8 @@ export const ruTranslation = {
     volume: 'Громкость',
     toggleQueue: 'Очередь',
     lyrics: 'Текст',
+    fsLyricsToggle: 'Слова в полноэкранном режиме',
+    vizToggle: 'Визуализатор',
     lyricsLoading: 'Загрузка текста…',
     lyricsNotFound: 'Текст не найден',
   },

@@ -800,6 +800,7 @@ export const nbTranslation = {
     toggleQueue: 'Veksle kø',
     lyrics: 'Sangtekst',
     fsLyricsToggle: 'Sangtekst i fullskjerm',
+    vizToggle: 'Visualiser',
     lyricsLoading: 'Laster sangtekst…',
     lyricsNotFound: 'Ingen sangtekst funnet for dette sporet',
     lyricsSourceServer: 'Kilde: Server',

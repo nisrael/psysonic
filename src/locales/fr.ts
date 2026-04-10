@@ -801,6 +801,7 @@ export const frTranslation = {
     toggleQueue: 'Afficher/masquer la file',
     lyrics: 'Paroles',
     fsLyricsToggle: 'Paroles en plein écran',
+    vizToggle: 'Visualiseur',
     lyricsLoading: 'Chargement des paroles…',
     lyricsNotFound: 'Aucune parole trouvée pour ce titre',
     lyricsSourceServer: 'Source : Serveur',

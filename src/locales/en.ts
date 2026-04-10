@@ -804,6 +804,7 @@ export const enTranslation = {
     toggleQueue: 'Toggle Queue',
     lyrics: 'Lyrics',
     fsLyricsToggle: 'Lyrics in fullscreen',
+    vizToggle: 'Visualizer',
     lyricsLoading: 'Loading lyrics…',
     lyricsNotFound: 'No lyrics found for this track',
     lyricsSourceServer: 'Source: Server',

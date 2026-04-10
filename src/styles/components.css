@@ -3396,6 +3396,32 @@
   transition: opacity 200ms ease;
 }
 
+/* ── Circular visualizer — centered behind the cluster & portrait ── */
+.fs-viz-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width:  min(70vh, 70vw);
+  height: min(70vh, 70vw);
+  z-index: 3;
+  pointer-events: none;
+  contain: layout style paint;
+}
+
+.fs-viz-canvas {
+  width:  100%;
+  height: 100%;
+  opacity: 0.55;
+  transition: opacity 600ms ease;
+  will-change: contents;
+}
+
+.fs-player[data-idle="true"] .fs-viz-canvas {
+  opacity: 0;
+  transition: opacity 1200ms ease;
+}
+
 /* ── Lyrics overlay — upper-left quadrant, strictly 5 lines tall ── */
 /*    Slot = 6vh  →  5 × 6vh = 30vh. JS reads window.innerHeight * 0.06.       */
 .fs-lyrics-overlay {

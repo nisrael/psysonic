@@ -3,6 +3,8 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
+use crate::visualizer::VisualizerTap;
+
 use ringbuf::{HeapConsumer, HeapProducer, HeapRb};
 
 use biquad::{Biquad, Coefficients, DirectForm2Transposed, ToHertz, Type as FilterType};
@@ -372,15 +374,27 @@ impl<S: Source<Item = f32>> Source for NotifyingSource<S> {
 // Wraps the outermost source and increments a shared AtomicU64 on every sample.
 // The progress task reads this counter and divides by (sample_rate * channels)
 // to get the exact playback position — no wall-clock drift.
+//
+// Additionally, if a VisualizerTap is attached, each stereo frame is mixed
+// down to mono and forwarded to the tap's lock-free circular buffer so that
+// the FFT worker can capture the audio without any impact on the output path.
 
 struct CountingSource<S: Source<Item = f32>> {
     inner: S,
     counter: Arc<AtomicU64>,
+    tap: Option<Arc<VisualizerTap>>,
+    ch_idx: u16,
+    ch_accum: f32,
 }
 
 impl<S: Source<Item = f32>> CountingSource<S> {
     fn new(inner: S, counter: Arc<AtomicU64>) -> Self {
-        Self { inner, counter }
+        Self { inner, counter, tap: None, ch_idx: 0, ch_accum: 0.0 }
+    }
+
+    fn with_tap(mut self, tap: Arc<VisualizerTap>) -> Self {
+        self.tap = Some(tap);
+        self
     }
 }
 
@@ -388,8 +402,19 @@ impl<S: Source<Item = f32>> Iterator for CountingSource<S> {
     type Item = f32;
     fn next(&mut self) -> Option<f32> {
         let sample = self.inner.next();
-        if sample.is_some() {
+        if let Some(s) = sample {
             self.counter.fetch_add(1, Ordering::Relaxed);
+            // Visualizer tap: accumulate a stereo frame, then push mono average.
+            if let Some(tap) = &self.tap {
+                let channels = self.inner.channels().max(1);
+                self.ch_accum += s;
+                self.ch_idx   += 1;
+                if self.ch_idx >= channels {
+                    tap.push_mono(self.ch_accum / channels as f32);
+                    self.ch_idx   = 0;
+                    self.ch_accum = 0.0;
+                }
+            }
         }
         sample
     }
@@ -410,6 +435,9 @@ impl<S: Source<Item = f32>> Source for CountingSource<S> {
             let samples = (pos.as_secs_f64() * self.inner.sample_rate() as f64
                 * self.inner.channels() as f64) as u64;
             self.counter.store(samples, Ordering::Relaxed);
+            // Reset stereo-accumulator so the next push_mono is frame-aligned.
+            self.ch_idx   = 0;
+            self.ch_accum = 0.0;
         }
         result
     }
@@ -1332,6 +1360,7 @@ struct BuiltSource {
 /// `sample_counter`: atomic counter incremented per sample for drift-free position.
 /// `target_rate`: canonical output sample rate for resampling (0 = no resampling).
 /// `format_hint`: optional file extension (e.g. "flac", "mp3") to help symphonia probe.
+/// `viz_tap`: optional shared visualizer tap; if Some, CountingSource feeds it.
 fn build_source(
     data: Vec<u8>,
     duration_hint: f64,
@@ -1344,6 +1373,7 @@ fn build_source(
     target_rate: u32,
     format_hint: Option<&str>,
     hi_res: bool,
+    viz_tap: Option<Arc<VisualizerTap>>,
 ) -> Result<BuiltSource, String> {
     let gapless = parse_gapless_info(&data);
 
@@ -1402,7 +1432,12 @@ fn build_source(
     let fade_in = EqualPowerFadeIn::new(eq_src, fade_in_dur);
     let fade_out = TriggeredFadeOut::new(fade_in, fadeout_trigger.clone(), fadeout_samples.clone());
     let notifying = NotifyingSource::new(fade_out, done_flag);
-    let counting = CountingSource::new(notifying, sample_counter);
+    let counting_base = CountingSource::new(notifying, sample_counter);
+    let counting = if let Some(tap) = viz_tap {
+        counting_base.with_tap(tap)
+    } else {
+        counting_base
+    };
 
     Ok(BuiltSource {
         source: counting,
@@ -1479,6 +1514,9 @@ pub struct AudioEngine {
     /// Active radio session state.  None for regular (non-radio) tracks.
     /// Dropping the value aborts the HTTP download task via RadioLiveState::Drop.
     pub radio_state: Mutex<Option<RadioLiveState>>,
+    /// Shared visualizer tap — the FFT worker reads band magnitudes from here;
+    /// the frontend polls them via `audio_get_viz_bands`.
+    pub viz_tap: Arc<VisualizerTap>,
 }
 
 pub struct AudioCurrent {
@@ -1701,6 +1739,11 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
         current_channels: Arc::new(AtomicU32::new(2)),
         gapless_switch_at: Arc::new(AtomicU64::new(0)),
         radio_state: Mutex::new(None),
+        viz_tap: {
+            let tap = Arc::new(VisualizerTap::new());
+            VisualizerTap::spawn_worker(Arc::clone(&tap));
+            tap
+        },
     };
 
     (engine, thread)
@@ -1981,6 +2024,7 @@ pub async fn audio_play(
         target_rate,
         format_hint.as_deref(),
         hi_res_enabled,
+        Some(Arc::clone(&state.viz_tap)),
     ).map_err(|e| { app.emit("audio:error", &e).ok(); e })?;
     let source = built.source;
     let duration_secs = built.duration_secs;
@@ -1990,6 +2034,7 @@ pub async fn audio_play(
     // Store the actual output rate/channels for position calculation.
     state.current_sample_rate.store(output_rate, Ordering::Relaxed);
     state.current_channels.store(output_channels as u32, Ordering::Relaxed);
+    state.viz_tap.sample_rate.store(output_rate, Ordering::Relaxed);
 
     if state.generation.load(Ordering::SeqCst) != gen {
         return Ok(());
@@ -2257,6 +2302,7 @@ pub async fn audio_chain_preload(
         target_rate,
         format_hint.as_deref(),
         hi_res_enabled,
+        Some(Arc::clone(&state.viz_tap)),
     ).map_err(|e| e.to_string())?;
     let source = built.source;
     let duration_secs = built.duration_secs;
@@ -2828,7 +2874,8 @@ pub async fn audio_play_radio(
     let fade_in   = EqualPowerFadeIn::new(eq_src, Duration::from_millis(5));
     let fade_out  = TriggeredFadeOut::new(fade_in, fadeout_trigger.clone(), fadeout_samples.clone());
     let notifying = NotifyingSource::new(fade_out, done_flag.clone());
-    let counting  = CountingSource::new(notifying, state.samples_played.clone());
+    let counting  = CountingSource::new(notifying, state.samples_played.clone())
+        .with_tap(Arc::clone(&state.viz_tap));
 
     if state.generation.load(Ordering::SeqCst) != gen { return Ok(()); }
 
@@ -2852,8 +2899,7 @@ pub async fn audio_play_radio(
 
     state.current_sample_rate.store(sample_rate, Ordering::Relaxed);
     state.current_channels.store(channels as u32, Ordering::Relaxed);
-
-    app.emit("audio:playing", 0.0f64).ok();
+    state.viz_tap.sample_rate.store(sample_rate, Ordering::Relaxed);
 
     spawn_progress_task(
         gen,
@@ -2954,4 +3000,17 @@ pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
             app.emit("audio:device-changed", ()).ok();
         }
     });
+}
+
+// ─── Visualizer command ───────────────────────────────────────────────────────
+
+/// Return the latest smoothed band magnitudes (24 values in [0, 1]).
+/// The values come from the FFT worker and are always available without blocking.
+#[tauri::command]
+pub fn audio_get_viz_bands(state: State<'_, AudioEngine>) -> Vec<f32> {
+    use crate::visualizer::VIZ_BANDS;
+    match state.viz_tap.bands.try_lock() {
+        Ok(guard) => guard.to_vec(),
+        Err(_)    => vec![0.0; VIZ_BANDS],
+    }
 }
