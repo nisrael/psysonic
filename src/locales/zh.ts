@@ -94,6 +94,8 @@ export const zhTranslation = {
     addToQueue: '添加到队列',
     enqueueAlbum: '专辑加入队列',
     startRadio: '开始电台',
+    instantMix: '即时混音',
+    instantMixFailed: '无法生成即时混音 — 服务器或插件出错。',
     lfmLove: '在 Last.fm 上标记喜欢',
     lfmUnlove: '取消 Last.fm 喜欢标记',
     favorite: '收藏',
@@ -392,6 +394,11 @@ export const zhTranslation = {
     testBtn: '测试连接',
     testingBtn: '正在测试…',
     serverCompatible: '兼容：Navidrome · Gonic · Airsonic · Subsonic',
+    audiomuseTitle: 'AudioMuse-AI（Navidrome）',
+    audiomuseDesc:
+      '若此服务器已配置 <pluginLink>AudioMuse-AI Navidrome 插件</pluginLink>请开启。可从曲目启动即时混音，并在艺人页使用服务器返回的相似艺人，而非 Last.fm。',
+    audiomuseIssueHint:
+      '近期即时混音失败 — 请检查 Navidrome 插件与 AudioMuse API。若服务器无结果，将回退使用 Last.fm 的相似艺人。',
     connected: '已连接',
     failed: '失败',
     eqTitle: '均衡器',

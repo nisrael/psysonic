@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Wifi, WifiOff, Globe, Music2, Sliders, LogOut, CheckCircle2, FolderOpen,
   Palette, Server, Plus, Trash2, Eye, EyeOff, Info, ExternalLink, Shuffle, X, Play, Type, Keyboard, ChevronDown,
-  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves, Star, Clock, ZoomIn
+  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves, Star, Clock, ZoomIn, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { exportBackup, importBackup } from '../utils/backup';
 import { showToast } from '../utils/toast';
@@ -29,13 +29,16 @@ import { useSidebarStore, DEFAULT_SIDEBAR_ITEMS, SidebarItemConfig } from '../st
 import { useHomeStore, HomeSectionId } from '../store/homeStore';
 import { useDragDrop, useDragSource } from '../contexts/DragDropContext';
 import { ALL_NAV_ITEMS } from '../components/Sidebar';
-import { pingWithCredentials } from '../api/subsonic';
+import { pingWithCredentials, scheduleInstantMixProbeForServer } from '../api/subsonic';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import Equalizer from '../components/Equalizer';
 import StarRating from '../components/StarRating';
+import { showAudiomuseNavidromeServerSetting } from '../utils/subsonicServerIdentity';
 
 const AUDIOBOOK_GENRES_DISPLAY = ['Hörbuch', 'Hoerbuch', 'Hörspiel', 'Hoerspiel', 'Audiobook', 'Audio Book', 'Spoken Word', 'Spokenword', 'Podcast', 'Kapitel', 'Thriller', 'Krimi', 'Speech', 'Fantasy', 'Comedy', 'Literature'];
+
+const AUDIOMUSE_NV_PLUGIN_URL = 'https://github.com/NeptuneHub/AudioMuse-AI-NV-plugin';
 
 const CONTRIBUTORS = [
   {
@@ -318,8 +321,17 @@ export default function Settings() {
   const testConnection = async (server: ServerProfile) => {
     setConnStatus(s => ({ ...s, [server.id]: 'testing' }));
     try {
-      const ok = await pingWithCredentials(server.url, server.username, server.password);
-      setConnStatus(s => ({ ...s, [server.id]: ok ? 'ok' : 'error' }));
+      const ping = await pingWithCredentials(server.url, server.username, server.password);
+      if (ping.ok) {
+        const identity = {
+          type: ping.type,
+          serverVersion: ping.serverVersion,
+          openSubsonic: ping.openSubsonic,
+        };
+        auth.setSubsonicServerIdentity(server.id, identity);
+        scheduleInstantMixProbeForServer(server.id, server.url, server.username, server.password, identity);
+      }
+      setConnStatus(s => ({ ...s, [server.id]: ping.ok ? 'ok' : 'error' }));
     } catch {
       setConnStatus(s => ({ ...s, [server.id]: 'error' }));
     }
@@ -328,8 +340,15 @@ export default function Settings() {
   const switchToServer = async (server: ServerProfile) => {
     setConnStatus(s => ({ ...s, [server.id]: 'testing' }));
     try {
-      const ok = await pingWithCredentials(server.url, server.username, server.password);
-      if (ok) {
+      const ping = await pingWithCredentials(server.url, server.username, server.password);
+      if (ping.ok) {
+        const identity = {
+          type: ping.type,
+          serverVersion: ping.serverVersion,
+          openSubsonic: ping.openSubsonic,
+        };
+        auth.setSubsonicServerIdentity(server.id, identity);
+        scheduleInstantMixProbeForServer(server.id, server.url, server.username, server.password, identity);
         auth.setActiveServer(server.id);
         auth.setLoggedIn(true);
         navigate('/');
@@ -352,9 +371,16 @@ export default function Settings() {
     const tempId = '_new';
     setConnStatus(s => ({ ...s, [tempId]: 'testing' }));
     try {
-      const ok = await pingWithCredentials(data.url, data.username, data.password);
-      if (ok) {
+      const ping = await pingWithCredentials(data.url, data.username, data.password);
+      if (ping.ok) {
         const id = auth.addServer(data);
+        const identity = {
+          type: ping.type,
+          serverVersion: ping.serverVersion,
+          openSubsonic: ping.openSubsonic,
+        };
+        auth.setSubsonicServerIdentity(id, identity);
+        scheduleInstantMixProbeForServer(id, data.url, data.username, data.password, identity);
         auth.setActiveServer(id);
         auth.setLoggedIn(true);
         setConnStatus(s => ({ ...s, [id]: 'ok' }));
@@ -1642,6 +1668,71 @@ export default function Settings() {
                           </button>
                         </div>
                       </div>
+                      {showAudiomuseNavidromeServerSetting(
+                        auth.subsonicServerIdentityByServer[srv.id],
+                        auth.instantMixProbeByServer[srv.id],
+                      ) && (
+                        <div
+                          className="settings-toggle-row"
+                          style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid color-mix(in srgb, var(--text-muted) 18%, transparent)' }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', minWidth: 0 }}>
+                            <Sparkles size={16} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }} />
+                            <div>
+                              <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                {t('settings.audiomuseTitle')}
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em',
+                                    padding: '2px 6px',
+                                    borderRadius: 4,
+                                    background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 22%, transparent)',
+                                    color: 'var(--text-primary)',
+                                  }}
+                                >
+                                  {t('settings.hotCacheAlphaBadge')}
+                                </span>
+                                {!!auth.audiomuseNavidromeByServer[srv.id] && auth.audiomuseNavidromeIssueByServer[srv.id] && (
+                                  <AlertTriangle
+                                    size={16}
+                                    style={{ color: 'var(--color-warning, #f59e0b)', flexShrink: 0 }}
+                                    data-tooltip={t('settings.audiomuseIssueHint')}
+                                    aria-label={t('settings.audiomuseIssueHint')}
+                                  />
+                                )}
+                              </div>
+                              <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                                <Trans
+                                  i18nKey="settings.audiomuseDesc"
+                                  components={{
+                                    pluginLink: (
+                                      <a
+                                        href={AUDIOMUSE_NV_PLUGIN_URL}
+                                        onClick={e => {
+                                          e.preventDefault();
+                                          void openUrl(AUDIOMUSE_NV_PLUGIN_URL);
+                                        }}
+                                        style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                                      />
+                                    ),
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <label className="toggle-switch" aria-label={t('settings.audiomuseTitle')}>
+                            <input
+                              type="checkbox"
+                              checked={!!auth.audiomuseNavidromeByServer[srv.id]}
+                              onChange={e => auth.setAudiomuseNavidromeEnabled(srv.id, e.target.checked)}
+                            />
+                            <span className="toggle-track" />
+                          </label>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

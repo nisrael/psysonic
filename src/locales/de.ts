@@ -94,6 +94,8 @@ export const deTranslation = {
     addToQueue: 'Zur Warteschlange hinzufügen',
     enqueueAlbum: 'Ganzes Album einreihen',
     startRadio: 'Radio starten',
+    instantMix: 'Instant Mix',
+    instantMixFailed: 'Instant Mix konnte nicht erstellt werden — Server- oder Pluginfehler.',
     lfmLove: 'Auf Last.fm liken',
     lfmUnlove: 'Last.fm-Like entfernen',
     favorite: 'Favorisieren',
@@ -396,6 +398,11 @@ export const deTranslation = {
     testBtn: 'Verbindung testen',
     testingBtn: 'Teste…',
     serverCompatible: 'Kompatibel mit: Navidrome · Gonic · Airsonic · Subsonic',
+    audiomuseTitle: 'AudioMuse-AI (Navidrome)',
+    audiomuseDesc:
+      'Aktivieren, wenn dieser Server das <pluginLink>AudioMuse-AI-Navidrome-Plugin</pluginLink> nutzt. Schaltet Instant Mix pro Titel frei und nutzt ähnliche Künstler vom Server statt Last.fm auf Künstlerseiten.',
+    audiomuseIssueHint:
+      'Instant Mix ist kürzlich fehlgeschlagen — Navidrome-Plugin und AudioMuse-API prüfen. Ohne Server-Treffer werden ähnliche Künstler über Last.fm geladen.',
     connected: 'Verbunden',
     failed: 'Fehlgeschlagen',
     eqTitle: 'Equalizer',

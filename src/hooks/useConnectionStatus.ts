@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { pingWithCredentials } from '../api/subsonic';
+import { pingWithCredentials, scheduleInstantMixProbeForServer } from '../api/subsonic';
 
 export type ConnectionStatus = 'connected' | 'disconnected' | 'checking';
 
@@ -37,8 +37,20 @@ export function useConnectionStatus() {
       return;
     }
 
-    const ok = await pingWithCredentials(server.url, server.username, server.password);
-    setStatus(ok ? 'connected' : 'disconnected');
+    const ping = await pingWithCredentials(server.url, server.username, server.password);
+       if (ping.ok) {
+      const sid = useAuthStore.getState().activeServerId;
+      if (sid) {
+        const identity = {
+          type: ping.type,
+          serverVersion: ping.serverVersion,
+          openSubsonic: ping.openSubsonic,
+        };
+        useAuthStore.getState().setSubsonicServerIdentity(sid, identity);
+        scheduleInstantMixProbeForServer(sid, server.url, server.username, server.password, identity);
+      }
+    }
+    setStatus(ping.ok ? 'connected' : 'disconnected');
   }, []);
 
   const retry = useCallback(async () => {

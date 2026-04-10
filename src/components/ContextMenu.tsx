@@ -1,11 +1,11 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info } from 'lucide-react';
+import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles } from 'lucide-react';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
 import { usePlayerStore, Track, songToTrack } from '../store/playerStore';
 import { useShallow } from 'zustand/react/shallow';
-import { SubsonicAlbum, SubsonicArtist, star, unstar, getSimilarSongs2, getTopSongs, buildDownloadUrl, getAlbum, getPlaylists, getPlaylist, createPlaylist, updatePlaylist, SubsonicPlaylist, setRating } from '../api/subsonic';
+import { SubsonicAlbum, SubsonicArtist, star, unstar, getSimilarSongs2, getSimilarSongs, getTopSongs, buildDownloadUrl, getAlbum, getPlaylists, getPlaylist, createPlaylist, updatePlaylist, SubsonicPlaylist, setRating } from '../api/subsonic';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
@@ -15,6 +15,7 @@ import { join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
 import { useZipDownloadStore } from '../store/zipDownloadStore';
 import { useTranslation } from 'react-i18next';
+import { showToast } from '../utils/toast';
 
 function sanitizeFilename(name: string): string {
   return name
@@ -195,6 +196,7 @@ export default function ContextMenu() {
     }))
   );
   const auth = useAuthStore();
+  const audiomuseNavidromeEnabled = !!(auth.activeServerId && auth.audiomuseNavidromeByServer[auth.activeServerId]);
   const requestDownloadFolder = useDownloadModalStore(s => s.requestFolder);
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -253,12 +255,15 @@ export default function ContextMenu() {
       // same "Top 5" in the same order every time.
       try {
         const [similar, top] = await Promise.all([getSimilarSongs2(artistId), getTopSongs(artistName)]);
-        const radioTracks = shuffleArray(
-          [...top, ...similar]
-            .map(songToTrack)
-            .filter(t => t.id !== seedTrack.id)
-            .map(t => ({ ...t, radioAdded: true as const }))
+        // Keep artist top songs and similar-by-artist in two blocks (each shuffled), not one blended pile —
+        // otherwise this feels the same as Instant Mix (track-based similar only).
+        const topTracks = shuffleArray(
+          top.map(songToTrack).filter(t => t.id !== seedTrack.id).map(t => ({ ...t, radioAdded: true as const }))
         );
+        const similarTracks = shuffleArray(
+          similar.map(songToTrack).filter(t => t.id !== seedTrack.id).map(t => ({ ...t, radioAdded: true as const }))
+        );
+        const radioTracks = [...topTracks, ...similarTracks];
         if (radioTracks.length > 0) usePlayerStore.getState().enqueueRadio(radioTracks, artistId);
       } catch (e) {
         console.error('Failed to load radio queue', e);
@@ -321,6 +326,33 @@ export default function ContextMenu() {
       } catch (e) {
         console.error('Failed to start radio', e);
       }
+    }
+  };
+
+  const startInstantMix = async (song: Track) => {
+    const state = usePlayerStore.getState();
+    if (state.currentTrack?.id === song.id) {
+      if (!state.isPlaying) state.resume();
+    } else {
+      playTrack(song, [song]);
+    }
+    const serverId = useAuthStore.getState().activeServerId;
+    try {
+      const similar = await getSimilarSongs(song.id, 50);
+      if (serverId) useAuthStore.getState().setAudiomuseNavidromeIssue(serverId, false);
+      const shuffled = shuffleArray(
+        similar
+          .filter(s => s.id !== song.id)
+          .map(s => ({ ...songToTrack(s), radioAdded: true as const }))
+      );
+      if (shuffled.length > 0) {
+        const aid = song.artistId?.trim() || undefined;
+        usePlayerStore.getState().enqueueRadio(shuffled, aid);
+      }
+    } catch (e) {
+      console.error('Instant mix failed', e);
+      if (serverId) useAuthStore.getState().setAudiomuseNavidromeIssue(serverId, true);
+      showToast(t('contextMenu.instantMixFailed'), 5000, 'error');
     }
   };
 
@@ -407,6 +439,11 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist, song))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
+              {audiomuseNavidromeEnabled && (
+                <div className="context-menu-item" onClick={() => handleAction(() => startInstantMix(song))}>
+                  <Sparkles size={14} /> {t('contextMenu.instantMix')}
+                </div>
+              )}
               <div className="context-menu-item" onClick={() => handleAction(() => {
                 const starred = isStarred(song.id, song.starred);
                 setStarredOverride(song.id, !starred);
@@ -557,6 +594,11 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist, song))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
+              {audiomuseNavidromeEnabled && (
+                <div className="context-menu-item" onClick={() => handleAction(() => startInstantMix(song))}>
+                  <Sparkles size={14} /> {t('contextMenu.instantMix')}
+                </div>
+              )}
               <div className="context-menu-divider" />
               <div className="context-menu-rating-row" onClick={e => e.stopPropagation()}>
                 <StarRating

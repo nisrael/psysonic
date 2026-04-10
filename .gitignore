@@ -40,3 +40,6 @@ memory/
 
 # Local scratchpad / notes (not committed)
 tmp/
+
+# Third-party clones for local research (not committed)
+research/

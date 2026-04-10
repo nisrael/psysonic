@@ -3,6 +3,11 @@ import md5 from 'md5';
 import { invoke } from '@tauri-apps/api/core';
 import { useAuthStore } from '../store/authStore';
 import { version } from '../../package.json';
+import {
+  isNavidromeAudiomuseSoftwareEligible,
+  type InstantMixProbeResult,
+  type SubsonicServerIdentity,
+} from '../utils/subsonicServerIdentity';
 
 // ─── Secure random salt ────────────────────────────────────────
 function secureRandomSalt(): string {
@@ -265,8 +270,14 @@ export async function ping(): Promise<boolean> {
   }
 }
 
+export type PingWithCredentialsResult = SubsonicServerIdentity & { ok: boolean };
+
 /** Test a connection with explicit credentials — does NOT depend on store state. */
-export async function pingWithCredentials(serverUrl: string, username: string, password: string): Promise<boolean> {
+export async function pingWithCredentials(
+  serverUrl: string,
+  username: string,
+  password: string,
+): Promise<PingWithCredentialsResult> {
   try {
     const base = serverUrl.startsWith('http') ? serverUrl.replace(/\/$/, '') : `http://${serverUrl.replace(/\/$/, '')}`;
     const salt = secureRandomSalt();
@@ -277,10 +288,106 @@ export async function pingWithCredentials(serverUrl: string, username: string, p
       timeout: 15000,
     });
     const data = resp.data?.['subsonic-response'];
-    return data?.status === 'ok';
+    const ok = data?.status === 'ok';
+    return {
+      ok,
+      type: typeof data?.type === 'string' ? data.type : undefined,
+      serverVersion: typeof data?.serverVersion === 'string' ? data.serverVersion : undefined,
+      openSubsonic: data?.openSubsonic === true,
+    };
   } catch {
-    return false;
+    return { ok: false };
   }
+}
+
+function restBaseFromUrl(serverUrl: string): string {
+  const base = serverUrl.startsWith('http') ? serverUrl.replace(/\/$/, '') : `http://${serverUrl.replace(/\/$/, '')}`;
+  return `${base}/rest`;
+}
+
+async function apiWithCredentials<T>(
+  serverUrl: string,
+  username: string,
+  password: string,
+  endpoint: string,
+  extra: Record<string, unknown> = {},
+  timeout = 15000,
+): Promise<T> {
+  const params = { ...getAuthParams(username, password), ...extra };
+  const resp = await axios.get(`${restBaseFromUrl(serverUrl)}/${endpoint}`, {
+    params,
+    paramsSerializer: { indexes: null },
+    timeout,
+  });
+  const data = resp.data?.['subsonic-response'];
+  if (!data) throw new Error('Invalid response from server (possibly not a Subsonic server)');
+  if (data.status !== 'ok') throw new Error(data.error?.message ?? 'Subsonic API error');
+  return data as T;
+}
+
+const INSTANT_MIX_PROBE_RANDOM_SIZE = 8;
+const INSTANT_MIX_PROBE_SIMILAR_COUNT = 12;
+const INSTANT_MIX_PROBE_MAX_TRACKS = 4;
+
+/**
+ * Probes whether `getSimilarSongs` returns any tracks (Instant Mix / Navidrome agent chain).
+ * Does not pass `musicFolderId` — probes the whole library as seen by the account.
+ * Note: if `ND_AGENTS` includes Last.fm, a positive result does not prove AudioMuse alone.
+ */
+export async function probeInstantMixWithCredentials(
+  serverUrl: string,
+  username: string,
+  password: string,
+): Promise<InstantMixProbeResult> {
+  try {
+    const data = await apiWithCredentials<{ randomSongs: { song: SubsonicSong | SubsonicSong[] } }>(
+      serverUrl,
+      username,
+      password,
+      'getRandomSongs.view',
+      { size: INSTANT_MIX_PROBE_RANDOM_SIZE, _t: Date.now() },
+      12000,
+    );
+    const raw = data.randomSongs?.song;
+    const songs: SubsonicSong[] = !raw ? [] : Array.isArray(raw) ? raw : [raw];
+    if (songs.length === 0) return 'skipped';
+
+    let anyError = false;
+    for (const song of songs.slice(0, INSTANT_MIX_PROBE_MAX_TRACKS)) {
+      try {
+        const simData = await apiWithCredentials<{ similarSongs: { song: SubsonicSong | SubsonicSong[] } }>(
+          serverUrl,
+          username,
+          password,
+          'getSimilarSongs.view',
+          { id: song.id, count: INSTANT_MIX_PROBE_SIMILAR_COUNT },
+          12000,
+        );
+        const sRaw = simData.similarSongs?.song;
+        const list: SubsonicSong[] = !sRaw ? [] : Array.isArray(sRaw) ? sRaw : [sRaw];
+        if (list.some(s => s.id !== song.id)) return 'ok';
+      } catch {
+        anyError = true;
+      }
+    }
+    return anyError ? 'error' : 'empty';
+  } catch {
+    return 'error';
+  }
+}
+
+/** After a successful ping, probe Instant Mix in the background (Navidrome ≥ 0.60 only). */
+export function scheduleInstantMixProbeForServer(
+  serverId: string,
+  serverUrl: string,
+  username: string,
+  password: string,
+  identity: SubsonicServerIdentity,
+): void {
+  if (!isNavidromeAudiomuseSoftwareEligible(identity)) return;
+  void probeInstantMixWithCredentials(serverUrl, username, password).then(result =>
+    useAuthStore.getState().setInstantMixProbe(serverId, result),
+  );
 }
 
 export async function getRandomAlbums(size = 6): Promise<SubsonicAlbum[]> {
@@ -307,6 +414,68 @@ export async function getAlbumList(
     ...extra,
   });
   return data.albumList2?.album ?? [];
+}
+
+/**
+ * Navidrome (and some servers) ignore `musicFolderId` on getSimilarSongs / getSimilarSongs2 / getTopSongs,
+ * so similar tracks can leak from other libraries. When the user scoped to one folder, we keep a set of
+ * album ids in that scope (paginated getAlbumList2) and drop songs whose albumId is not in the set.
+ */
+let scopedLibraryAlbumIdCache: {
+  serverId: string;
+  folderId: string;
+  filterVersion: number;
+  ids: Set<string>;
+} | null = null;
+
+async function albumIdsInActiveLibraryScope(): Promise<Set<string> | null> {
+  const { activeServerId, musicLibraryFilterByServer, musicLibraryFilterVersion } = useAuthStore.getState();
+  if (!activeServerId) return null;
+  const folder = musicLibraryFilterByServer[activeServerId];
+  if (folder === undefined || folder === 'all') {
+    scopedLibraryAlbumIdCache = null;
+    return null;
+  }
+  const hit = scopedLibraryAlbumIdCache;
+  if (
+    hit &&
+    hit.serverId === activeServerId &&
+    hit.folderId === folder &&
+    hit.filterVersion === musicLibraryFilterVersion
+  ) {
+    return hit.ids;
+  }
+  const ids = new Set<string>();
+  const pageSize = 500;
+  let offset = 0;
+  for (;;) {
+    const albums = await getAlbumList('alphabeticalByName', pageSize, offset);
+    for (const a of albums) ids.add(a.id);
+    if (albums.length < pageSize) break;
+    offset += pageSize;
+    if (offset > 500_000) break;
+  }
+  scopedLibraryAlbumIdCache = {
+    serverId: activeServerId,
+    folderId: folder,
+    filterVersion: musicLibraryFilterVersion,
+    ids,
+  };
+  return ids;
+}
+
+export async function filterSongsToActiveLibrary(songs: SubsonicSong[]): Promise<SubsonicSong[]> {
+  const allowed = await albumIdsInActiveLibraryScope();
+  if (!allowed || allowed.size === 0) return songs;
+  return songs.filter(s => s.albumId && allowed.has(s.albumId));
+}
+
+/** When scoped to one library, ask the server for more similar tracks — many will be filtered out client-side. */
+function similarSongsRequestCount(desired: number): number {
+  const { activeServerId, musicLibraryFilterByServer } = useAuthStore.getState();
+  const f = activeServerId ? musicLibraryFilterByServer[activeServerId] : undefined;
+  if (f === undefined || f === 'all') return desired;
+  return Math.min(300, Math.max(desired, desired * 4));
 }
 
 export async function getRandomSongs(size = 50, genre?: string, timeout = 15000): Promise<SubsonicSong[]> {
@@ -590,15 +759,21 @@ export async function getArtist(id: string): Promise<{ artist: SubsonicArtist; a
   return { artist, albums: album ?? [] };
 }
 
-export async function getArtistInfo(id: string): Promise<SubsonicArtistInfo> {
-  const data = await api<{ artistInfo2: SubsonicArtistInfo }>('getArtistInfo2.view', { id, count: 5 });
+export async function getArtistInfo(id: string, options?: { similarArtistCount?: number }): Promise<SubsonicArtistInfo> {
+  const count = options?.similarArtistCount ?? 5;
+  const data = await api<{ artistInfo2: SubsonicArtistInfo }>('getArtistInfo2.view', { id, count, ...libraryFilterParams() });
   return data.artistInfo2 ?? {};
 }
 
 export async function getTopSongs(artist: string): Promise<SubsonicSong[]> {
   try {
-    const data = await api<{ topSongs: { song: SubsonicSong[] } }>('getTopSongs.view', { artist, count: 5 });
-    return data.topSongs?.song ?? [];
+    const { activeServerId, musicLibraryFilterByServer } = useAuthStore.getState();
+    const scoped = activeServerId && musicLibraryFilterByServer[activeServerId] && musicLibraryFilterByServer[activeServerId] !== 'all';
+    const topCount = scoped ? 20 : 5;
+    const data = await api<{ topSongs: { song: SubsonicSong[] } }>('getTopSongs.view', { artist, count: topCount, ...libraryFilterParams() });
+    const raw = data.topSongs?.song ?? [];
+    const filtered = await filterSongsToActiveLibrary(raw);
+    return filtered.slice(0, 5);
   } catch {
     return [];
   }
@@ -606,8 +781,26 @@ export async function getTopSongs(artist: string): Promise<SubsonicSong[]> {
 
 export async function getSimilarSongs2(id: string, count = 50): Promise<SubsonicSong[]> {
   try {
-    const data = await api<{ similarSongs2: { song: SubsonicSong[] } }>('getSimilarSongs2.view', { id, count });
-    return data.similarSongs2?.song ?? [];
+    const requestCount = similarSongsRequestCount(count);
+    const data = await api<{ similarSongs2: { song: SubsonicSong[] } }>('getSimilarSongs2.view', { id, count: requestCount, ...libraryFilterParams() });
+    const raw = data.similarSongs2?.song ?? [];
+    const filtered = await filterSongsToActiveLibrary(raw);
+    return filtered.slice(0, count);
+  } catch {
+    return [];
+  }
+}
+
+/** Similar tracks for a song id (Subsonic `getSimilarSongs`) — Navidrome + AudioMuse Instant Mix. */
+export async function getSimilarSongs(id: string, count = 50): Promise<SubsonicSong[]> {
+  try {
+    const requestCount = similarSongsRequestCount(count);
+    const data = await api<{ similarSongs: { song: SubsonicSong | SubsonicSong[] } }>('getSimilarSongs.view', { id, count: requestCount, ...libraryFilterParams() });
+    const raw = data.similarSongs?.song;
+    if (!raw) return [];
+    const list = Array.isArray(raw) ? raw : [raw];
+    const filtered = await filterSongsToActiveLibrary(list);
+    return filtered.slice(0, count);
   } catch {
     return [];
   }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wifi, WifiOff, Eye, EyeOff, Server } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { pingWithCredentials } from '../api/subsonic';
+import { pingWithCredentials, scheduleInstantMixProbeForServer } from '../api/subsonic';
 import { useTranslation } from 'react-i18next';
 
 const PsysonicLogo = () => (
@@ -36,16 +36,16 @@ export default function Login() {
 
     // Test connection directly with entered credentials — don't touch the store yet.
     // This avoids any race condition with Zustand's async store rehydration.
-    let ok = false;
+    let ping: Awaited<ReturnType<typeof pingWithCredentials>> = { ok: false };
     try {
-      ok = await pingWithCredentials(profile.url.trim(), profile.username.trim(), profile.password);
+      ping = await pingWithCredentials(profile.url.trim(), profile.username.trim(), profile.password);
     } catch {
-      ok = false;
+      ping = { ok: false };
     }
 
     setConnecting(false);
 
-    if (ok) {
+    if (ping.ok) {
       // Connection succeeded — now persist to store
       const existing = servers.find(s => s.url === profile.url.trim() && s.username === profile.username.trim());
       let serverId: string;
@@ -63,6 +63,19 @@ export default function Login() {
           password: profile.password,
         });
       }
+      const identity = {
+        type: ping.type,
+        serverVersion: ping.serverVersion,
+        openSubsonic: ping.openSubsonic,
+      };
+      useAuthStore.getState().setSubsonicServerIdentity(serverId, identity);
+      scheduleInstantMixProbeForServer(
+        serverId,
+        profile.url.trim(),
+        profile.username.trim(),
+        profile.password,
+        identity,
+      );
       setActiveServer(serverId);
       setLoggedIn(true);
       setStatus('ok');
