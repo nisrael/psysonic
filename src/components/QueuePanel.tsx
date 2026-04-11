@@ -272,6 +272,12 @@ export default function QueuePanel() {
   const asideRef = useRef<HTMLElement>(null);
 
   const { isDragging: isPsyDragging, startDrag, payload: psyPayload } = useDragDrop();
+  /** Only these drag types may be dropped into the queue. */
+  const QUEUE_DROP_TYPES = new Set(['song', 'album', 'queue_reorder']);
+  const isQueueDrag = isPsyDragging && !!psyPayload && (() => {
+    try { return QUEUE_DROP_TYPES.has(JSON.parse(psyPayload.data).type); } catch { return false; }
+  })();
+  // Keep for the onPsyDrop radio-reject check below
   const isRadioDrag = isPsyDragging && !!psyPayload && (() => {
     try { return JSON.parse(psyPayload.data).type === 'radio'; } catch { return false; }
   })();
@@ -315,6 +321,8 @@ export default function QueuePanel() {
         if (fromIdx !== insertIdx) reorderQueue(fromIdx, insertIdx);
       } else if (parsedData.type === 'song') {
         enqueueAt([parsedData.track], insertIdx);
+      } else if (parsedData.type === 'songs') {
+        enqueueAt(parsedData.tracks as Track[], insertIdx);
       } else if (parsedData.type === 'album') {
         const albumData = await getAlbum(parsedData.id);
         const tracks: Track[] = albumData.songs.map((s: any) => ({
@@ -374,9 +382,9 @@ export default function QueuePanel() {
   return (
     <aside
       ref={asideRef}
-      className={`queue-panel${isPsyDragging && !isRadioDrag ? ' queue-drop-active' : ''}`}
+      className={`queue-panel${isQueueDrag ? ' queue-drop-active' : ''}`}
       onMouseMove={e => {
-        if (!isPsyDragging || isRadioDrag || !queueListRef.current) return;
+        if (!isQueueDrag || !queueListRef.current) return;
         const items = queueListRef.current.querySelectorAll<HTMLElement>('[data-queue-idx]');
         let found = false;
         for (let i = 0; i < items.length; i++) {
@@ -551,9 +559,9 @@ export default function QueuePanel() {
             const isFirstRadioAdded = track.radioAdded && (idx === 0 || !queue[idx - 1].radioAdded);
 
             let dragStyle: React.CSSProperties = {};
-            if (isPsyDragging && psyDragFromIdxRef.current === idx) {
+            if (isQueueDrag && psyDragFromIdxRef.current === idx) {
               dragStyle = { opacity: 0.4, background: 'var(--bg-hover)' };
-            } else if (isPsyDragging && externalDropTarget?.idx === idx) {
+            } else if (isQueueDrag && externalDropTarget?.idx === idx) {
               if (externalDropTarget.before) {
                 dragStyle = { borderTop: '2px solid var(--accent)', paddingTop: '6px', marginTop: '-2px' };
               } else {

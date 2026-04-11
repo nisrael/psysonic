@@ -46,6 +46,7 @@ export default function PlayerBar() {
   const navigate = useNavigate();
   const [eqOpen, setEqOpen] = useState(false);
   const [showVolPct, setShowVolPct] = useState(false);
+  const premuteVolumeRef = useRef(1);
   const showLyrics   = useLyricsStore(s => s.showLyrics);
   const activeTab    = useLyricsStore(s => s.activeTab);
   // currentTime is intentionally excluded — PlaybackTime handles it via direct DOM update.
@@ -313,7 +314,14 @@ export default function PlayerBar() {
       <div className="player-volume-section">
         <button
           className="player-btn player-btn-sm"
-          onClick={() => setVolume(volume === 0 ? 0.7 : 0)}
+          onClick={() => {
+            if (volume === 0) {
+              setVolume(premuteVolumeRef.current);
+            } else {
+              premuteVolumeRef.current = volume;
+              setVolume(0);
+            }
+          }}
           aria-label={t('player.volume')}
           style={{ color: 'var(--text-muted)', flexShrink: 0 }}
         >

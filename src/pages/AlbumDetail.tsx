@@ -57,6 +57,9 @@ export default function AlbumDetail() {
   const albumEntityRatingSupport = entityRatingSupportByServer[serverId] ?? 'unknown';
 
   const [albumEntityRating, setAlbumEntityRating] = useState(0);
+  const [filterText, setFilterText] = useState('');
+  const [sortKey, setSortKey] = useState<'natural' | 'title' | 'artist'>('natural');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   // Derive a stable albumId for the selectors below (empty string when not yet loaded).
   const albumId = album?.album.id ?? '';
@@ -259,6 +262,22 @@ const handleEnqueueAll = () => {
     deleteAlbum(album.album.id, serverId);
   };
 
+  const displayedSongs = useMemo(() => {
+    if (!album) return [];
+    const q = filterText.trim().toLowerCase();
+    if (!q && sortKey === 'natural') return album.songs;
+    let result = [...album.songs];
+    if (q) result = result.filter(s => s.title.toLowerCase().includes(q) || (s.artist ?? '').toLowerCase().includes(q));
+    if (sortKey !== 'natural') {
+      result.sort((a, b) => {
+        const av = sortKey === 'title' ? a.title : (a.artist ?? '');
+        const bv = sortKey === 'title' ? b.title : (b.artist ?? '');
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+    }
+    return result;
+  }, [album, filterText, sortKey, sortDir]);
+
   // Hooks must be called unconditionally — derive from nullable album state.
   // useMemo is required: buildCoverArtUrl generates a new salt on every call, so without
   // memoization every re-render (e.g. currentTrack change) produces a new fetchUrl,
@@ -318,8 +337,44 @@ const handleEnqueueAll = () => {
         </div>
       )}
 
+      {songs.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '0 16px 8px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 160px', maxWidth: 260 }}>
+            <input
+              className="input"
+              style={{ width: '100%', paddingRight: filterText ? 28 : undefined }}
+              placeholder={t('albumDetail.filterSongs')}
+              value={filterText}
+              onChange={e => setFilterText(e.target.value)}
+            />
+            {filterText && (
+              <button
+                style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, lineHeight: 1 }}
+                onClick={() => setFilterText('')}
+              >×</button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {(['natural', 'title', 'artist'] as const).map(key => (
+              <button
+                key={key}
+                className={`btn btn-sm ${sortKey === key ? 'btn-surface' : 'btn-ghost'}`}
+                onClick={() => {
+                  if (sortKey === key && key !== 'natural') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                  else { setSortKey(key); setSortDir('asc'); }
+                }}
+              >
+                {key === 'natural' ? t('albumDetail.sortNatural') : key === 'title' ? t('albumDetail.sortByTitle') : t('albumDetail.sortByArtist')}
+                {sortKey === key && key !== 'natural' && <span style={{ marginLeft: 3 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <AlbumTrackList
-        songs={songs}
+        songs={displayedSongs}
+        sorted={sortKey !== 'natural' || !!filterText.trim()}
         hasVariousArtists={hasVariousArtists}
         currentTrack={currentTrack}
         isPlaying={isPlaying}

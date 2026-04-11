@@ -21,25 +21,29 @@ function loadPrefs(
   try {
     const raw = localStorage.getItem(storageKey);
     if (!raw) return { widths: defaultWidths, visible: defaultVisible };
-    const parsed = JSON.parse(raw) as { widths?: Record<string, number>; visible?: string[] };
+    const parsed = JSON.parse(raw) as { widths?: Record<string, number>; visible?: string[]; known?: string[] };
     const visible = new Set<string>(parsed.visible ?? [...defaultVisible]);
     columns.filter(c => c.required).forEach(c => visible.add(c.key));
+    // Auto-show columns that are new since prefs were last saved.
+    // "known" tracks every column seen at save time; absent = newly added column → default to visible.
+    if (parsed.known) {
+      const known = new Set<string>(parsed.known);
+      columns.filter(c => !c.required && !known.has(c.key)).forEach(c => visible.add(c.key));
+    }
     const widths = { ...defaultWidths, ...(parsed.widths ?? {}) };
     const durationCol = columns.find(c => c.key === 'duration');
     if (durationCol && typeof widths.duration === 'number' && widths.duration < durationCol.minWidth) {
       widths.duration = defaultWidths.duration;
     }
-    return {
-      widths,
-      visible,
-    };
+    return { widths, visible };
   } catch {
     return { widths: defaultWidths, visible: defaultVisible };
   }
 }
 
 function savePrefs(storageKey: string, widths: Record<string, number>, visible: Set<string>) {
-  localStorage.setItem(storageKey, JSON.stringify({ widths, visible: [...visible] }));
+  const known = Object.keys(widths);
+  localStorage.setItem(storageKey, JSON.stringify({ widths, visible: [...visible], known }));
 }
 
 export function useTracklistColumns(columns: readonly ColDef[], storageKey: string) {

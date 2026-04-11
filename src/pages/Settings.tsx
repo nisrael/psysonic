@@ -102,6 +102,7 @@ const CONTRIBUTORS = [
       'Richer star ratings, skip threshold, and library filtering (PR #130)',
       'Statistics: scope album and song totals to selected music library (PR #138)',
       'AudioMuse-AI discovery integration for Navidrome (PR #147)',
+      'Hot playback cache — eviction budgeting, grace period, and live Audio settings readout (PR #153)',
     ],
   },
   {
@@ -1482,12 +1483,16 @@ export default function Settings() {
             <Keyboard size={18} />
             <h2>{t('settings.tabInput')}</h2>
           </div>
+          <div style={{ position: 'relative' }}>
+            <button
+              className="btn btn-ghost"
+              style={{ position: 'absolute', top: -22, right: 0, fontSize: 12, color: 'var(--text-muted)', padding: '2px 4px' }}
+              onClick={() => { kb.resetToDefaults(); setListeningFor(null); }}
+              data-tooltip={t('settings.shortcutsReset')}
+            >
+              <RotateCcw size={14} />
+            </button>
           <div className="settings-card">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-              <button className="btn btn-danger" style={{ fontSize: 12 }} onClick={() => { kb.resetToDefaults(); setListeningFor(null); }}>
-                {t('settings.shortcutsReset')}
-              </button>
-            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {([
                 ['play-pause',        t('settings.shortcutPlayPause')],
@@ -1558,6 +1563,7 @@ export default function Settings() {
               })}
             </div>
           </div>
+          </div>
         </section>
 
         <section className="settings-section">
@@ -1568,12 +1574,16 @@ export default function Settings() {
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
             {t('settings.globalShortcutsNote')}
           </p>
+          <div style={{ position: 'relative' }}>
+            <button
+              className="btn btn-ghost"
+              style={{ position: 'absolute', top: -22, right: 0, fontSize: 12, color: 'var(--text-muted)', padding: '2px 4px' }}
+              onClick={() => { gs.resetAll(); setListeningForGlobal(null); }}
+              data-tooltip={t('settings.shortcutsReset')}
+            >
+              <RotateCcw size={14} />
+            </button>
           <div className="settings-card">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-              <button className="btn btn-danger" style={{ fontSize: 12 }} onClick={() => { gs.resetAll(); setListeningForGlobal(null); }}>
-                {t('settings.shortcutsReset')}
-              </button>
-            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {([
                 ['play-pause',  t('settings.shortcutPlayPause')],
@@ -1640,6 +1650,7 @@ export default function Settings() {
                 );
               })}
             </div>
+          </div>
           </div>
         </section>
         </>
@@ -2042,25 +2053,27 @@ function HomeCustomizer() {
       <div className="settings-section-header">
         <LayoutGrid size={18} />
         <h2>{t('settings.homeCustomizerTitle')}</h2>
+      </div>
+      <div style={{ position: 'relative' }}>
         <button
           className="btn btn-ghost"
-          style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}
+          style={{ position: 'absolute', top: -22, right: 0, fontSize: 12, color: 'var(--text-muted)', padding: '2px 4px' }}
           onClick={reset}
           data-tooltip={t('settings.sidebarReset')}
         >
           <RotateCcw size={14} />
         </button>
-      </div>
-      <div className="settings-card" style={{ padding: '4px 0' }}>
-        {sections.map(sec => (
-          <div key={sec.id} className="settings-toggle-row" style={{ padding: '8px 16px' }}>
-            <span style={{ fontSize: 14 }}>{SECTION_LABELS[sec.id]}</span>
-            <label className="toggle-switch" aria-label={SECTION_LABELS[sec.id]}>
-              <input type="checkbox" checked={sec.visible} onChange={() => toggleSection(sec.id)} />
-              <span className="toggle-track" />
-            </label>
-          </div>
-        ))}
+        <div className="settings-card" style={{ padding: '4px 0' }}>
+          {sections.map(sec => (
+            <div key={sec.id} className="settings-toggle-row" style={{ padding: '8px 16px' }}>
+              <span style={{ fontSize: 14 }}>{SECTION_LABELS[sec.id]}</span>
+              <label className="toggle-switch" aria-label={SECTION_LABELS[sec.id]}>
+                <input type="checkbox" checked={sec.visible} onChange={() => toggleSection(sec.id)} />
+                <span className="toggle-track" />
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

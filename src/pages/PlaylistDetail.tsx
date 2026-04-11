@@ -113,6 +113,9 @@ export default function PlaylistDetail() {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [editingMeta, setEditingMeta] = useState(false);
   const [customCoverId, setCustomCoverId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [sortKey, setSortKey] = useState<'natural' | 'title' | 'artist'>('natural');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
   const [hoveredSuggestionId, setHoveredSuggestionId] = useState<string | null>(null);
   const [contextMenuSongId, setContextMenuSongId] = useState<string | null>(null);
@@ -435,6 +438,7 @@ export default function PlaylistDetail() {
   // ── Row mousedown: threshold drag for reorder (from anywhere on the row) ──
   const handleRowMouseDown = (e: React.MouseEvent, idx: number) => {
     if (e.button !== 0) return;
+    if (isFiltered) return;
     if ((e.target as HTMLElement).closest('button, input')) return;
     e.preventDefault();
     const sx = e.clientX, sy = e.clientY;
@@ -459,6 +463,26 @@ export default function PlaylistDetail() {
   // ── Memoized derivations ──────────────────────────────────────
   const existingIds = useMemo(() => new Set(songs.map(s => s.id)), [songs]);
   const tracks = useMemo(() => songs.map(songToTrack), [songs]);
+
+  const displayedSongs = useMemo(() => {
+    const q = filterText.trim().toLowerCase();
+    if (!q && sortKey === 'natural') return songs;
+    let result = [...songs];
+    if (q) result = result.filter(s => s.title.toLowerCase().includes(q) || (s.artist ?? '').toLowerCase().includes(q));
+    if (sortKey !== 'natural') {
+      result.sort((a, b) => {
+        const av = sortKey === 'title' ? a.title : (a.artist ?? '');
+        const bv = sortKey === 'title' ? b.title : (b.artist ?? '');
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+    }
+    return result;
+  }, [songs, filterText, sortKey, sortDir]);
+  const displayedTracks = useMemo(
+    () => displayedSongs === songs ? tracks : displayedSongs.map(songToTrack),
+    [displayedSongs, songs, tracks],
+  );
+  const isFiltered = displayedSongs !== songs;
 
   // ── Drag-over visual feedback ─────────────────────────────────
   const handleRowMouseEnter = (idx: number, e: React.MouseEvent) => {
@@ -664,6 +688,44 @@ export default function PlaylistDetail() {
         </div>
       )}
 
+      {/* ── Filter / sort toolbar ── */}
+      {songs.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 160px', maxWidth: 260 }}>
+            <input
+              className="input"
+              style={{ width: '100%', paddingRight: filterText ? 28 : undefined }}
+              placeholder={t('albumDetail.filterSongs')}
+              value={filterText}
+              onChange={e => setFilterText(e.target.value)}
+            />
+            {filterText && (
+              <button
+                style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, lineHeight: 1 }}
+                onClick={() => setFilterText('')}
+              >×</button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {(['natural', 'title', 'artist'] as const).map(key => (
+              <button
+                key={key}
+                className={`btn btn-sm ${sortKey === key ? 'btn-surface' : 'btn-ghost'}`}
+                onClick={() => {
+                  if (sortKey === key && key !== 'natural') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                  else { setSortKey(key); setSortDir('asc'); }
+                }}
+              >
+                {key === 'natural' ? t('albumDetail.sortNatural')
+                  : key === 'title' ? t('albumDetail.sortByTitle')
+                  : t('albumDetail.sortByArtist')}
+                {sortKey === key && key !== 'natural' && <span style={{ marginLeft: 3 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Tracklist ── */}
       <div className="tracklist" ref={tracklistRef}>
 
@@ -798,23 +860,25 @@ export default function PlaylistDetail() {
           </div>
         )}
 
-        {songs.map((song, idx) => (
-          <React.Fragment key={song.id + idx}>
-            {isDragging && dropTargetIdx?.idx === idx && dropTargetIdx.before && (
+        {displayedSongs.map((song, i) => {
+          const realIdx = isFiltered ? songs.indexOf(song) : i;
+          return (
+          <React.Fragment key={song.id + i}>
+            {!isFiltered && isDragging && dropTargetIdx?.idx === i && dropTargetIdx.before && (
               <div className="playlist-drop-indicator" />
             )}
             <div
-              data-track-idx={idx}
+              data-track-idx={realIdx}
               className={`track-row track-row-va tracklist-playlist${currentTrack?.id === song.id ? ' active' : ''}${contextMenuSongId === song.id ? ' context-active' : ''}${selectedIds.has(song.id) ? ' bulk-selected' : ''}`}
               style={gridStyle}
-              onMouseEnter={e => handleRowMouseEnter(idx, e)}
-              onMouseDown={e => handleRowMouseDown(e, idx)}
+              onMouseEnter={e => !isFiltered && handleRowMouseEnter(i, e)}
+              onMouseDown={e => handleRowMouseDown(e, realIdx)}
               onClick={e => {
                 if ((e.target as HTMLElement).closest('button, a, input')) return;
                 if (selectedIds.size > 0) {
-                  toggleSelect(song.id, idx, e.shiftKey);
+                  toggleSelect(song.id, i, e.shiftKey);
                 } else {
-                  playTrack(tracks[idx], tracks);
+                  playTrack(displayedTracks[i], displayedTracks);
                 }
               }}
               onContextMenu={e => {
@@ -827,11 +891,11 @@ export default function PlaylistDetail() {
                 const inSelectMode = selectedIds.size > 0;
                 switch (colDef.key) {
                   case 'num': return (
-                    <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(tracks[idx], tracks); }}>
-                      <span className={`bulk-check${selectedIds.has(song.id) ? ' checked' : ''}${inSelectMode ? ' bulk-check-visible' : ''}`} onClick={e => { e.stopPropagation(); toggleSelect(song.id, idx, e.shiftKey); }} />
+                    <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(displayedTracks[i], displayedTracks); }}>
+                      <span className={`bulk-check${selectedIds.has(song.id) ? ' checked' : ''}${inSelectMode ? ' bulk-check-visible' : ''}`} onClick={e => { e.stopPropagation(); toggleSelect(song.id, i, e.shiftKey); }} />
                       {currentTrack?.id === song.id && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                       <span className="track-num-play"><Play size={13} fill="currentColor" /></span>
-                      <span className="track-num-number">{idx + 1}</span>
+                      <span className="track-num-number">{i + 1}</span>
                     </div>
                   );
                   case 'title': return (
@@ -858,7 +922,7 @@ export default function PlaylistDetail() {
                   );
                   case 'delete': return (
                     <div key="delete" className="playlist-row-delete-cell">
-                      <button className="playlist-row-delete-btn" onClick={e => { e.stopPropagation(); removeSong(idx); }} data-tooltip={t('playlists.removeSong')} data-tooltip-pos="left">
+                      <button className="playlist-row-delete-btn" onClick={e => { e.stopPropagation(); removeSong(realIdx); }} data-tooltip={t('playlists.removeSong')} data-tooltip-pos="left">
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -867,22 +931,14 @@ export default function PlaylistDetail() {
                 }
               })}
             </div>
-            {isDragging && dropTargetIdx?.idx === idx && !dropTargetIdx.before && (
+            {!isFiltered && isDragging && dropTargetIdx?.idx === i && !dropTargetIdx.before && (
               <div className="playlist-drop-indicator" />
             )}
           </React.Fragment>
-        ))}
+          );
+        })}
 
-        {/* Total row */}
-        {songs.length > 0 && (
-          <div className="tracklist-total" style={gridStyle}>
-            {visibleCols.map(c => {
-              if (c.key === 'title') return <span key="title" className="tracklist-total-label">{t('albumDetail.trackTotal')}</span>;
-              if (c.key === 'duration') return <span key="duration" className="tracklist-total-value">{formatDuration(songs.reduce((a, s) => a + (s.duration ?? 0), 0))}</span>;
-              return <span key={c.key} />;
-            })}
-          </div>
-        )}
+
       </div>
 
       {/* ── Suggestions ── */}
