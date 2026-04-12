@@ -104,6 +104,7 @@ const CONTRIBUTORS = [
       'Statistics: scope album and song totals to selected music library (PR #138)',
       'AudioMuse-AI discovery integration for Navidrome (PR #147)',
       'Hot playback cache — eviction budgeting, grace period, and live Audio settings readout (PR #153)',
+      'Folder Browser: keyboard navigation, context menus, now-playing path emphasis, and adaptive column layout (PR #158)',
     ],
   },
   {
@@ -115,6 +116,17 @@ const CONTRIBUTORS = [
       'Album cover art in Discord Rich Presence via iTunes API (PR #111)',
       'Tiling WM detection: hide custom TitleBar on Hyprland/Sway/i3/etc. (PR #134)',
       'Russian translation: lyricsServerFirst settings strings (PR #140)',
+      'Russian translation refinements (PR #148)',
+      'Merge Random Mix & Albums into a single Build a Mix hub (PR #155)',
+      'Fullscreen player: software-rendering performance fixes + portrait toggle & dimming setting (PR #156)',
+    ],
+  },
+  {
+    github: 'kveld9',
+    since: '1.34.4',
+    contributions: [
+      'Spanish (es) translation — 964 strings (PR #159)',
+      'Column-header sorting for albums & playlists (PR #160)',
     ],
   },
   {
