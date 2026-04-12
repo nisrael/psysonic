@@ -179,17 +179,7 @@ export default function Artists() {
           <button
             key={l}
             onClick={() => setLetterFilter(l)}
-            style={{
-              padding: '0.25rem 0.5rem',
-              borderRadius: 'var(--radius-sm)',
-              background: letterFilter === l ? 'var(--accent)' : 'var(--bg-card)',
-              color: letterFilter === l ? 'var(--ctp-crust)' : 'var(--text-secondary)',
-              border: '1px solid var(--border-subtle)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+            className={`artists-alpha-btn${letterFilter === l ? ' artists-alpha-btn--active' : ''}`}
           >
             {l === ALL_SENTINEL ? t('artists.all') : l}
           </button>
