@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getArtists, SubsonicArtist, buildCoverArtUrl, coverArtCacheKey } from '../api/subsonic';
-import { LayoutGrid, List, Images, ChevronDown } from 'lucide-react';
+import { LayoutGrid, List, Images, CheckSquare2, ListMusic, Check } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
 import CachedImage from '../components/CachedImage';
@@ -81,25 +81,55 @@ export default function Artists() {
   const [letterFilter, setLetterFilter] = useState(ALL_SENTINEL);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const [visibleCount, setVisibleCount] = useState(50);
+  const showArtistImages = useAuthStore(s => s.showArtistImages);
+  const PAGE_SIZE = showArtistImages ? 50 : 100; // Menor con imágenes para reducir I/O
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const openContextMenu = usePlayerStore(state => state.openContextMenu);
-  const showArtistImages = useAuthStore(s => s.showArtistImages);
   const setShowArtistImages = useAuthStore(s => s.setShowArtistImages);
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+
+  // ── Multi-selection ──────────────────────────────────────────────────────
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(v => !v);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const selectedArtists = artists.filter(a => selectedIds.has(a.id));
 
   useEffect(() => {
     getArtists().then(data => { setArtists(data); setLoading(false); }).catch(() => setLoading(false));
   }, [musicLibraryFilterVersion]);
 
   const loadMore = useCallback(() => {
-    setVisibleCount(prev => prev + 50);
-  }, []);
+    if (loadingMore) return;
+    setLoadingMore(true);
+    setVisibleCount(prev => prev + PAGE_SIZE);
+    setTimeout(() => setLoadingMore(false), 100);
+  }, [loadingMore, PAGE_SIZE]);
 
-  // Reset infinite scroll when filters change
+  // Reset infinite scroll when filters or image setting change
   useEffect(() => {
-    setVisibleCount(50);
-  }, [filter, letterFilter, viewMode]);
+    setVisibleCount(PAGE_SIZE);
+  }, [filter, letterFilter, viewMode, PAGE_SIZE]);
 
   // Filter pipeline
   let filtered = artists;
@@ -120,6 +150,16 @@ export default function Artists() {
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
+  // Intersection Observer for infinite scroll (after hasMore declaration)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: '200px' }
+    );
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    return () => observer.disconnect();
+  }, [loadMore, hasMore]);
+
   // Group by first letter (for list view)
   const groups: Record<string, SubsonicArtist[]> = {};
   visible.forEach(a => {
@@ -134,7 +174,11 @@ export default function Artists() {
     <div className="content-body animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h1 className="page-title" style={{ marginBottom: 0 }}>{t('artists.title')}</h1>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>
+            {selectionMode && selectedIds.size > 0
+              ? t('artists.selectionCount', { count: selectedIds.size })
+              : t('artists.title')}
+          </h1>
           <input
             className="input"
             style={{ maxWidth: 220 }}
@@ -146,30 +190,43 @@ export default function Artists() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {!(selectionMode && selectedIds.size > 0) && (<>
+              <button
+                className={`btn btn-surface`}
+                onClick={() => setShowArtistImages(!showArtistImages)}
+                style={showArtistImages ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
+                data-tooltip={showArtistImages ? t('artists.imagesOn') : t('artists.imagesOff')}
+                data-tooltip-wrap
+              >
+                <Images size={20} />
+              </button>
+              <button
+                className={`btn btn-surface ${viewMode === 'grid' ? 'btn-sort-active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                style={viewMode === 'grid' ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
+                data-tooltip={t('artists.gridView')}
+              >
+                <LayoutGrid size={20} />
+              </button>
+              <button
+                className={`btn btn-surface ${viewMode === 'list' ? 'btn-sort-active' : ''}`}
+                onClick={() => setViewMode('list')}
+                style={viewMode === 'list' ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
+                data-tooltip={t('artists.listView')}
+              >
+                <List size={20} />
+              </button>
+            </>
+          )}
           <button
-            className={`btn btn-surface`}
-            onClick={() => setShowArtistImages(!showArtistImages)}
-            style={showArtistImages ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
-            data-tooltip={showArtistImages ? t('artists.imagesOn') : t('artists.imagesOff')}
-            data-tooltip-wrap
+            className={`btn btn-surface${selectionMode ? ' btn-sort-active' : ''}`}
+            onClick={toggleSelectionMode}
+            data-tooltip={selectionMode ? t('artists.cancelSelect') : t('artists.startSelect')}
+            data-tooltip-pos="bottom"
+            style={selectionMode ? { background: 'var(--accent)', color: 'var(--ctp-crust)' } : {}}
           >
-            <Images size={20} />
-          </button>
-          <button
-            className={`btn btn-surface ${viewMode === 'grid' ? 'btn-sort-active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            style={viewMode === 'grid' ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
-            data-tooltip={t('artists.gridView')}
-          >
-            <LayoutGrid size={20} />
-          </button>
-          <button
-            className={`btn btn-surface ${viewMode === 'list' ? 'btn-sort-active' : ''}`}
-            onClick={() => setViewMode('list')}
-            style={viewMode === 'list' ? { background: 'var(--accent)', color: 'var(--ctp-crust)', padding: '0.5rem' } : { padding: '0.5rem' }}
-            data-tooltip={t('artists.listView')}
-          >
-            <List size={20} />
+            <CheckSquare2 size={15} />
+            {selectionMode ? t('artists.cancelSelect') : t('artists.select')}
           </button>
         </div>
       </div>
@@ -193,13 +250,33 @@ export default function Artists() {
           {visible.map(artist => (
             <div
               key={artist.id}
-              className="artist-card"
-              onClick={() => navigate(`/artist/${artist.id}`)}
+              className={`artist-card${selectionMode && selectedIds.has(artist.id) ? ' selected' : ''}${selectionMode ? ' artist-card--selectable' : ''}`}
+              onClick={() => {
+                if (selectionMode) {
+                  toggleSelect(artist.id);
+                } else {
+                  navigate(`/artist/${artist.id}`);
+                }
+              }}
               onContextMenu={(e) => {
                 e.preventDefault();
-                openContextMenu(e.clientX, e.clientY, artist, 'artist');
+                if (selectionMode && selectedIds.size > 0) {
+                  openContextMenu(e.clientX, e.clientY, selectedArtists, 'multi-artist');
+                } else {
+                  openContextMenu(e.clientX, e.clientY, artist, 'artist');
+                }
               }}
+              style={selectionMode && selectedIds.has(artist.id) ? {
+                outline: '2px solid var(--accent)',
+                outlineOffset: '2px',
+                borderRadius: 'var(--radius-md)'
+              } : {}}
             >
+              {selectionMode && (
+                <div className={`artist-card-select-check${selectedIds.has(artist.id) ? ' artist-card-select-check--on' : ''}`}>
+                  {selectedIds.has(artist.id) && <Check size={14} strokeWidth={3} />}
+                </div>
+              )}
               <ArtistCardAvatar artist={artist} showImages={showArtistImages} />
               <div style={{ textAlign: 'center' }}>
                 <div className="artist-card-name">{artist.name}</div>
@@ -221,13 +298,27 @@ export default function Artists() {
                 {groups[letter].map(artist => (
                   <button
                     key={artist.id}
-                    className="artist-row"
-                    onClick={() => navigate(`/artist/${artist.id}`)}
+                    className={`artist-row${selectionMode && selectedIds.has(artist.id) ? ' selected' : ''}`}
+                    onClick={() => {
+                      if (selectionMode) {
+                        toggleSelect(artist.id);
+                      } else {
+                        navigate(`/artist/${artist.id}`);
+                      }
+                    }}
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      openContextMenu(e.clientX, e.clientY, artist, 'artist');
+                      if (selectionMode && selectedIds.size > 0) {
+                        openContextMenu(e.clientX, e.clientY, selectedArtists, 'multi-artist');
+                      } else {
+                        openContextMenu(e.clientX, e.clientY, artist, 'artist');
+                      }
                     }}
                     id={`artist-${artist.id}`}
+                    style={selectionMode && selectedIds.has(artist.id) ? {
+                      background: 'var(--accent-dim)',
+                      color: 'var(--accent)'
+                    } : {}}
                   >
                     <ArtistRowAvatar artist={artist} showImages={showArtistImages} />
                     <div style={{ textAlign: 'left' }}>
@@ -245,10 +336,8 @@ export default function Artists() {
       )}
 
       {!loading && hasMore && (
-        <div style={{ marginTop: 32, marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-          <button className="btn btn-primary" onClick={loadMore}>
-            <ChevronDown size={16} /> {t('artists.loadMore')}
-          </button>
+        <div ref={observerTarget} style={{ height: '20px', margin: '2rem 0', display: 'flex', justifyContent: 'center' }}>
+          {loadingMore && <div className="spinner" style={{ width: 20, height: 20 }} />}
         </div>
       )}
 

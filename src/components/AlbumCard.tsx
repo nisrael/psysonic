@@ -15,9 +15,10 @@ interface AlbumCardProps {
   selectionMode?: boolean;
   onToggleSelect?: (id: string) => void;
   showRating?: boolean;
+  selectedAlbums?: SubsonicAlbum[];
 }
 
-function AlbumCard({ album, selected, selectionMode, onToggleSelect, showRating = false }: AlbumCardProps) {
+function AlbumCard({ album, selected, selectionMode, onToggleSelect, showRating = false, selectedAlbums = [] }: AlbumCardProps) {
   const navigate = useNavigate();
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const serverId = useAuthStore(s => s.activeServerId ?? '');
@@ -44,7 +45,11 @@ function AlbumCard({ album, selected, selectionMode, onToggleSelect, showRating 
       onKeyDown={e => e.key === 'Enter' && handleClick()}
       onContextMenu={(e) => {
         e.preventDefault();
-        openContextMenu(e.clientX, e.clientY, album, 'album');
+        if (selectionMode && selectedAlbums.length > 0) {
+          openContextMenu(e.clientX, e.clientY, selectedAlbums, 'multi-album');
+        } else {
+          openContextMenu(e.clientX, e.clientY, album, 'album');
+        }
       }}
       onMouseDown={e => {
         if (selectionMode || e.button !== 0) return;

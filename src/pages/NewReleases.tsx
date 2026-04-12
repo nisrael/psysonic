@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { CheckSquare2, Download, HardDriveDownload } from 'lucide-react';
+import { CheckSquare2, Download, HardDriveDownload, ListMusic } from 'lucide-react';
 import AlbumCard from '../components/AlbumCard';
 import GenreFilterBar from '../components/GenreFilterBar';
 import { getAlbumList, getAlbumsByGenre, getAlbum, SubsonicAlbum, buildDownloadUrl } from '../api/subsonic';
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useOfflineStore } from '../store/offlineStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
+import { usePlayerStore } from '../store/playerStore';
 import { invoke } from '@tauri-apps/api/core';
 import { join } from '@tauri-apps/api/path';
 import { showToast } from '../utils/toast';
@@ -50,6 +51,7 @@ export default function NewReleases() {
   }, []);
   const clearSelection = () => { setSelectionMode(false); setSelectedIds(new Set()); };
   const selectedAlbums = albums.filter(a => selectedIds.has(a.id));
+  const openContextMenu = usePlayerStore(state => state.openContextMenu);
 
   const handleDownloadZips = async () => {
     if (selectedAlbums.length === 0) return;
@@ -183,6 +185,7 @@ export default function NewReleases() {
                 selectionMode={selectionMode}
                 selected={selectedIds.has(a.id)}
                 onToggleSelect={toggleSelect}
+                selectedAlbums={selectedAlbums}
               />
             ))}
           </div>

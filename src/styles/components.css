@@ -198,6 +198,7 @@
 
 /* ─ Album Card ─ */
 .album-card {
+  position: relative;
   cursor: pointer;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -514,6 +515,33 @@
 }
 
 .album-card-select-check--on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ctp-crust);
+}
+
+/* ─── Artist Card Selection Checkbox ─── */
+.artist-card {
+  position: relative;
+}
+
+.artist-card-select-check {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.artist-card-select-check--on {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--ctp-crust);

@@ -174,10 +174,10 @@ interface PlayerState {
     x: number;
     y: number;
     item: any;
-    type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | null;
+    type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | 'playlist' | 'multi-album' | 'multi-artist' | 'multi-playlist' | null;
     queueIndex?: number;
   };
-  openContextMenu: (x: number, y: number, item: any, type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song', queueIndex?: number) => void;
+  openContextMenu: (x: number, y: number, item: any, type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | 'playlist' | 'multi-album' | 'multi-artist' | 'multi-playlist', queueIndex?: number) => void;
   closeContextMenu: () => void;
 
   songInfoModal: { isOpen: boolean; songId: string | null };

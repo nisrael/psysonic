@@ -6,11 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useOfflineStore } from '../store/offlineStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
+import { usePlayerStore } from '../store/playerStore';
 import { invoke } from '@tauri-apps/api/core';
 import { join } from '@tauri-apps/api/path';
 import { showToast } from '../utils/toast';
 import { useZipDownloadStore } from '../store/zipDownloadStore';
-import { X, CheckSquare2, Download, HardDriveDownload } from 'lucide-react';
+import { X, CheckSquare2, Download, HardDriveDownload, ListMusic } from 'lucide-react';
 
 type SortType = 'alphabeticalByName' | 'alphabeticalByArtist';
 
@@ -68,6 +69,7 @@ export default function Albums() {
   };
 
   const selectedAlbums = albums.filter(a => selectedIds.has(a.id));
+  const openContextMenu = usePlayerStore(state => state.openContextMenu);
 
   const handleDownloadZips = async () => {
     if (selectedAlbums.length === 0) return;
@@ -284,6 +286,7 @@ export default function Albums() {
                 selectionMode={selectionMode}
                 selected={selectedIds.has(a.id)}
                 onToggleSelect={toggleSelect}
+                selectedAlbums={selectedAlbums}
               />
             ))}
           </div>
