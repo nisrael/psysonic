@@ -5,6 +5,80 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.9] - 2026-04-12
+
+### Added
+
+- **Multi-select in Playlist Detail & Favorites** *(Issue [#157](https://github.com/Psychotoxical/psysonic/issues/157))*: The same Ctrl/Cmd+Click multi-select system that was previously exclusive to album track lists is now available everywhere. Hold Ctrl (or ⌘ on macOS) to enter select mode, Shift+Click to range-select, click the header checkbox to toggle all. Selected tracks can be dragged as a group directly into the queue. A bulk action bar appears with **Add to Playlist** and **Clear selection** options. Works in Playlist Detail (main tracklist) and in the Favorites song list.
+
+- **"Open Artist" in context menu**: Song context menus now show an **Open Artist** entry directly below **Open Album**, navigating to the artist detail page. Previously only accessible via the tracklist artist link.
+
+- **"Add to Playlist" for Artists**: The context menu for artists now includes an **Add to Playlist** submenu. Psysonic fetches all albums from the artist and collects every track, then forwards them to the playlist picker — identical to the existing album-level submenu.
+
+- **Infinite queue — Instant Mix strategy** *(contributed by [@cucadmuh](https://github.com/cucadmuh), PR [#163](https://github.com/Psychotoxical/psysonic/pull/163))*: When Infinite Queue is enabled, Psysonic now builds the upcoming track list using the same artist-driven logic as Instant Mix. It fetches **Top Songs** and **Similar Songs** for the current track's artist, shuffles and deduplicates the pool, and only falls back to fully random songs when no artist-driven candidates are available. This results in much more coherent listening sessions that stay close to your current musical context.
+
+- **Fullscreen Player — appearance settings** *(contributed by [@kilyabin](https://github.com/kilyabin), PR [#156](https://github.com/Psychotoxical/psysonic/pull/156))*: Settings → Appearance → Fullscreen Player now offers a toggle to show/hide the artist portrait and a 0–80 % dimming slider for the background portrait.
+
+- **Build a Mix hub** *(contributed by [@kilyabin](https://github.com/kilyabin), PR [#155](https://github.com/Psychotoxical/psysonic/pull/155))*: The previous *Random Mix* and *Random Albums* sidebar entries have been merged into a single **Build a Mix** page (Wand icon) at `/random`. A landing card lets you choose between *Mix by Tracks* and *Mix by Albums*. Old routes remain fully functional.
+
+- **Spanish translation** *(contributed by [@Kveld9](https://github.com/Kveld9), PR [#159](https://github.com/Psychotoxical/psysonic/pull/159))*: Complete Spanish (es) locale with 964 translated strings. Psysonic now ships in 8 languages: English, German, French, Dutch, Chinese, Norwegian, Russian, and Spanish.
+
+- **Column-header sorting for Albums & Playlists** *(contributed by [@Kveld9](https://github.com/Kveld9), PR [#160](https://github.com/Psychotoxical/psysonic/pull/160))*: Track lists in Album Detail and Playlist Detail now support click-to-sort directly on the column headers. Three-click cycle: ascending → descending → natural order. Sortable columns: Title, Artist, Album, Favourite, Rating, Duration. The active column is shown bold with a ▲/▼ indicator.
+
+- **Folder Browser — keyboard navigation & context menus** *(contributed by [@cucadmuh](https://github.com/cucadmuh), PR [#158](https://github.com/Psychotoxical/psysonic/pull/158))*: Full keyboard navigation in the Folder Browser with arrow keys, Enter to open, and Ctrl+Enter to open the context menu. Context menus for all row types include keyboard-operable submenus and star-rating control via arrow keys. The now-playing path is visually emphasized and updates live. Adaptive column layout prioritizes right-side visibility for deep directory trees. A new configurable *Open Folder Browser* keybinding is available in Settings → Keyboard.
+
+- **PLS/M3U playlist resolution for Internet Radio**: Stations configured with a `.pls` or `.m3u`/`.m3u8` URL (e.g. SomaFM, schizoid.in) are now resolved to their first direct stream URL before playback. ICY metadata fetching also auto-resolves playlist URLs. Previously these stations would fail to play or show no track info.
+
+- **Lyrics sources — configurable order & per-source toggle**: The old *Server First* toggle has been replaced with a full drag-to-reorder list in Settings → General. Three sources — **Server** (embedded/OpenSubsonic), **LRCLIB**, and **Netease Cloud Music** — can each be individually enabled or disabled, and their priority order is fully customisable. Embedded SYLT tags from local files always win unconditionally.
+
+- **ReplayGain Pre-Gain & Fallback** *(audio)*: Two new sliders in Settings → Audio → ReplayGain:
+  - **Pre-Gain** (0–+6 dB): added on top of every ReplayGain-tagged track for users who prefer a louder default.
+  - **Fallback Gain** (−6–0 dB): applied to untagged tracks and internet radio streams, preventing volume jumps when switching between tagged and untagged content.
+
+- **Context-aware Remix button in Build a Mix**: When a genre filter is active, the Remix button now re-fetches the same genre instead of resetting to the full library pool. An *All Songs* chip is available as the first genre option to return to the global mix without leaving the page.
+
+- **AlbumTrackList multi-select & psyDnD** *(tracklist polish)*: Album track lists now support full multi-select with Ctrl/Cmd+Click, Shift+Click range selection, and drag-to-queue for multiple tracks simultaneously. The `TrackRow` component is `React.memo` with fine-grained Zustand selectors, so only the toggled row re-renders on selection change (O(1)).
+
+- **Mute/unmute restores previous volume**: The mute button in the player bar now restores the volume to its level before muting instead of always jumping to 70 %.
+
+### Fixed
+
+- **Statistics — accurate counts for large libraries**: The statistics page was previously capped at 10 pages (≈ 5,000 albums), causing incorrect totals on larger libraries. The pagination loop now runs until the server returns a partial page, regardless of library size. Sort type changed to `alphabeticalByName` for stable pagination.
+
+- **Statistics — Artists count tooltip**: The Artists card now shows a tooltip (dotted underline, cursor: help) explaining that the count reflects album artists only — a Subsonic API limitation. Featured or guest artists who do not have their own album are not counted. The tooltip is localised in all 8 languages.
+
+- **Artists page — alphabet navigation hover effect**: The A–Z filter buttons had inline styles that prevented `:hover` CSS from applying. Buttons are now styled via `.artists-alpha-btn` CSS class with an accent-coloured hover highlight and a subtle glow ring.
+
+- **Hot Cache — eviction & prefetch budget**: Eviction now correctly keeps only the current and next track; prefetch fetches up to five tracks when under the size cap but always fetches the immediate next; the previous current track is given a grace period until the debounce fires; eviction runs immediately on MB limit or folder changes; the cap is re-read after each download completes. Live disk usage is now shown on the Audio settings page.
+
+- **Hot Cache + Preload — mutual exclusion on rehydration**: Users who had both Hot Cache and Preload enabled before the mutual-exclusion rule was introduced will have both automatically reset to off on first launch, preventing a conflicting state.
+
+- **Fullscreen Player — Linux compositing performance** *(contributed by [@kilyabin](https://github.com/kilyabin), PR [#156](https://github.com/Psychotoxical/psysonic/pull/156))*: A new `no_compositing_mode` Tauri command detects Linux software-rendering mode and adds an `html.no-compositing` class, which swaps GPU-only CSS effects (`backdrop-filter`, `filter`, `mask-image`) for software-friendly equivalents throughout the fullscreen player.
+
+- **Fullscreen Player — long lyric lines wrapping**: Long words in lyric lines now wrap correctly instead of overflowing the container.
+
+- **Russian locale** *(contributed by [@kilyabin](https://github.com/kilyabin), PR [#148](https://github.com/Psychotoxical/psysonic/pull/148))*: Numerous translation improvements across the application, replacing machine-translated or awkward phrasings with natural Russian.
+
+- **npm audit vulnerabilities**: Updated `axios` and `vite` to address reported security advisories.
+
+### Changed
+
+- **"Remove from Queue" context menu item** now has a **Trash** icon, matching the destructive action style of other delete operations.
+- **Playlist Detail — filter-mode drag**: Rows in a filtered/sorted playlist view can now be dragged to the queue as single songs (previously dragging was disabled entirely in filter mode).
+- **Infinite queue deduplication**: Tracks already present in the queue are excluded from the candidate pool, preventing the same song from appearing twice in a row during Infinite Queue sessions.
+
+### Contributors
+
+Thank you to everyone who contributed to **v1.34.9**:
+
+- [@cucadmuh](https://github.com/cucadmuh) — Infinite queue via Instant Mix strategy (PR [#163](https://github.com/Psychotoxical/psysonic/pull/163)), Folder Browser keyboard navigation & context menus (PR [#158](https://github.com/Psychotoxical/psysonic/pull/158))
+- [@kilyabin](https://github.com/kilyabin) — Fullscreen Player performance & appearance settings (PR [#156](https://github.com/Psychotoxical/psysonic/pull/156)), Build a Mix hub (PR [#155](https://github.com/Psychotoxical/psysonic/pull/155)), Russian locale improvements (PR [#148](https://github.com/Psychotoxical/psysonic/pull/148))
+- [@Kveld9](https://github.com/Kveld9) — Spanish translation (PR [#159](https://github.com/Psychotoxical/psysonic/pull/159)), Column-header sorting (PR [#160](https://github.com/Psychotoxical/psysonic/pull/160))
+
+A huge thank you to all three of you — your contributions have made this one of the most feature-packed patch releases yet. Psysonic keeps getting better because of people like you. 🙌
+
+---
+
 ## [1.34.8] - 2026-04-10
 
 ### Added
