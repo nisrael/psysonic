@@ -44,6 +44,7 @@ export function AddToPlaylistSubmenu({ songIds, onDone, dropDown, triggerId }: {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [flipLeft, setFlipLeft] = useState(false);
+  const [flipUp, setFlipUp] = useState(false);
   const storePlaylists = usePlaylistStore((s) => s.playlists);
   const recentIds = usePlaylistStore((s) => s.recentIds);
   const createPlaylist = usePlaylistStore((s) => s.createPlaylist);
@@ -62,10 +63,12 @@ export function AddToPlaylistSubmenu({ songIds, onDone, dropDown, triggerId }: {
   }, [storePlaylists, recentIds]);
 
   // Flip submenu left if it would overflow the right edge of the viewport
+  // Flip submenu up if it would overflow the bottom of the viewport
   useLayoutEffect(() => {
     if (subRef.current) {
       const rect = subRef.current.getBoundingClientRect();
       if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+      if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
     }
   }, []);
 
@@ -97,8 +100,8 @@ export function AddToPlaylistSubmenu({ songIds, onDone, dropDown, triggerId }: {
   const subStyle: React.CSSProperties = dropDown
     ? { top: 'calc(100% + 4px)', left: 0, right: 'auto' }
     : flipLeft
-      ? { right: 'calc(100% + 4px)', left: 'auto' }
-      : { left: 'calc(100% + 4px)', right: 'auto' };
+      ? { right: 'calc(100% + 4px)', left: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' }
+      : { left: 'calc(100% + 4px)', right: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' };
 
   return (
     <div className="context-submenu" data-parent-trigger-id={triggerId ?? ''} ref={subRef} style={subStyle}>
@@ -198,14 +201,18 @@ function MultiAlbumToPlaylistSubmenu({ albumIds, onDone, triggerId }: { albumIds
   const { t } = useTranslation();
   const [resolvedIds, setResolvedIds] = useState<string[] | null>(null);
   const [totalAlbums, setTotalAlbums] = useState(0);
+  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     setTotalAlbums(albumIds.length);
+    // Delay showing loading state to avoid flash for fast loads
+    const loadingTimeout = setTimeout(() => setShowLoading(true), 300);
     (async () => {
       const albumSongs = await Promise.all(albumIds.map(id => getAlbum(id).then(r => r.songs).catch(() => [])));
       const allSongs = albumSongs.flat();
       setResolvedIds(allSongs.map(s => s.id));
     })().catch(() => setResolvedIds([]));
+    return () => clearTimeout(loadingTimeout);
   }, [albumIds]);
 
   const handleAddWithToast = async (pl: SubsonicPlaylist, songIds: string[]) => {
@@ -292,22 +299,26 @@ function MultiAlbumToPlaylistSubmenu({ albumIds, onDone, triggerId }: { albumIds
     const { t } = useTranslation();
     const subRef = useRef<HTMLDivElement>(null);
     const newNameRef = useRef<HTMLInputElement>(null);
-    const [playlists, setPlaylists] = useState<SubsonicPlaylist[]>([]);
     const [adding, setAdding] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [newName, setNewName] = useState('');
     const [flipLeft, setFlipLeft] = useState(false);
+    const [flipUp, setFlipUp] = useState(false);
+    const [visible, setVisible] = useState(false);
+    const storePlaylists = usePlaylistStore((s) => s.playlists);
 
-    useEffect(() => {
-      getPlaylists().then((all) => {
-        setPlaylists(all.sort((a, b) => a.name.localeCompare(b.name)));
-      }).catch(() => {});
-    }, []);
+    // Sort playlists from store (no fetch needed, prevents flash)
+    const playlists = useMemo(() => {
+      return [...storePlaylists].sort((a, b) => a.name.localeCompare(b.name));
+    }, [storePlaylists]);
 
     useLayoutEffect(() => {
       if (subRef.current) {
         const rect = subRef.current.getBoundingClientRect();
         if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+        if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
+        // Show after position is calculated to prevent flash
+        setVisible(true);
       }
     }, []);
 
@@ -342,11 +353,11 @@ function MultiAlbumToPlaylistSubmenu({ albumIds, onDone, triggerId }: { albumIds
     };
 
     const subStyle: React.CSSProperties = flipLeft
-      ? { right: 'calc(100% + 4px)', left: 'auto' }
-      : { left: 'calc(100% + 4px)', right: 'auto' };
+      ? { right: 'calc(100% + 4px)', left: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' }
+      : { left: 'calc(100% + 4px)', right: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' };
 
     return (
-      <div className="context-submenu" ref={subRef} style={subStyle}>
+      <div className="context-submenu" ref={subRef} style={{ ...subStyle, visibility: visible ? 'visible' : 'hidden' }}>
         {!creating ? (
           <div
             className="context-menu-item context-submenu-new"
@@ -394,8 +405,12 @@ function MultiAlbumToPlaylistSubmenu({ albumIds, onDone, triggerId }: { albumIds
   }
 
   if (resolvedIds === null) {
+    // Only show loading UI if it takes more than 300ms (avoid flash)
+    if (!showLoading) {
+      return <div className="context-submenu" style={{ minWidth: 190 }} />;
+    }
     return (
-      <div className="context-submenu" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.75rem', gap: '0.5rem' }}>
+      <div className="context-submenu" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.75rem', gap: '0.5rem', minWidth: 190 }}>
         <div className="spinner" style={{ width: 16, height: 16 }} />
         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           {t('playlists.loadingAlbums', { count: totalAlbums })}
@@ -412,9 +427,12 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
   const { t } = useTranslation();
   const [resolvedIds, setResolvedIds] = useState<string[] | null>(null);
   const [totalArtists, setTotalArtists] = useState(0);
+  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     setTotalArtists(artistIds.length);
+    // Delay showing loading state to avoid flash for fast loads
+    const loadingTimeout = setTimeout(() => setShowLoading(true), 300);
     (async () => {
       const allSongs: string[] = [];
       for (const artistId of artistIds) {
@@ -428,6 +446,7 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
       }
       setResolvedIds(allSongs);
     })().catch(() => setResolvedIds([]));
+    return () => clearTimeout(loadingTimeout);
   }, [artistIds]);
 
   const handleAddWithToast = async (pl: SubsonicPlaylist, songIds: string[]) => {
@@ -495,6 +514,7 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
     const [creating, setCreating] = useState(false);
     const [newName, setNewName] = useState('');
     const [flipLeft, setFlipLeft] = useState(false);
+    const [flipUp, setFlipUp] = useState(false);
 
     useEffect(() => {
       getPlaylists().then((all) => {
@@ -506,6 +526,7 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
       if (subRef.current) {
         const rect = subRef.current.getBoundingClientRect();
         if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+        if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
       }
     }, []);
 
@@ -540,8 +561,8 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
     };
 
     const subStyle: React.CSSProperties = flipLeft
-      ? { right: 'calc(100% + 4px)', left: 'auto' }
-      : { left: 'calc(100% + 4px)', right: 'auto' };
+      ? { right: 'calc(100% + 4px)', left: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' }
+      : { left: 'calc(100% + 4px)', right: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' };
 
     return (
       <div className="context-submenu" ref={subRef} style={subStyle}>
@@ -592,8 +613,12 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
   }
 
   if (resolvedIds === null) {
+    // Only show loading UI if it takes more than 300ms (avoid flash)
+    if (!showLoading) {
+      return <div className="context-submenu" style={{ minWidth: 190 }} />;
+    }
     return (
-      <div className="context-submenu" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.75rem', gap: '0.5rem' }}>
+      <div className="context-submenu" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.75rem', gap: '0.5rem', minWidth: 190 }}>
         <div className="spinner" style={{ width: 16, height: 16 }} />
         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           {t('playlists.loadingArtists', { count: totalArtists })}
@@ -609,20 +634,25 @@ function MultiArtistToPlaylistSubmenu({ artistIds, onDone, triggerId }: { artist
 function SinglePlaylistToPlaylistSubmenu({ playlist, onDone, triggerId }: { playlist: { id: string; name: string }; onDone: () => void; triggerId?: string }) {
   const { t } = useTranslation();
   const subRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
-  const [allPlaylists, setAllPlaylists] = useState<{ id: string; name: string }[]>([]);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const newNameRef = useRef<HTMLInputElement>(null);
+  const [flipLeft, setFlipLeft] = useState(false);
+  const [flipUp, setFlipUp] = useState(false);
+  const storePlaylists = usePlaylistStore((s) => s.playlists);
 
-  useEffect(() => {
-    (async () => {
-      const { getPlaylists } = await import('../api/subsonic');
-      const pls = await getPlaylists().catch(() => []);
-      setAllPlaylists(pls.filter((p: { id: string }) => p.id !== playlist.id));
-      setLoading(false);
-    })();
-  }, [playlist]);
+  // Filter out the current playlist from the list
+  const allPlaylists = useMemo(() => {
+    return storePlaylists.filter((p) => p.id !== playlist.id);
+  }, [storePlaylists, playlist.id]);
+
+  useLayoutEffect(() => {
+    if (subRef.current) {
+      const rect = subRef.current.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+      if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (creating && newNameRef.current) {
@@ -693,17 +723,9 @@ function SinglePlaylistToPlaylistSubmenu({ playlist, onDone, triggerId }: { play
     }
   };
 
-  if (loading) {
-    return (
-      <div ref={subRef} className="context-submenu" data-submenu-for={triggerId} style={{ minWidth: 190 }}>
-        <div style={{ padding: '0.75rem', display: 'flex', justifyContent: 'center' }}>
-          <div className="spinner" style={{ width: 16, height: 16 }} />
-        </div>
-      </div>
-    );
-  }
-
-  const subStyle: React.CSSProperties = { left: 'calc(100% + 4px)', right: 'auto' };
+  const subStyle: React.CSSProperties = flipLeft
+    ? { right: 'calc(100% + 4px)', left: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' }
+    : { left: 'calc(100% + 4px)', right: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' };
 
   return (
     <div ref={subRef} className="context-submenu" data-submenu-for={triggerId} style={{ ...subStyle, minWidth: 190 }}>
@@ -757,21 +779,26 @@ function SinglePlaylistToPlaylistSubmenu({ playlist, onDone, triggerId }: { play
 function MultiPlaylistToPlaylistSubmenu({ playlists, onDone, triggerId }: { playlists: { id: string; name: string }[]; onDone: () => void; triggerId?: string }) {
   const { t } = useTranslation();
   const subRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
-  const [allPlaylists, setAllPlaylists] = useState<{ id: string; name: string }[]>([]);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const newNameRef = useRef<HTMLInputElement>(null);
+  const [flipLeft, setFlipLeft] = useState(false);
+  const [flipUp, setFlipUp] = useState(false);
+  const storePlaylists = usePlaylistStore((s) => s.playlists);
 
-  useEffect(() => {
-    (async () => {
-      const { getPlaylists } = await import('../api/subsonic');
-      const pls = await getPlaylists().catch(() => []);
-      const selectedIds = new Set(playlists.map(p => p.id));
-      setAllPlaylists(pls.filter((p: { id: string }) => !selectedIds.has(p.id)));
-      setLoading(false);
-    })();
-  }, [playlists]);
+  // Filter out the selected playlists from the list
+  const allPlaylists = useMemo(() => {
+    const selectedIds = new Set(playlists.map(p => p.id));
+    return storePlaylists.filter((p) => !selectedIds.has(p.id));
+  }, [storePlaylists, playlists]);
+
+  useLayoutEffect(() => {
+    if (subRef.current) {
+      const rect = subRef.current.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+      if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (creating && newNameRef.current) {
@@ -860,17 +887,9 @@ function MultiPlaylistToPlaylistSubmenu({ playlists, onDone, triggerId }: { play
     }
   };
 
-  if (loading) {
-    return (
-      <div ref={subRef} className="context-submenu" data-submenu-for={triggerId} style={{ minWidth: 190 }}>
-        <div style={{ padding: '0.75rem', display: 'flex', justifyContent: 'center' }}>
-          <div className="spinner" style={{ width: 16, height: 16 }} />
-        </div>
-      </div>
-    );
-  }
-
-  const subStyle: React.CSSProperties = { left: 'calc(100% + 4px)', right: 'auto' };
+  const subStyle: React.CSSProperties = flipLeft
+    ? { right: 'calc(100% + 4px)', left: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' }
+    : { left: 'calc(100% + 4px)', right: 'auto', top: flipUp ? 'auto' : -4, bottom: flipUp ? 0 : 'auto' };
 
   return (
     <div ref={subRef} className="context-submenu" data-submenu-for={triggerId} style={{ ...subStyle, minWidth: 190 }}>
@@ -1064,7 +1083,7 @@ export default function ContextMenu() {
     };
   }, [pendingSubmenuKeyboardFocus, playlistSubmenuOpen, getMenuNavItems, focusMenuItemAt]);
 
-  const { type, item, queueIndex } = contextMenu;
+  const { type, item, queueIndex, playlistId, playlistSongIndex } = contextMenu;
 
   const isStarred = (id: string, itemStarred?: string) =>
     id in starredOverrides ? starredOverrides[id] : !!itemStarred;
@@ -1485,6 +1504,26 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => openSongInfo(song.id))}>
                 <Info size={14} /> {t('contextMenu.songInfo')}
               </div>
+              {playlistId && playlistSongIndex !== undefined && (
+                <div className="context-menu-item" style={{ color: 'var(--danger)' }} onClick={() => handleAction(async () => {
+                  const { getPlaylist, updatePlaylist } = await import('../api/subsonic');
+                  const { usePlaylistStore } = await import('../store/playlistStore');
+                  const { showToast } = await import('../utils/toast');
+                  const touchPlaylist = usePlaylistStore.getState().touchPlaylist;
+                  try {
+                    const { songs } = await getPlaylist(playlistId);
+                    const prevCount = songs.length;
+                    const updatedIds = songs.filter((_, i) => i !== playlistSongIndex).map(s => s.id);
+                    await updatePlaylist(playlistId, updatedIds, prevCount);
+                    touchPlaylist(playlistId);
+                    showToast(t('playlists.removeSuccess'), 3000, 'info');
+                  } catch {
+                    showToast(t('playlists.removeError'), 4000, 'error');
+                  }
+                })}>
+                  <Trash2 size={14} /> {t('contextMenu.removeFromPlaylist')}
+                </div>
+              )}
             </>
           );
         })()}

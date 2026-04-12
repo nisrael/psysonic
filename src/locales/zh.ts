@@ -941,6 +941,7 @@ export const zhTranslation = {
     select: '选择',
     startSelect: '启用选择',
     cancelSelect: '取消',
+    loadingAlbums: '正在解析 {{count}} 张专辑…',
     loadingArtists: '正在解析 {{count}} 位艺术家…',
     myPlaylists: '我的播放列表',
     noOtherPlaylists: '没有其他可用播放列表',

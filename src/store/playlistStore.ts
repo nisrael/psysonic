@@ -6,6 +6,7 @@ interface PlaylistStore {
   recentIds: string[];
   playlists: SubsonicPlaylist[];
   playlistsLoading: boolean;
+  lastModified: Record<string, number>;
   touchPlaylist: (id: string) => void;
   removeId: (id: string) => void;
   fetchPlaylists: () => Promise<void>;
@@ -19,9 +20,11 @@ export const usePlaylistStore = create<PlaylistStore>()(
       recentIds: [],
       playlists: [],
       playlistsLoading: false,
+      lastModified: {},
       touchPlaylist: (id) =>
         set((s) => ({
           recentIds: [id, ...s.recentIds.filter((x) => x !== id)].slice(0, 50),
+          lastModified: { ...s.lastModified, [id]: Date.now() },
         })),
       removeId: (id) =>
         set((s) => ({ recentIds: s.recentIds.filter((x) => x !== id) })),

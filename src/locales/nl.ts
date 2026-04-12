@@ -945,6 +945,7 @@ export const nlTranslation = {
     select: 'Selecteren',
     startSelect: 'Selectie inschakelen',
     cancelSelect: 'Annuleren',
+    loadingAlbums: '{{count}} albums oplossen…',
     loadingArtists: '{{count}} artiesten oplossen…',
     myPlaylists: 'Mijn playlists',
     noOtherPlaylists: 'Geen andere playlists beschikbaar',

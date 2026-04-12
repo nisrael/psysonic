@@ -176,8 +176,10 @@ interface PlayerState {
     item: any;
     type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | 'playlist' | 'multi-album' | 'multi-artist' | 'multi-playlist' | null;
     queueIndex?: number;
+    playlistId?: string;
+    playlistSongIndex?: number;
   };
-  openContextMenu: (x: number, y: number, item: any, type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | 'playlist' | 'multi-album' | 'multi-artist' | 'multi-playlist', queueIndex?: number) => void;
+  openContextMenu: (x: number, y: number, item: any, type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song' | 'playlist' | 'multi-album' | 'multi-artist' | 'multi-playlist', queueIndex?: number, playlistId?: string, playlistSongIndex?: number) => void;
   closeContextMenu: () => void;
 
   songInfoModal: { isOpen: boolean; songId: string | null };
@@ -729,8 +731,8 @@ export const usePlayerStore = create<PlayerState>()(
       repeatMode: 'off',
       contextMenu: { isOpen: false, x: 0, y: 0, item: null, type: null },
 
-      openContextMenu: (x, y, item, type, queueIndex) => set({
-        contextMenu: { isOpen: true, x, y, item, type, queueIndex },
+      openContextMenu: (x, y, item, type, queueIndex, playlistId, playlistSongIndex) => set({
+        contextMenu: { isOpen: true, x, y, item, type, queueIndex, playlistId, playlistSongIndex },
       }),
       closeContextMenu: () => set(state => ({
         contextMenu: { ...state.contextMenu, isOpen: false },

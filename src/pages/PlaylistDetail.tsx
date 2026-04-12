@@ -234,6 +234,8 @@ export default function PlaylistDetail() {
   }, [contextMenuOpen]);
 
   // ── Load ─────────────────────────────────────────────────────
+  const lastModified = usePlaylistStore(s => (id ? s.lastModified[id] : undefined));
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -253,7 +255,7 @@ export default function PlaylistDetail() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, lastModified]);
 
   // ── Suggestions ───────────────────────────────────────────────
   const loadSuggestions = useCallback(async (currentSongs: SubsonicSong[]) => {
@@ -1019,7 +1021,7 @@ export default function PlaylistDetail() {
               onContextMenu={e => {
                 e.preventDefault();
                 setContextMenuSongId(song.id);
-                openContextMenu(e.clientX, e.clientY, songToTrack(song), 'album-song');
+                openContextMenu(e.clientX, e.clientY, songToTrack(song), 'album-song', undefined, id, realIdx);
               }}
             >
               {visibleCols.map(colDef => {
