@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star } from 'lucide-react';
+import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2 } from 'lucide-react';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
@@ -703,6 +703,11 @@ export default function ContextMenu() {
                   <Disc3 size={14} /> {t('contextMenu.openAlbum')}
                 </div>
               )}
+              {song.artistId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/artist/${song.artistId}`))}>
+                  <User size={14} /> {t('contextMenu.goToArtist')}
+                </div>
+              )}
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist, song))}>
                 <Radio size={14} /> {t('contextMenu.startRadio')}
               </div>
@@ -875,7 +880,7 @@ export default function ContextMenu() {
               <div className="context-menu-item" style={{ color: 'var(--danger)' }} onClick={() => handleAction(() => {
                 if (queueIndex !== undefined) removeTrack(queueIndex);
               })}>
-                {t('contextMenu.removeFromQueue')}
+                <Trash2 size={14} /> {t('contextMenu.removeFromQueue')}
               </div>
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
@@ -893,6 +898,11 @@ export default function ContextMenu() {
               {song.albumId && (
                 <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/album/${song.albumId}`))}>
                   <Disc3 size={14} /> {t('contextMenu.openAlbum')}
+                </div>
+              )}
+              {song.artistId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/artist/${song.artistId}`))}>
+                  <User size={14} /> {t('contextMenu.goToArtist')}
                 </div>
               )}
               <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist, song))}>
