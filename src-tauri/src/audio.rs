@@ -1448,9 +1448,11 @@ pub struct AudioEngine {
     /// The rate the device was opened at on cold start — used to restore the
     /// stream when Hi-Res is toggled off while a hi-res rate is active.
     pub device_default_rate: u32,
-    /// Sends `(desired_rate, is_hi_res, reply_tx)` to the audio-stream thread to
-    /// re-open the output device. `is_hi_res` controls thread-priority escalation.
-    pub stream_reopen_tx: std::sync::mpsc::SyncSender<(u32, bool, std::sync::mpsc::SyncSender<rodio::OutputStreamHandle>)>,
+    /// Sends `(desired_rate, is_hi_res, device_name, reply_tx)` to the audio-stream
+    /// thread to re-open the output device. `device_name = None` → system default.
+    pub stream_reopen_tx: std::sync::mpsc::SyncSender<(u32, bool, Option<String>, std::sync::mpsc::SyncSender<rodio::OutputStreamHandle>)>,
+    /// User-selected output device name (None = follow system default).
+    pub selected_device: Arc<Mutex<Option<String>>>,
     pub current: Arc<Mutex<AudioCurrent>>,
     /// Monotonically incremented on each audio_play (non-chain) / audio_stop call.
     pub generation: Arc<AtomicU64>,
@@ -1511,7 +1513,10 @@ impl AudioCurrent {
     }
 }
 
-/// Open the system default output device at `desired_rate` Hz (0 = device default).
+/// Open an output device at `desired_rate` Hz (0 = device default).
+///
+/// `device_name`: exact name from `audio_list_devices`. `None` → system default.
+/// Falls back to the system default if the named device is not found.
 ///
 /// Resolution order:
 ///   1. Exact rate match in the device's supported config ranges.
@@ -1520,12 +1525,17 @@ impl AudioCurrent {
 ///   4. System default (last resort).
 ///
 /// Returns `(OutputStream, OutputStreamHandle, actual_sample_rate)`.
-fn open_stream_for_rate(desired_rate: u32) -> (rodio::OutputStream, rodio::OutputStreamHandle, u32) {
+fn open_stream_for_device_and_rate(device_name: Option<&str>, desired_rate: u32) -> (rodio::OutputStream, rodio::OutputStreamHandle, u32) {
     use rodio::cpal::traits::{DeviceTrait, HostTrait};
 
     let host = rodio::cpal::default_host();
 
-    if let Some(device) = host.default_output_device() {
+    // Resolve the target device: named device first, fall back to system default.
+    let device = device_name.and_then(|name| {
+        host.output_devices().ok()?.find(|d| d.name().ok().as_deref() == Some(name))
+    }).or_else(|| host.default_output_device());
+
+    if let Some(device) = device {
         if desired_rate > 0 {
             if let Ok(supported) = device.supported_output_configs() {
                 let configs: Vec<_> = supported.collect();
@@ -1608,7 +1618,7 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
     let (init_tx, init_rx) =
         std::sync::mpsc::sync_channel::<(rodio::OutputStreamHandle, u32)>(0);
     let (reopen_tx, reopen_rx) =
-        std::sync::mpsc::sync_channel::<(u32, bool, std::sync::mpsc::SyncSender<rodio::OutputStreamHandle>)>(4);
+        std::sync::mpsc::sync_channel::<(u32, bool, Option<String>, std::sync::mpsc::SyncSender<rodio::OutputStreamHandle>)>(4);
 
     let thread = std::thread::Builder::new()
         .name("psysonic-audio-stream".into())
@@ -1627,11 +1637,11 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
             // Thread priority is kept at default during standard-mode playback.
             // It is escalated to Max only when a Hi-Res stream reopen is requested,
             // to prevent PipeWire underruns at high quantum sizes (8192 frames).
-            let (mut _stream, handle, rate) = open_stream_for_rate(0);
+            let (mut _stream, handle, rate) = open_stream_for_device_and_rate(None, 0);
             init_tx.send((handle, rate)).ok();
 
-            // Keep the stream alive and handle sample-rate switch requests.
-            while let Ok((desired_rate, is_hi_res, reply_tx)) = reopen_rx.recv() {
+            // Keep the stream alive and handle sample-rate / device-switch requests.
+            while let Ok((desired_rate, is_hi_res, device_name, reply_tx)) = reopen_rx.recv() {
                 // Escalate to Max for Hi-Res reopens (large PipeWire quanta need
                 // real-time scheduling to avoid underruns). No escalation for
                 // standard mode — the thread blocks on recv() between reopens so
@@ -1657,7 +1667,7 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
                     std::env::set_var("PULSE_LATENCY_MSEC", latency_ms.to_string());
                 }
 
-                let (new_stream, new_handle, _actual) = open_stream_for_rate(desired_rate);
+                let (new_stream, new_handle, _actual) = open_stream_for_device_and_rate(device_name.as_deref(), desired_rate);
                 _stream = new_stream;
                 reply_tx.send(new_handle).ok();
             }
@@ -1671,6 +1681,7 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
         stream_sample_rate: Arc::new(AtomicU32::new(initial_rate)),
         device_default_rate: initial_rate,
         stream_reopen_tx: reopen_tx,
+        selected_device: Arc::new(Mutex::new(None)),
         current: Arc::new(Mutex::new(AudioCurrent {
             sink: None,
             duration_secs: 0.0,
@@ -2018,7 +2029,8 @@ pub async fn audio_play(
         let needs_switch = target_rate > 0 && target_rate != current_stream_rate;
         if needs_switch {
             let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel::<rodio::OutputStreamHandle>(0);
-            if state.stream_reopen_tx.send((target_rate, hi_res_enabled, reply_tx)).is_ok() {
+            let dev = state.selected_device.lock().unwrap().clone();
+            if state.stream_reopen_tx.send((target_rate, hi_res_enabled, dev, reply_tx)).is_ok() {
                 match reply_rx.recv_timeout(std::time::Duration::from_secs(5)) {
                     Ok(new_handle) => {
                         *state.stream_handle.lock().unwrap() = new_handle;
@@ -2883,6 +2895,46 @@ pub async fn audio_play_radio(
     Ok(())
 }
 
+/// Returns the names of all available audio output devices on the current host.
+#[tauri::command]
+pub fn audio_list_devices() -> Vec<String> {
+    use rodio::cpal::traits::{DeviceTrait, HostTrait};
+    let host = rodio::cpal::default_host();
+    host.output_devices()
+        .map(|iter| iter.filter_map(|d| d.name().ok()).collect())
+        .unwrap_or_default()
+}
+
+/// Switch the audio output device. `device_name = null` → follow system default.
+/// Reopens the stream immediately; frontend must restart playback via audio:device-changed.
+#[tauri::command]
+pub async fn audio_set_device(
+    device_name: Option<String>,
+    state: State<'_, AudioEngine>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    *state.selected_device.lock().unwrap() = device_name.clone();
+
+    let rate = state.stream_sample_rate.load(Ordering::Relaxed);
+    let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel::<rodio::OutputStreamHandle>(0);
+    state.stream_reopen_tx
+        .send((rate, false, device_name, reply_tx))
+        .map_err(|e| e.to_string())?;
+
+    let new_handle = tauri::async_runtime::spawn_blocking(move || {
+        reply_rx.recv_timeout(Duration::from_secs(5)).ok()
+    }).await.unwrap_or(None).ok_or("device open timed out")?;
+
+    *state.stream_handle.lock().unwrap() = new_handle;
+
+    // Drop active sinks — they were bound to the old stream.
+    if let Some(s) = state.current.lock().unwrap().sink.take() { s.stop(); }
+    if let Some(s) = state.fading_out_sink.lock().unwrap().take() { s.stop(); }
+
+    app.emit("audio:device-changed", ()).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[tauri::command]
 pub fn audio_set_crossfade(enabled: bool, secs: f32, state: State<'_, AudioEngine>) {
     state.crossfade_enabled.store(enabled, Ordering::Relaxed);
@@ -2896,21 +2948,23 @@ pub fn audio_set_gapless(enabled: bool, state: State<'_, AudioEngine>) {
 
 // ─── Device-change watcher ────────────────────────────────────────────────────
 //
-// Polls the OS default output device every 3 s.  When it changes (Bluetooth
-// headphones connecting, USB DAC plugging in, etc.) the stream is reopened on
-// the new device and `audio:device-changed` is emitted so the frontend can
-// restart playback.  The old Sink is dropped here — it was bound to the
-// now-closed OutputStream and can no longer produce audio on any device.
+// Polls every 3 s for two conditions:
+//   1. System default device changed (Bluetooth, USB DAC plug/unplug) while no
+//      device is pinned → reopen on new default, emit audio:device-changed.
+//   2. User-pinned device disappeared (DAC unplugged) → fall back to system
+//      default, clear selected_device, emit audio:device-reset so the frontend
+//      can reset its dropdown and persist the change.
 
 pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
-    let reopen_tx     = engine.stream_reopen_tx.clone();
-    let stream_handle = engine.stream_handle.clone();
-    let stream_rate   = engine.stream_sample_rate.clone();
-    let current       = engine.current.clone();
-    let fading_out    = engine.fading_out_sink.clone();
+    let reopen_tx       = engine.stream_reopen_tx.clone();
+    let stream_handle   = engine.stream_handle.clone();
+    let stream_rate     = engine.stream_sample_rate.clone();
+    let current         = engine.current.clone();
+    let fading_out      = engine.fading_out_sink.clone();
+    let selected_device = engine.selected_device.clone();
 
     tauri::async_runtime::spawn(async move {
-        let mut last_name: Option<String> = tauri::async_runtime::spawn_blocking(|| {
+        let mut last_default: Option<String> = tauri::async_runtime::spawn_blocking(|| {
             use rodio::cpal::traits::{DeviceTrait, HostTrait};
             rodio::cpal::default_host()
                 .default_output_device()
@@ -2920,21 +2974,63 @@ pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
         loop {
             tokio::time::sleep(Duration::from_secs(3)).await;
 
-            let current_name: Option<String> = tauri::async_runtime::spawn_blocking(|| {
+            // Enumerate all available output devices and the current default.
+            let (current_default, available) = tauri::async_runtime::spawn_blocking(|| {
                 use rodio::cpal::traits::{DeviceTrait, HostTrait};
-                rodio::cpal::default_host()
-                    .default_output_device()
-                    .and_then(|d| d.name().ok())
-            }).await.unwrap_or(None);
+                let host = rodio::cpal::default_host();
+                let default = host.default_output_device().and_then(|d| d.name().ok());
+                let available: Vec<String> = host
+                    .output_devices()
+                    .map(|iter| iter.filter_map(|d| d.name().ok()).collect())
+                    .unwrap_or_default();
+                (default, available)
+            }).await.unwrap_or((None, vec![]));
 
-            if current_name == last_name {
+            let pinned = selected_device.lock().unwrap().clone();
+
+            if let Some(ref dev_name) = pinned {
+                // ── Case 2: pinned device disappeared ────────────────────────
+                if !available.iter().any(|d| d == dev_name) {
+                    eprintln!("[psysonic] device-watcher: pinned device '{dev_name}' disconnected, falling back to system default");
+                    *selected_device.lock().unwrap() = None;
+
+                    // Debounce so the OS finishes reconfiguring.
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+
+                    let rate = stream_rate.load(Ordering::Relaxed);
+                    let reopen_tx2 = reopen_tx.clone();
+                    let new_handle = tauri::async_runtime::spawn_blocking(move || {
+                        let (reply_tx, reply_rx) =
+                            std::sync::mpsc::sync_channel::<rodio::OutputStreamHandle>(0);
+                        if reopen_tx2.send((rate, false, None, reply_tx)).is_err() {
+                            return None;
+                        }
+                        reply_rx.recv_timeout(Duration::from_secs(5)).ok()
+                    }).await.unwrap_or(None);
+
+                    if let Some(handle) = new_handle {
+                        *stream_handle.lock().unwrap() = handle;
+                        if let Some(s) = current.lock().unwrap().sink.take() { s.stop(); }
+                        if let Some(s) = fading_out.lock().unwrap().take()   { s.stop(); }
+                        // audio:device-reset tells the frontend to clear its
+                        // audioOutputDevice setting and restart playback.
+                        app.emit("audio:device-reset", ()).ok();
+                    }
+
+                    last_default = current_default;
+                }
+                // Pinned device still present — nothing to do.
                 continue;
             }
 
-            last_name = current_name.clone();
+            // ── Case 1: no pinned device, system default changed ──────────────
+            if current_default == last_default {
+                continue;
+            }
 
-            // Only act if there is actually a device to open.
-            let Some(_new_name) = current_name else { continue };
+            last_default = current_default.clone();
+
+            let Some(_new_name) = current_default else { continue };
 
             // Debounce: give the OS time to finish configuring the new device.
             tokio::time::sleep(Duration::from_millis(500)).await;
@@ -2944,8 +3040,8 @@ pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
             let new_handle = tauri::async_runtime::spawn_blocking(move || {
                 let (reply_tx, reply_rx) =
                     std::sync::mpsc::sync_channel::<rodio::OutputStreamHandle>(0);
-                if reopen_tx2.send((rate, false, reply_tx)).is_err() {
-                    return None; // audio thread exited
+                if reopen_tx2.send((rate, false, None, reply_tx)).is_err() {
+                    return None;
                 }
                 reply_rx.recv_timeout(Duration::from_secs(5)).ok()
             }).await.unwrap_or(None);
@@ -2956,11 +3052,8 @@ pub fn start_device_watcher(engine: &AudioEngine, app: tauri::AppHandle) {
             };
 
             *stream_handle.lock().unwrap() = handle;
-
-            // Drop the old Sink — it was bound to the now-closed OutputStream.
             if let Some(s) = current.lock().unwrap().sink.take() { s.stop(); }
             if let Some(s) = fading_out.lock().unwrap().take()   { s.stop(); }
-
             app.emit("audio:device-changed", ()).ok();
         }
     });

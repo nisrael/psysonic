@@ -575,9 +575,12 @@ export function initAudioListeners(): () => void {
   usePlayerStore.getState().syncLastfmLovedTracks();
 
   // Initial sync of audio settings to Rust engine on startup.
-  const { crossfadeEnabled, crossfadeSecs, gaplessEnabled } = useAuthStore.getState();
+  const { crossfadeEnabled, crossfadeSecs, gaplessEnabled, audioOutputDevice } = useAuthStore.getState();
   invoke('audio_set_crossfade', { enabled: crossfadeEnabled, secs: crossfadeSecs }).catch(() => {});
   invoke('audio_set_gapless', { enabled: gaplessEnabled }).catch(() => {});
+  if (audioOutputDevice) {
+    invoke('audio_set_device', { deviceName: audioOutputDevice }).catch(() => {});
+  }
 
   // Keep audio settings in sync whenever auth store changes.
   const unsubAuth = useAuthStore.subscribe((state) => {

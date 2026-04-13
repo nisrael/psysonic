@@ -1713,6 +1713,8 @@ pub fn run() {
             audio::audio_play_radio,
             audio::audio_set_crossfade,
             audio::audio_set_gapless,
+            audio::audio_list_devices,
+            audio::audio_set_device,
             audio::audio_chain_preload,
             discord::discord_update_presence,
             discord::discord_clear_presence,

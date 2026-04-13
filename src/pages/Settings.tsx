@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Wifi, WifiOff, Globe, Music2, Sliders, LogOut, CheckCircle2, FolderOpen,
   Palette, Server, Plus, Trash2, Eye, EyeOff, Info, ExternalLink, Shuffle, X, Play, Type, Keyboard, ChevronDown,
-  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves, Star, Clock, ZoomIn, Sparkles, AlertTriangle, Maximize2
+  GripVertical, PanelLeft, RotateCcw, LayoutGrid, AppWindow, HardDrive, Upload, Download, Waves, Star, Clock, ZoomIn, Sparkles, AlertTriangle, Maximize2, AudioLines
 } from 'lucide-react';
 import i18n from '../i18n';
 import { exportBackup, importBackup } from '../utils/backup';
@@ -260,6 +260,8 @@ export default function Settings() {
   const [imageCacheBytes, setImageCacheBytes] = useState<number | null>(null);
   const [offlineCacheBytes, setOfflineCacheBytes] = useState<number | null>(null);
   const [hotCacheBytes, setHotCacheBytes] = useState<number | null>(null);
+  const [audioDevices, setAudioDevices] = useState<string[]>([]);
+  const [deviceSwitching, setDeviceSwitching] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [contributorsOpen, setContributorsOpen] = useState(false);
@@ -275,6 +277,12 @@ export default function Settings() {
     invoke<number>('get_offline_cache_size', { customDir: auth.offlineDownloadDir || null }).then(setOfflineCacheBytes).catch(() => setOfflineCacheBytes(0));
     invoke<number>('get_hot_cache_size', { customDir: auth.hotCacheDownloadDir || null }).then(setHotCacheBytes).catch(() => setHotCacheBytes(0));
   }, [activeTab, auth.offlineDownloadDir, auth.hotCacheDownloadDir]);
+
+  // Load available audio output devices when Audio tab is open.
+  useEffect(() => {
+    if (activeTab !== 'audio') return;
+    invoke<string[]>('audio_list_devices').then(setAudioDevices).catch(() => {});
+  }, [activeTab]);
 
   /** Live disk usage for hot cache while Audio settings are open (interval + refresh when index changes). */
   useEffect(() => {
@@ -490,6 +498,61 @@ export default function Settings() {
       {/* ── Audio ────────────────────────────────────────────────────────────── */}
       {activeTab === 'audio' && (
         <>
+          {/* Audio Output Device */}
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <AudioLines size={18} />
+              <h2>{t('settings.audioOutputDevice')}</h2>
+            </div>
+            <div className="settings-card">
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                {t('settings.audioOutputDeviceDesc')}
+              </div>
+              <CustomSelect
+                value={auth.audioOutputDevice ?? ''}
+                disabled={deviceSwitching}
+                onChange={async (val) => {
+                  const device = val || null;
+                  setDeviceSwitching(true);
+                  try {
+                    await invoke('audio_set_device', { deviceName: device });
+                    auth.setAudioOutputDevice(device);
+                  } catch { /* device open failed — don't persist */ }
+                  setDeviceSwitching(false);
+                }}
+                options={[
+                  { value: '', label: t('settings.audioOutputDeviceDefault') },
+                  ...audioDevices.map(d => ({ value: d, label: d })),
+                ]}
+              />
+            </div>
+          </section>
+
+          {/* Native Hi-Res Playback */}
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Waves size={18} />
+              <h2>{t('settings.hiResTitle')}</h2>
+            </div>
+            <div className="settings-card">
+              <div className="settings-toggle-row">
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('settings.hiResEnabled')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.hiResDesc')}</div>
+                </div>
+                <label className="toggle-switch" aria-label={t('settings.hiResEnabled')}>
+                  <input
+                    type="checkbox"
+                    checked={auth.enableHiRes}
+                    onChange={e => auth.setEnableHiRes(e.target.checked)}
+                    id="hires-enabled-toggle"
+                  />
+                  <span className="toggle-track" />
+                </label>
+              </div>
+            </div>
+          </section>
+
           {/* Equalizer */}
           <section className="settings-section">
             <div className="settings-section-header">
@@ -807,31 +870,6 @@ export default function Settings() {
                 </div>
               )}
 
-            </div>
-          </section>
-
-          {/* Native Hi-Res Playback */}
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <Waves size={18} />
-              <h2>{t('settings.hiResTitle')}</h2>
-            </div>
-            <div className="settings-card">
-              <div className="settings-toggle-row">
-                <div>
-                  <div style={{ fontWeight: 500 }}>{t('settings.hiResEnabled')}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.hiResDesc')}</div>
-                </div>
-                <label className="toggle-switch" aria-label={t('settings.hiResEnabled')}>
-                  <input
-                    type="checkbox"
-                    checked={auth.enableHiRes}
-                    onChange={e => auth.setEnableHiRes(e.target.checked)}
-                    id="hires-enabled-toggle"
-                  />
-                  <span className="toggle-track" />
-                </label>
-              </div>
             </div>
           </section>
 

@@ -437,6 +437,26 @@ function TauriEventBridge() {
     return () => { unlisten?.(); };
   }, []);
 
+  // Pinned output device was unplugged — Rust already fell back to system default.
+  // Clear the stored device so the Settings dropdown resets to "System Default".
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    listen('audio:device-reset', () => {
+      useAuthStore.getState().setAudioOutputDevice(null);
+      const { currentTrack, currentTime, isPlaying, playTrack, resetAudioPause } = usePlayerStore.getState();
+      if (!currentTrack) return;
+      if (isPlaying) {
+        const pos = currentTime;
+        const dur = currentTrack.duration || 1;
+        playTrack(currentTrack);
+        setTimeout(() => usePlayerStore.getState().seek(pos / dur), 600);
+      } else {
+        resetAudioPause();
+      }
+    }).then(u => { unlisten = u; });
+    return () => { unlisten?.(); };
+  }, []);
+
   // Sync tray-icon visibility with the user's stored setting.
   // Runs once on mount (initial sync) and again whenever the setting changes.
   const showTrayIcon = useAuthStore(s => s.showTrayIcon);

@@ -77,6 +77,8 @@ interface AuthState {
 
   /** Alpha: native hi-res sample rate output (disabled = safe 44.1 kHz mode) */
   enableHiRes: boolean;
+  /** Selected audio output device name. null = system default. */
+  audioOutputDevice: string | null;
 
   /** Alpha: ephemeral queue prefetch cache on disk */
   hotCacheEnabled: boolean;
@@ -197,6 +199,7 @@ interface AuthState {
   setLastSeenChangelogVersion: (v: string) => void;
   setSeekbarStyle: (v: SeekbarStyle) => void;
   setEnableHiRes: (v: boolean) => void;
+  setAudioOutputDevice: (v: string | null) => void;
   setHotCacheEnabled: (v: boolean) => void;
   setHotCacheMaxMb: (v: number) => void;
   setHotCacheDebounceSec: (v: number) => void;
@@ -289,6 +292,7 @@ export const useAuthStore = create<AuthState>()(
       lastSeenChangelogVersion: '',
       seekbarStyle: 'waveform',
       enableHiRes: false,
+      audioOutputDevice: null,
       hotCacheEnabled: false,
       hotCacheMaxMb: 256,
       hotCacheDebounceSec: 30,
@@ -410,6 +414,7 @@ export const useAuthStore = create<AuthState>()(
 
       setSeekbarStyle: (v) => set({ seekbarStyle: v }),
       setEnableHiRes: (v) => set({ enableHiRes: v }),
+      setAudioOutputDevice: (v) => set({ audioOutputDevice: v }),
       setHotCacheEnabled: (v) => set({ hotCacheEnabled: v }),
       setHotCacheMaxMb: (v) => set({ hotCacheMaxMb: v }),
       setHotCacheDebounceSec: (v) => set({ hotCacheDebounceSec: v }),

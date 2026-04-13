@@ -15,9 +15,10 @@ interface Props {
   onChange: (value: string) => void;
   className?: string;
   style?: React.CSSProperties;
+  disabled?: boolean;
 }
 
-export default function CustomSelect({ value, options, onChange, className = '', style }: Props) {
+export default function CustomSelect({ value, options, onChange, className = '', style, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -80,7 +81,8 @@ export default function CustomSelect({ value, options, onChange, className = '',
         type="button"
         className={`custom-select-trigger ${className}`}
         style={style}
-        onClick={() => setOpen(v => !v)}
+        disabled={disabled}
+        onClick={() => { if (!disabled) setOpen(v => !v); }}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
