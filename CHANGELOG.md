@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 *Special thanks to everyone who contributed to this release:*
-*[@cucadmuh](https://github.com/cucadmuh) for the significant Folder Browser improvements,  the modifier-chord keybindings and and the Linux audio stability fixes — three PRs in one release cycle, remarkable.*
+*[@cucadmuh](https://github.com/cucadmuh) for the significant Folder Browser improvements,  the modifier-chord keybindings and and the Linux audio stability fixes — four PRs in one release cycle, remarkable.*
 *[@kilyabin](https://github.com/kilyabin) for continuing to hunt down no-compositing performance issues.*
 *[@kveld9](https://github.com/kveld9) for the playlist management overhaul.*
 
