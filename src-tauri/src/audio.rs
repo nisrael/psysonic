@@ -1,5 +1,5 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 #[cfg(unix)]
@@ -13,7 +13,7 @@ use rodio::source::UniformSourceIterator;
 use serde::Serialize;
 use symphonia::core::{
     audio::{AudioBufferRef, SampleBuffer, SignalSpec},
-    codecs::{DecoderOptions, CODEC_TYPE_NULL},
+    codecs::{CodecRegistry, DecoderOptions, CODEC_TYPE_NULL},
     formats::{FormatOptions, FormatReader, SeekMode, SeekTo},
     io::{MediaSource, MediaSourceStream, MediaSourceStreamOptions},
     meta::MetadataOptions,
@@ -682,11 +682,22 @@ impl Drop for RadioLiveState {
 //   [features]
 //   fdk-aac = ["dep:symphonia-adapter-fdk-aac"]
 
+/// Symphonia’s default codec set for our enabled features, plus Opus via libopus.
+fn psysonic_codec_registry() -> &'static CodecRegistry {
+    static REGISTRY: OnceLock<CodecRegistry> = OnceLock::new();
+    REGISTRY.get_or_init(|| {
+        let mut registry = CodecRegistry::new();
+        symphonia::default::register_enabled_codecs(&mut registry);
+        registry.register_all::<symphonia_adapter_libopus::OpusDecoder>();
+        registry
+    })
+}
+
 fn try_make_radio_decoder(
     params: &symphonia::core::codecs::CodecParameters,
     opts: &DecoderOptions,
 ) -> Result<Box<dyn symphonia::core::codecs::Decoder>, symphonia::core::errors::Error> {
-    symphonia::default::get_codecs().make(params, opts)
+    psysonic_codec_registry().make(params, opts)
 }
 
 // ── Async HTTP Download Task ──────────────────────────────────────────────────
@@ -980,7 +991,7 @@ impl SizedDecoder {
             .zip(track.codec_params.n_frames)
             .map(|(base, frames)| base.calc_time(frames));
 
-        let mut decoder = symphonia::default::get_codecs()
+        let mut decoder = psysonic_codec_registry()
             .make(&track.codec_params, &DecoderOptions::default())
             .map_err(|e| {
                 eprintln!("[psysonic] codec init failed: {e}");
