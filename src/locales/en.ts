@@ -212,6 +212,11 @@ export const enTranslation = {
     playAll: 'Play all',
     removeSong: 'Remove from favorites',
     stations: 'Radio Stations',
+    showingFiltered: 'Showing {{filtered}} of {{total}} ({{artist}})',
+    showingCount: 'Showing {{filtered}} of {{total}}',
+    clearArtistFilter: 'Clear artist filter',
+    noFilterResults: 'No results with selected filters.',
+    allArtists: 'All Artists',
   },
   randomLanding: {
     title: 'Build a Mix',
@@ -400,6 +405,10 @@ export const enTranslation = {
     durationHoursMinutes: '{{hours}}h {{minutes}}m',
     durationMinutesOnly: '{{minutes}}m',
     updaterOpenGitHub: 'Open on GitHub',
+    filters: 'Filters',
+    more: 'more',
+    yearRange: 'Year Range',
+    clearAll: 'Clear all',
   },
   settings: {
     title: 'Settings',

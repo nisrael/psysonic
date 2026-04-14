@@ -211,6 +211,11 @@ export const deTranslation = {
     playAll: 'Alle abspielen',
     removeSong: 'Aus Favoriten entfernen',
     stations: 'Radiosender',
+    showingFiltered: 'Zeige {{filtered}} von {{total}} ({{artist}})',
+    showingCount: 'Zeige {{filtered}} von {{total}}',
+    clearArtistFilter: 'Künstlerfilter zurücksetzen',
+    noFilterResults: 'Keine Ergebnisse mit den ausgewählten Filtern.',
+    allArtists: 'Alle Künstler',
   },
   randomLanding: {
     title: 'Mix erstellen',
@@ -399,6 +404,10 @@ export const deTranslation = {
     durationHoursMinutes: '{{hours}} Std. {{minutes}} Min.',
     durationMinutesOnly: '{{minutes}} Min.',
     updaterOpenGitHub: 'Auf GitHub öffnen',
+    filters: 'Filter',
+    more: 'mehr',
+    yearRange: 'Jahresbereich',
+    clearAll: 'Alles zurücksetzen',
   },
   settings: {
     title: 'Einstellungen',

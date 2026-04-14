@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTracklistColumns, type ColDef } from '../utils/useTracklistColumns';
 import AlbumRow from '../components/AlbumRow';
 import ArtistRow from '../components/ArtistRow';
@@ -10,7 +10,7 @@ import {
 } from '../api/subsonic';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import StarRating from '../components/StarRating';
-import { Cast, ChevronDown, ChevronLeft, ChevronRight, Check, Heart, ListPlus, Play, Star, X } from 'lucide-react';
+import { Cast, ChevronDown, ChevronLeft, ChevronRight, Check, Heart, ListPlus, Play, Star, X, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { unstar } from '../api/subsonic';
@@ -18,15 +18,24 @@ import { useDragDrop } from '../contexts/DragDropContext';
 import { useAuthStore } from '../store/authStore';
 import { useSelectionStore } from '../store/selectionStore';
 import { AddToPlaylistSubmenu } from '../components/ContextMenu';
+import GenreFilterBar from '../components/GenreFilterBar';
 
 const FAV_COLUMNS: readonly ColDef[] = [
   { key: 'num',      i18nKey: null,            minWidth: 60,  defaultWidth: 60,  required: true  },
   { key: 'title',    i18nKey: 'trackTitle',    minWidth: 150, defaultWidth: 0,   required: true,  flex: true },
   { key: 'artist',   i18nKey: 'trackArtist',   minWidth: 80,  defaultWidth: 180, required: false },
+  { key: 'album',    i18nKey: 'trackAlbum',    minWidth: 80,  defaultWidth: 180, required: false },
   { key: 'rating',   i18nKey: 'trackRating',   minWidth: 80,  defaultWidth: 120, required: false },
   { key: 'duration', i18nKey: 'trackDuration', minWidth: 72,  defaultWidth: 92,  required: false },
+  { key: 'format',   i18nKey: 'trackFormat',   minWidth: 60,  defaultWidth: 80,  required: false },
   { key: 'remove',   i18nKey: null,            minWidth: 36,  defaultWidth: 36,  required: true  },
 ];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_YEAR = 1950;
+
+// Columns that support 3-state sorting (asc → desc → reset)
+const SORTABLE_COLUMNS = new Set(['title', 'artist', 'album', 'rating', 'duration']);
 
 export default function Favorites() {
   const { t } = useTranslation();
@@ -35,6 +44,21 @@ export default function Favorites() {
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [radioStations, setRadioStations] = useState<InternetRadioStation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ── Sorting (3-state: asc → desc → reset) ────────────────────────────────
+  const [sortKey, setSortKey] = useState<string>('natural');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortClickCount, setSortClickCount] = useState(0);
+
+  // ── Artist filtering ─────────────────────────────────────────────────────
+  const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
+
+  // ── Genre filtering ──────────────────────────────────────────────────────
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+
+  // ── Year range filtering ─────────────────────────────────────────────────
+  const [yearRange, setYearRange] = useState<[number, number]>([MIN_YEAR, CURRENT_YEAR]);
+  const [showFilters, setShowFilters] = useState(false);
 
   // ── Column resize/visibility (must be before early return) ───────────────
   const {
@@ -74,6 +98,36 @@ export default function Favorites() {
     setStarredOverride(id, false);
     setSongs(prev => prev.filter(s => s.id !== id));
   }
+
+  // ── Sorting logic ─────────────────────────────────────────────────────────
+  const handleSortClick = (key: string) => {
+    if (!SORTABLE_COLUMNS.has(key)) return;
+
+    if (sortKey === key) {
+      const nextCount = sortClickCount + 1;
+      if (nextCount >= 3) {
+        // Reset to natural order (favorite addition order)
+        setSortKey('natural');
+        setSortDir('asc');
+        setSortClickCount(0);
+      } else {
+        // Toggle direction
+        setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        setSortClickCount(nextCount);
+      }
+    } else {
+      // Start new sort on this column
+      setSortKey(key);
+      setSortDir('asc');
+      setSortClickCount(1);
+    }
+  };
+
+  const getSortIndicator = (key: string) => {
+    if (sortKey !== key) return null;
+    if (sortClickCount === 0) return null;
+    return sortDir === 'asc' ? <ArrowUp size={12} style={{ marginLeft: 4, opacity: 0.7 }} /> : <ArrowDown size={12} style={{ marginLeft: 4, opacity: 0.7 }} />;
+  };
 
   function unfavoriteStation(id: string) {
     setRadioStations(prev => prev.filter(s => s.id !== id));
@@ -151,6 +205,68 @@ export default function Favorites() {
     loadAll();
   }, [musicLibraryFilterVersion]);
 
+  // ── Filter & sort logic ──────────────────────────────────────────────────
+  const filteredSongs = useMemo(() => {
+    return songs.filter(s => {
+      // Remove unfavorited
+      if (starredOverrides[s.id] === false) return false;
+
+      // Artist filter
+      if (selectedArtist) {
+        const artistMatch = s.artistId === selectedArtist ||
+                           s.artist === selectedArtist ||
+                           s.albumArtist === selectedArtist;
+        if (!artistMatch) return false;
+      }
+
+      // Genre filter
+      if (selectedGenres.length > 0) {
+        const songGenre = s.genre || '';
+        const hasMatchingGenre = selectedGenres.some(g =>
+          songGenre.toLowerCase().includes(g.toLowerCase())
+        );
+        if (!hasMatchingGenre) return false;
+      }
+
+      // Year range filter
+      if (s.year !== undefined) {
+        if (s.year < yearRange[0] || s.year > yearRange[1]) return false;
+      }
+
+      return true;
+    });
+  }, [songs, starredOverrides, selectedArtist, selectedGenres, yearRange]);
+
+  // ── Sort logic ───────────────────────────────────────────────────────────
+  const visibleSongs = useMemo(() => {
+    if (sortKey === 'natural' || sortClickCount === 0) {
+      return filteredSongs;
+    }
+
+    const sorted = [...filteredSongs];
+    const multiplier = sortDir === 'asc' ? 1 : -1;
+
+    return sorted.sort((a, b) => {
+      switch (sortKey) {
+        case 'title':
+          return multiplier * (a.title || '').localeCompare(b.title || '');
+        case 'artist':
+          return multiplier * ((a.artist || '').localeCompare(b.artist || ''));
+        case 'album':
+          return multiplier * ((a.album || '').localeCompare(b.album || ''));
+        case 'rating':
+          const ratingA = ratings[a.id] ?? userRatingOverrides[a.id] ?? a.userRating ?? 0;
+          const ratingB = ratings[b.id] ?? userRatingOverrides[b.id] ?? b.userRating ?? 0;
+          return multiplier * (ratingA - ratingB);
+        case 'duration':
+          return multiplier * ((a.duration || 0) - (b.duration || 0));
+        default:
+          return 0;
+      }
+    });
+  }, [filteredSongs, sortKey, sortDir, sortClickCount, ratings, userRatingOverrides]);
+
+
   if (loading) {
     return (
       <div className="content-body" style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
@@ -158,9 +274,8 @@ export default function Favorites() {
       </div>
     );
   }
-
-  const visibleSongs = songs.filter(s => starredOverrides[s.id] !== false);
-  const hasAnyFavorites = albums.length > 0 || artists.length > 0 || visibleSongs.length > 0 || radioStations.length > 0;
+  // Check if user has any favorites (using original unfiltered lists)
+  const hasAnyFavorites = albums.length > 0 || artists.length > 0 || songs.length > 0 || radioStations.length > 0;
 
   return (
     <div className="content-body animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
@@ -194,30 +309,130 @@ export default function Favorites() {
             />
           )}
 
-          {visibleSongs.length > 0 && (
+          {(visibleSongs.length > 0 || selectedArtist || selectedGenres.length > 0 || yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR) && (
             <section className="album-row-section">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                <h2 className="section-title" style={{ margin: 0 }}>{t('favorites.songs')}</h2>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    const tracks = visibleSongs.map(songToTrack);
-                    playTrack(tracks[0], tracks);
-                  }}
-                >
-                  <Play size={15} />
-                  {t('favorites.playAll')}
-                </button>
-                <button
-                  className="btn btn-surface"
-                  onClick={() => {
-                    const tracks = visibleSongs.map(songToTrack);
-                    enqueue(tracks);
-                  }}
-                >
-                  <ListPlus size={15} />
-                  {t('favorites.enqueueAll')}
-                </button>
+              {/* ── Section Header with Stats & Filters ───────────────────────── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                {/* Title Row with showing X of Y indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <h2 className="section-title" style={{ margin: 0 }}>{t('favorites.songs')}</h2>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                    {selectedArtist
+                      ? t('favorites.showingFiltered', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length, artist: selectedArtist })
+                      : t('favorites.showingCount', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length })}
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-primary"
+                    disabled={visibleSongs.length === 0}
+                    onClick={() => {
+                      if (visibleSongs.length === 0) return;
+                      const tracks = visibleSongs.map(songToTrack);
+                      playTrack(tracks[0], tracks);
+                    }}
+                  >
+                    <Play size={15} />
+                    {t('favorites.playAll')}
+                  </button>
+                  <button
+                    className="btn btn-surface"
+                    disabled={visibleSongs.length === 0}
+                    onClick={() => {
+                      if (visibleSongs.length === 0) return;
+                      const tracks = visibleSongs.map(songToTrack);
+                      enqueue(tracks);
+                    }}
+                  >
+                    <ListPlus size={15} />
+                    {t('favorites.enqueueAll')}
+                  </button>
+
+                  {/* Filter Toggle Button */}
+                  <button
+                    className={`btn ${showFilters || selectedGenres.length > 0 || yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR ? 'btn-primary' : 'btn-surface'}`}
+                    onClick={() => setShowFilters(v => !v)}
+                  >
+                    <SlidersHorizontal size={14} />
+                    {t('common.filters')}
+                  </button>
+
+                  {(selectedArtist || selectedGenres.length > 0 || yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR) && (
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => {
+                        setSelectedArtist(null);
+                        setSelectedGenres([]);
+                        setYearRange([MIN_YEAR, CURRENT_YEAR]);
+                        setSortKey('natural');
+                        setSortClickCount(0);
+                      }}
+                    >
+                      <X size={13} />
+                      {t('common.clearAll')}
+                    </button>
+                  )}
+                </div>
+
+                {/* Filters Panel */}
+                {showFilters && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem', background: 'var(--surface)', borderRadius: '8px', marginTop: '0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                      <GenreFilterBar selected={selectedGenres} onSelectionChange={setSelectedGenres} />
+                    </div>
+
+                    {/* Year Range Filter */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                        <span>{t('common.yearRange')}:</span>
+                        <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{yearRange[0]} - {yearRange[1]}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <input
+                          type="range"
+                          min={MIN_YEAR}
+                          max={CURRENT_YEAR}
+                          value={yearRange[0]}
+                          onChange={e => {
+                            const val = parseInt(e.target.value);
+                            setYearRange(prev => [Math.min(val, prev[1] - 1), prev[1]]);
+                          }}
+                          style={{ flex: 1 }}
+                        />
+                        <input
+                          type="range"
+                          min={MIN_YEAR}
+                          max={CURRENT_YEAR}
+                          value={yearRange[1]}
+                          onChange={e => {
+                            const val = parseInt(e.target.value);
+                            setYearRange(prev => [prev[0], Math.max(val, prev[0] + 1)]);
+                          }}
+                          style={{ flex: 1 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedArtist && (
+                  <button
+                    onClick={() => setSelectedArtist(null)}
+                    className="btn btn-ghost btn-sm"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      fontSize: '0.75rem',
+                      alignSelf: 'flex-start',
+                    }}
+                  >
+                    <X size={11} />
+                    {t('favorites.clearArtistFilter')}
+                  </button>
+                )}
               </div>
               <div className="tracklist" style={{ padding: 0 }} ref={tracklistRef} onClick={e => {
                 if (inSelectMode && e.target === e.currentTarget) useSelectionStore.getState().clearAll();
@@ -283,17 +498,34 @@ export default function Favorites() {
                       }
                       if (key === 'title') {
                         const hasNextCol = colIndex + 1 < visibleCols.length;
+                        const canSort = SORTABLE_COLUMNS.has('title');
                         return (
                           <div key="title" style={{ position: 'relative', padding: 0, margin: 0, minWidth: 0, overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: 12 }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                width: '100%',
+                                height: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                paddingLeft: 12,
+                                cursor: canSort ? 'pointer' : 'default',
+                                userSelect: 'none',
+                              }}
+                              onClick={() => handleSortClick('title')}
+                            >
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                              {canSort && getSortIndicator('title')}
                             </div>
                             {hasNextCol && <div className="col-resize-handle" onMouseDown={e => startResize(e, colIndex + 1, -1)} />}
                           </div>
                         );
                       }
                       if (key === 'remove') return <div key="remove" />;
+
                       const isCentered = key === 'duration' || key === 'rating';
+                      const canSort = SORTABLE_COLUMNS.has(key);
+
                       return (
                         <div key={key} style={{ position: 'relative', padding: 0, margin: 0, minWidth: 0, overflow: 'hidden' }}>
                           <div
@@ -304,9 +536,13 @@ export default function Favorites() {
                               alignItems: 'center',
                               justifyContent: isCentered ? 'center' : 'flex-start',
                               paddingLeft: isCentered ? 0 : 12,
+                              cursor: canSort ? 'pointer' : 'default',
+                              userSelect: 'none',
                             }}
+                            onClick={() => canSort && handleSortClick(key)}
                           >
                             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                            {canSort && getSortIndicator(key)}
                           </div>
                           {!isLastCol && <div className="col-resize-handle" onMouseDown={e => startResize(e, colIndex, 1)} />}
                         </div>
@@ -352,7 +588,7 @@ export default function Favorites() {
                           playTrack(track, visibleSongs.map(songToTrack));
                         }
                       }}
-                      onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, track, 'song'); }}
+                      onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, track, 'favorite-song'); }}
                       role="row"
                       onMouseDown={e => {
                         if (e.button !== 0) return;
@@ -392,6 +628,34 @@ export default function Favorites() {
                               <span className={`track-artist${song.artistId ? ' track-artist-link' : ''}`} style={{ cursor: song.artistId ? 'pointer' : 'default' }} onClick={() => song.artistId && navigate(`/artist/${song.artistId}`)}>{song.artist}</span>
                             </div>
                           );
+                          case 'album': return (
+                            <div key="album" className="track-artist-cell">
+                              {song.albumId ? (
+                                <span
+                                  className="track-artist track-artist-link"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/album/${song.albumId}`);
+                                  }}
+                                >
+                                  {song.album}
+                                </span>
+                              ) : (
+                                <span className="track-artist">{song.album}</span>
+                              )}
+                            </div>
+                          );
+                          case 'format': return (
+                            <div key="format" className="track-meta">
+                              {(song.suffix || song.bitRate) && (
+                                <span className="track-codec">
+                                  {song.suffix?.toUpperCase()}
+                                  {song.suffix && song.bitRate && ' · '}
+                                  {song.bitRate && `${song.bitRate} kbps`}
+                                </span>
+                              )}
+                            </div>
+                          );
                           case 'rating': return (
                             <StarRating
                               key="rating"
@@ -417,7 +681,15 @@ export default function Favorites() {
                     </div>
                   );
                 })}
+
+                {/* Empty state when filters return no results */}
+                {visibleSongs.length === 0 && (selectedArtist || selectedGenres.length > 0 || yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR) && (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+                    {t('favorites.noFilterResults')}
+                  </div>
+                )}
               </div>
+
             </section>
           )}
         </>

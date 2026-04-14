@@ -210,6 +210,11 @@ export const zhTranslation = {
     playAll: '全部播放',
     removeSong: '从收藏中移除',
     stations: '广播电台',
+    showingFiltered: '显示 {{filtered}} / {{total}} ({{artist}})',
+    showingCount: '显示 {{filtered}} / {{total}}',
+    clearArtistFilter: '清除艺术家筛选',
+    noFilterResults: '所选筛选条件下无结果。',
+    allArtists: '全部艺术家',
   },
   randomLanding: {
     title: '创建混音',
@@ -394,6 +399,10 @@ export const zhTranslation = {
     durationHoursMinutes: '{{hours}}小时{{minutes}}分钟',
     durationMinutesOnly: '{{minutes}}分钟',
     updaterOpenGitHub: '在 GitHub 上打开',
+    filters: '筛选器',
+    more: '更多',
+    yearRange: '年份范围',
+    clearAll: '清除全部',
   },
   settings: {
     title: '设置',

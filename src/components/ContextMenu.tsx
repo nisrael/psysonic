@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2 } from 'lucide-react';
+import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack } from 'lucide-react';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
@@ -1531,6 +1531,105 @@ export default function ContextMenu() {
                   <Trash2 size={14} /> {t('contextMenu.removeFromPlaylist')}
                 </div>
               )}
+            </>
+          );
+        })()}
+
+        {type === 'favorite-song' && (() => {
+          const song = item as Track;
+          return (
+            <>
+              <div className="context-menu-item" onClick={() => handleAction(() => playTrack(song, [song]))}>
+                <Play size={14} /> {t('contextMenu.playNow')}
+              </div>
+              <div className="context-menu-item" onClick={() => handleAction(() => {
+                if (!currentTrack) {
+                  playTrack(song, [song]);
+                  return;
+                }
+                const currentIdx = usePlayerStore.getState().queueIndex;
+                const newQueue = [...queue];
+                newQueue.splice(currentIdx + 1, 0, song);
+                usePlayerStore.setState({ queue: newQueue });
+              })}>
+                <ChevronRight size={14} /> {t('contextMenu.playNext')}
+              </div>
+              <div className="context-menu-item" onClick={() => handleAction(() => enqueue([song]))}>
+                <ListPlus size={14} /> {t('contextMenu.addToQueue')}
+              </div>
+              <div
+                className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
+                data-playlist-trigger-id={song.id}
+                onMouseEnter={() => { setPlaylistSongIds([song.id]); setPlaylistSubmenuOpen(true); }}
+                onMouseLeave={() => setPlaylistSubmenuOpen(false)}
+              >
+                <ListMusic size={14} /> {t('contextMenu.addToPlaylist')}
+                <ChevronRight size={13} style={{ marginLeft: 'auto' }} />
+                {playlistSubmenuOpen && playlistSongIds[0] === song.id && (
+                  <AddToPlaylistSubmenu songIds={[song.id]} triggerId={song.id} onDone={() => { setPlaylistSubmenuOpen(false); closeContextMenu(); }} />
+                )}
+              </div>
+              <div className="context-menu-divider" />
+              {song.albumId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/album/${song.albumId}`))}>
+                  <Disc3 size={14} /> {t('contextMenu.openAlbum')}
+                </div>
+              )}
+              {song.artistId && (
+                <div className="context-menu-item" onClick={() => handleAction(() => navigate(`/artist/${song.artistId}`))}>
+                  <User size={14} /> {t('contextMenu.goToArtist')}
+                </div>
+              )}
+              <div className="context-menu-item" onClick={() => handleAction(() => startRadio(song.artistId ?? song.artist, song.artist, song))}>
+                <Radio size={14} /> {t('contextMenu.startRadio')}
+              </div>
+              {audiomuseNavidromeEnabled && (
+                <div className="context-menu-item" onClick={() => handleAction(() => startInstantMix(song))}>
+                  <Sparkles size={14} /> {t('contextMenu.instantMix')}
+                </div>
+              )}
+              {auth.lastfmSessionKey && (() => {
+                const loveKey = `${song.title}::${song.artist}`;
+                const loved = lastfmLovedCache[loveKey] ?? false;
+                return (
+                  <div className="context-menu-item" onClick={() => handleAction(() => {
+                    const newLoved = !loved;
+                    setLastfmLovedForSong(song.title, song.artist, newLoved);
+                    if (newLoved) lastfmLoveTrack(song, auth.lastfmSessionKey);
+                    else lastfmUnloveTrack(song, auth.lastfmSessionKey);
+                  })}>
+                    <LastfmIcon size={14} />
+                    {loved ? t('contextMenu.lfmUnlove') : t('contextMenu.lfmLove')}
+                  </div>
+                );
+              })()}
+              <div
+                className="context-menu-rating-row"
+                data-rating-kind="song"
+                data-rating-id={song.id}
+                data-rating-disabled="false"
+                onClick={e => e.stopPropagation()}
+              >
+                <Star size={14} className="context-menu-rating-icon" aria-hidden />
+                <StarRating
+                  value={keyboardRating?.kind === 'song' && keyboardRating.id === song.id
+                    ? keyboardRating.value
+                    : userRatingOverrides[song.id] ?? song.userRating ?? 0}
+                  onChange={r => { setKeyboardRating({ kind: 'song', id: song.id, value: r }); applySongRating(song.id, r); }}
+                  ariaLabel={t('albumDetail.ratingLabel')}
+                />
+              </div>
+              <div className="context-menu-divider" />
+              <div className="context-menu-item" onClick={() => handleAction(() => openSongInfo(song.id))}>
+                <Info size={14} /> {t('contextMenu.songInfo')}
+              </div>
+              <div className="context-menu-divider" />
+              <div className="context-menu-item" style={{ color: 'var(--danger)' }} onClick={() => handleAction(() => {
+                setStarredOverride(song.id, false);
+                return unstar(song.id, 'song');
+              })}>
+                <HeartCrack size={14} /> {t('contextMenu.unfavorite')}
+              </div>
             </>
           );
         })()}
