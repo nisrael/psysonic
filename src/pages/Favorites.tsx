@@ -228,9 +228,9 @@ export default function Favorites() {
         if (!hasMatchingGenre) return false;
       }
 
-      // Year range filter
-      if (s.year !== undefined) {
-        if (s.year < yearRange[0] || s.year > yearRange[1]) return false;
+      // Year range filter — only applied when range is non-default; songs without year are excluded
+      if (yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR) {
+        if (s.year === undefined || s.year < yearRange[0] || s.year > yearRange[1]) return false;
       }
 
       return true;
@@ -316,11 +316,13 @@ export default function Favorites() {
                 {/* Title Row with showing X of Y indicator */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   <h2 className="section-title" style={{ margin: 0 }}>{t('favorites.songs')}</h2>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
-                    {selectedArtist
-                      ? t('favorites.showingFiltered', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length, artist: selectedArtist })
-                      : t('favorites.showingCount', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length })}
-                  </span>
+                  {(selectedArtist || selectedGenres.length > 0 || yearRange[0] !== MIN_YEAR || yearRange[1] !== CURRENT_YEAR) && (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      {selectedArtist
+                        ? t('favorites.showingFiltered', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length, artist: selectedArtist })
+                        : t('favorites.showingCount', { filtered: visibleSongs.length, total: songs.filter(s => starredOverrides[s.id] !== false).length })}
+                    </span>
+                  )}
                 </div>
 
                 {/* Action Buttons */}

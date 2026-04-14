@@ -3711,6 +3711,12 @@ body.psy-dragging * {
   transform: translateY(0);
 }
 
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+  gap: var(--space-1);
+}
+
 /* ─── Input ─── */
 .input {
   width: 100%;
