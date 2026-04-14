@@ -1,17 +1,20 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import {
   HardDriveUpload, FolderOpen, Loader2,
-  ListMusic, Disc3, Users, CheckCircle2, AlertCircle, SkipForward, Trash2,
-  ChevronRight, ChevronDown,
+  ListMusic, Disc3, Users, CheckCircle2, AlertCircle, Clock,
+  ChevronRight, ChevronDown, Trash2, Undo2, Search, Usb, RefreshCw, Shuffle, Zap,
 } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
 import { useTranslation } from 'react-i18next';
 import { useDeviceSyncStore, DeviceSyncSource } from '../store/deviceSyncStore';
+import { useDeviceSyncJobStore } from '../store/deviceSyncJobStore';
 import {
   getPlaylists, getAlbumList, getArtists, getAlbum, getPlaylist, getArtist,
-  buildDownloadUrl, SubsonicSong, SubsonicAlbum, SubsonicPlaylist, SubsonicArtist,
+  buildDownloadUrl, search as searchSubsonic,
+  SubsonicSong, SubsonicAlbum, SubsonicPlaylist, SubsonicArtist,
 } from '../api/subsonic';
 import { showToast } from '../utils/toast';
 
@@ -43,6 +46,25 @@ function trackToSyncInfo(track: SubsonicSong, url: string) {
   };
 }
 
+type SyncStatus = 'synced' | 'pending' | 'deletion';
+
+interface RemovableDrive {
+  name: string;
+  mount_point: string;
+  available_space: number;
+  total_space: number;
+  file_system: string;
+  is_removable: boolean;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+}
+
 // ─── component ───────────────────────────────────────────────────────────────
 
 export default function DeviceSync() {
@@ -52,41 +74,243 @@ export default function DeviceSync() {
   const filenameTemplate = useDeviceSyncStore(s => s.filenameTemplate);
   const sources          = useDeviceSyncStore(s => s.sources);
   const checkedIds       = useDeviceSyncStore(s => s.checkedIds);
-  const activeJob        = useDeviceSyncStore(s => s.activeJob);
-  const { setTargetDir, setFilenameTemplate, addSource, removeSource,
-    clearSources, toggleChecked, setCheckedIds, setActiveJob, updateJob } =
-    useDeviceSyncStore.getState();
+  const pendingDeletion  = useDeviceSyncStore(s => s.pendingDeletion);
+  const deviceFilePaths  = useDeviceSyncStore(s => s.deviceFilePaths);
+  const scanning         = useDeviceSyncStore(s => s.scanning);
+  const {
+    setTargetDir, setFilenameTemplate, addSource, removeSource,
+    clearSources, toggleChecked, setCheckedIds, markForDeletion,
+    unmarkDeletion, removeSources, setDeviceFilePaths, setScanning,
+  } = useDeviceSyncStore.getState();
+
+  const jobStatus = useDeviceSyncJobStore(s => s.status);
+  const jobDone   = useDeviceSyncJobStore(s => s.done);
+  const jobSkip   = useDeviceSyncJobStore(s => s.skipped);
+  const jobFail   = useDeviceSyncJobStore(s => s.failed);
+  const jobTotal  = useDeviceSyncJobStore(s => s.total);
 
   const [activeTab, setActiveTab]           = useState<SourceTab>('albums');
   const [search, setSearch]                 = useState('');
   const [playlists, setPlaylists]           = useState<SubsonicPlaylist[]>([]);
-  const [albums, setAlbums]                 = useState<SubsonicAlbum[]>([]);
+  const [randomAlbums, setRandomAlbums]     = useState<SubsonicAlbum[]>([]);
+  const [albumSearchResults, setAlbumSearchResults] = useState<SubsonicAlbum[]>([]);
+  const [albumSearchLoading, setAlbumSearchLoading] = useState(false);
   const [artists, setArtists]               = useState<SubsonicArtist[]>([]);
-  const [loadingBrowser, setLoadingBrowser]     = useState(false);
-  const [deleting, setDeleting]                 = useState(false);
+  const [loadingBrowser, setLoadingBrowser] = useState(false);
   const [expandedArtistIds, setExpandedArtistIds] = useState<Set<string>>(new Set());
-  const [artistAlbumsMap, setArtistAlbumsMap]   = useState<Map<string, SubsonicAlbum[]>>(new Map());
-  const [loadingArtistIds, setLoadingArtistIds] = useState<Set<string>>(new Set());
+  const [artistAlbumsMap, setArtistAlbumsMap]     = useState<Map<string, SubsonicAlbum[]>>(new Map());
+  const [loadingArtistIds, setLoadingArtistIds]   = useState<Set<string>>(new Set());
 
-  const cancelRef = useRef(false);
+  // Map source IDs → computed device paths (for status derivation)
+  const [sourcePathsMap, setSourcePathsMap] = useState<Map<string, string[]>>(new Map());
+
+  // ─── Removable drive detection ──────────────────────────────────────────
+  const [drives, setDrives] = useState<RemovableDrive[]>([]);
+  const [drivesLoading, setDrivesLoading] = useState(false);
+
+  const [preSyncOpen, setPreSyncOpen] = useState(false);
+  const [preSyncLoading, setPreSyncLoading] = useState(false);
+  const [syncDelta, setSyncDelta] = useState({ addBytes: 0, addCount: 0, delBytes: 0, delCount: 0, availableBytes: 0, tracks: [] as SubsonicSong[] });
+
+  const refreshDrives = useCallback(async () => {
+    setDrivesLoading(true);
+    try {
+      const result = await invoke<RemovableDrive[]>('get_removable_drives');
+      setDrives(result);
+    } catch {
+      setDrives([]);
+    } finally {
+      setDrivesLoading(false);
+    }
+  }, []);
+
+  // Fetch drives on mount, then poll every 5 seconds
+  useEffect(() => {
+    refreshDrives();
+    const interval = setInterval(refreshDrives, 5000);
+    return () => clearInterval(interval);
+  }, [refreshDrives]);
+
+  // Detect if the current targetDir is on a detected removable drive
+  const activeDrive = useMemo(() => {
+    if (!targetDir) return null;
+    return drives.find(d => targetDir.startsWith(d.mount_point)) ?? null;
+  }, [targetDir, drives]);
+
+  const driveDetected = activeDrive !== null;
+
+  const isRunning = jobStatus === 'running';
+
+  // ─── Device scan on mount ───────────────────────────────────────────────
+
+  const scanDevice = useCallback(async () => {
+    if (!targetDir || sources.length === 0) {
+      setDeviceFilePaths([]);
+      return;
+    }
+    setScanning(true);
+    try {
+      const files = await invoke<string[]>('list_device_dir_files', { dir: targetDir });
+      setDeviceFilePaths(files);
+    } catch {
+      setDeviceFilePaths([]);
+    } finally {
+      setScanning(false);
+    }
+  }, [targetDir, sources.length]);
+
+  // Scan device on mount and when targetDir changes
+  useEffect(() => { scanDevice(); }, [scanDevice]);
+
+  // Compute expected paths for each source (for status comparison)
+  useEffect(() => {
+    if (!targetDir || sources.length === 0) {
+      setSourcePathsMap(new Map());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const map = new Map<string, string[]>();
+      await Promise.all(sources.map(async source => {
+        if (cancelled) return;
+        try {
+          const tracks = await fetchTracksForSource(source);
+          const paths = await invoke<string[]>('compute_sync_paths', {
+            tracks: tracks.map(t => trackToSyncInfo(t, '')),
+            destDir: targetDir,
+            template: filenameTemplate,
+          });
+          map.set(source.id, paths);
+        } catch {
+          map.set(source.id, []);
+        }
+      }));
+      if (!cancelled) setSourcePathsMap(map);
+    })();
+    return () => { cancelled = true; };
+  }, [targetDir, filenameTemplate, sources]);
+
+  // Derive sync status per source
+  const sourceStatuses = useMemo(() => {
+    const deviceSet = new Set(deviceFilePaths);
+    const statuses = new Map<string, SyncStatus>();
+    for (const source of sources) {
+      if (pendingDeletion.includes(source.id)) {
+        statuses.set(source.id, 'deletion');
+      } else {
+        const paths = sourcePathsMap.get(source.id) ?? [];
+        const allSynced = paths.length > 0 && paths.every(p => deviceSet.has(p));
+        statuses.set(source.id, allSynced ? 'synced' : 'pending');
+      }
+    }
+    return statuses;
+  }, [sources, pendingDeletion, sourcePathsMap, deviceFilePaths]);
+
+  // ─── Desired State / Diff Logic ─────────────────────────────────────────
+
+  const handleToggleSource = useCallback((source: DeviceSyncSource) => {
+    const isSelected = sources.some(s => s.id === source.id);
+    const isPendingDeletion = pendingDeletion.includes(source.id);
+    const isActuallySelected = isSelected && !isPendingDeletion;
+
+    if (isActuallySelected) {
+      // User initiated a DE-SELECTION. Diff check against target device
+      const isSynced = sourceStatuses.get(source.id) === 'synced';
+      const pathsOnDisk = sourcePathsMap.get(source.id)?.filter(p => deviceFilePaths.includes(p)).length || 0;
+      
+      if (pathsOnDisk > 0 || isSynced) {
+        // Source currently has physical footprint. Stage for deletion.
+        markForDeletion([source.id]);
+      } else {
+        // Zero physical footprint. Strip safely.
+        removeSource(source.id);
+      }
+    } else {
+      // User initiated a SELECTION.
+      if (isPendingDeletion) {
+        unmarkDeletion(source.id); // Cancel queued red/strikethrough state
+      } else if (!isSelected) {
+        addSource(source); // Trigger clean pending install state
+      }
+    }
+  }, [sources, pendingDeletion, sourceStatuses, sourcePathsMap, deviceFilePaths, markForDeletion, removeSource, unmarkDeletion, addSource]);
+
+  // ─── Listen for background sync events ──────────────────────────────────
+
+  useEffect(() => {
+    const jobStore = useDeviceSyncJobStore.getState;
+    const unlistenProgress = listen<{
+      jobId: string; done: number; skipped: number; failed: number; total: number;
+    }>('device:sync:progress', ({ payload }) => {
+      const current = jobStore();
+      if (current.jobId && payload.jobId === current.jobId) {
+        useDeviceSyncJobStore.getState().updateProgress(
+          payload.done, payload.skipped, payload.failed
+        );
+      }
+    });
+
+    const unlistenComplete = listen<{
+      jobId: string; done: number; skipped: number; failed: number; total: number;
+    }>('device:sync:complete', ({ payload }) => {
+      const current = jobStore();
+      if (current.jobId && payload.jobId === current.jobId) {
+        useDeviceSyncJobStore.getState().complete(
+          payload.done, payload.skipped, payload.failed
+        );
+        showToast(
+          t('deviceSync.syncResult', {
+            done: payload.done, skipped: payload.skipped, total: payload.total
+          }),
+          5000, 'info'
+        );
+        // Re-scan the device after sync completes
+        scanDevice();
+      }
+    });
+
+    return () => {
+      unlistenProgress.then(f => f());
+      unlistenComplete.then(f => f());
+    };
+  }, [t, scanDevice]);
 
   // Load browser data when tab switches
   useEffect(() => {
     setSearch('');
     if (activeTab === 'playlists' && playlists.length === 0) loadPlaylists();
-    if (activeTab === 'albums'    && albums.length === 0)    loadAlbums();
+    if (activeTab === 'albums'    && randomAlbums.length === 0) loadRandomAlbums();
     if (activeTab === 'artists'   && artists.length === 0)   loadArtists();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // Live album search with 300ms debounce
+  useEffect(() => {
+    if (activeTab !== 'albums') return;
+    const q = search.trim();
+    if (!q) { setAlbumSearchResults([]); return; }
+    setAlbumSearchLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { albums } = await searchSubsonic(q, { albumCount: 20, artistCount: 0, songCount: 0 });
+        setAlbumSearchResults(albums);
+      } catch {
+        setAlbumSearchResults([]);
+      } finally {
+        setAlbumSearchLoading(false);
+      }
+    }, 300);
+    return () => { clearTimeout(timer); setAlbumSearchLoading(false); };
+  }, [search, activeTab]);
 
   const loadPlaylists = useCallback(async () => {
     setLoadingBrowser(true);
     try { setPlaylists(await getPlaylists()); } catch { /* ignore */ }
     finally { setLoadingBrowser(false); }
   }, []);
-  const loadAlbums = useCallback(async () => {
+  const loadRandomAlbums = useCallback(async () => {
     setLoadingBrowser(true);
-    try { setAlbums(await getAlbumList('alphabeticalByName', 500, 0)); } catch { /* ignore */ }
+    try { setRandomAlbums(await getAlbumList('random', 10)); } catch { /* ignore */ }
     finally { setLoadingBrowser(false); }
   }, []);
   const loadArtists = useCallback(async () => {
@@ -114,133 +338,160 @@ export default function DeviceSync() {
   }, [artistAlbumsMap]);
 
   const q                 = search.toLowerCase();
-  const filteredPlaylists = playlists.filter(p => p.name.toLowerCase().includes(q));
-  const filteredAlbums    = albums.filter(a =>
-    a.name.toLowerCase().includes(q) || (a.artist ?? '').toLowerCase().includes(q));
-  const filteredArtists   = artists.filter(a => a.name.toLowerCase().includes(q));
+  const filteredPlaylists = useMemo(() => playlists.filter(p => p.name.toLowerCase().includes(q)), [playlists, q]);
+  const filteredArtists   = useMemo(() => artists.filter(a => a.name.toLowerCase().includes(q)), [artists, q]);
 
   const handleChooseFolder = async () => {
     const sel = await openDialog({ directory: true, multiple: false, title: t('deviceSync.chooseFolder') });
-    if (sel) setTargetDir(sel as string);
+    if (sel) {
+      setTargetDir(sel as string);
+      // Trigger a device scan after folder change
+      setTimeout(() => scanDevice(), 100);
+    }
   };
 
-  // ─── Sync ────────────────────────────────────────────────────────────────
+  // ─── Sync (non-blocking) ────────────────────────────────────────────────
 
-  const handleSync = async () => {
+  const promptSyncSummary = async () => {
     if (!targetDir)          { showToast(t('deviceSync.noTargetDir'), 3000, 'error'); return; }
     if (sources.length === 0){ showToast(t('deviceSync.noSources'),   3000, 'error'); return; }
 
-    cancelRef.current = false;
-    const jobId = uuid();
-    setActiveJob({ id: jobId, total: 0, done: 0, skipped: 0, failed: 0, status: 'running' });
-
-    let allTracks: SubsonicSong[] = [];
-    try {
-      for (const source of sources) {
-        if (cancelRef.current) break;
-        allTracks.push(...await fetchTracksForSource(source));
-      }
-    } catch {
-      showToast(t('deviceSync.fetchError'), 3000, 'error');
-      setActiveJob(null);
-      return;
-    }
-
-    const seen = new Set<string>();
-    allTracks = allTracks.filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
-
-    if (allTracks.length === 0) {
-      showToast(t('deviceSync.noTracks'), 3000, 'error');
-      setActiveJob(null);
-      return;
-    }
-
-    updateJob({ total: allTracks.length });
-
-    const unlisten = await listen<{ jobId: string; status: string }>(
-      'device:sync:progress',
-      ({ payload }) => {
-        if (payload.jobId !== jobId) return;
-        const st = useDeviceSyncStore.getState().activeJob!;
-        if      (payload.status === 'done')    updateJob({ done:    st.done    + 1 });
-        else if (payload.status === 'skipped') updateJob({ skipped: st.skipped + 1 });
-        else if (payload.status === 'error')   updateJob({ failed:  st.failed  + 1 });
-      }
-    );
-
-    const CONCURRENCY = 4;
-    let idx = 0;
-    const worker = async () => {
-      while (idx < allTracks.length && !cancelRef.current) {
-        const track = allTracks[idx++];
-        try {
-          await invoke('sync_track_to_device', {
-            track: trackToSyncInfo(track, buildDownloadUrl(track.id)),
-            destDir: targetDir,
-            template: filenameTemplate,
-            jobId,
-          });
-        } catch { /* emitted via event */ }
-      }
-    };
+    setPreSyncLoading(true);
+    setPreSyncOpen(true);
 
     try {
-      await Promise.all(Array.from({ length: CONCURRENCY }, worker));
-    } finally {
-      unlisten();
-    }
-
-    updateJob({ status: cancelRef.current ? 'cancelled' : 'done' });
-  };
-
-  // ─── Delete checked items from device ────────────────────────────────────
-
-  const handleDeleteChecked = async () => {
-    if (!targetDir || checkedIds.length === 0) return;
-
-    const toDelete = sources.filter(s => checkedIds.includes(s.id));
-    const confirmed = window.confirm(
-      t('deviceSync.confirmDelete', { count: toDelete.length, names: toDelete.map(s => s.name).join(', ') })
-    );
-    if (!confirmed) return;
-
-    setDeleting(true);
-    try {
-      // Collect all tracks for the checked sources
-      let tracks: SubsonicSong[] = [];
-      for (const source of toDelete) {
-        tracks.push(...await fetchTracksForSource(source));
-      }
-      const seen = new Set<string>();
-      tracks = tracks.filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
-
-      // Compute expected device paths via Rust (same sanitizer as sync)
-      const paths = await invoke<string[]>('compute_sync_paths', {
-        tracks: tracks.map(t => trackToSyncInfo(t, '')),
-        destDir: targetDir,
+      const { getClient } = await import('../api/subsonic');
+      const { baseUrl, params } = getClient();
+      const payload = await invoke<{
+        addBytes: number; addCount: number; delBytes: number; delCount: number; availableBytes: number; tracks: SubsonicSong[];
+      }>('calculate_sync_payload', {
+        sources,
+        deletionIds: pendingDeletion,
+        auth: { baseUrl, ...params },
+        targetDir,
         template: filenameTemplate,
       });
 
-      for (const path of paths) {
-        await invoke('delete_device_file', { path }).catch(() => {});
-      }
-
-      // Remove from the list
-      for (const s of toDelete) removeSource(s.id);
-      showToast(t('deviceSync.deleteComplete', { count: toDelete.length }), 3000, 'info');
+      setSyncDelta(payload);
     } catch {
       showToast(t('deviceSync.fetchError'), 3000, 'error');
+      setPreSyncOpen(false);
     } finally {
-      setDeleting(false);
+      setPreSyncLoading(false);
     }
   };
 
-  const handleCancel = () => { cancelRef.current = true; };
-  const isRunning = activeJob?.status === 'running';
-  const isDone    = activeJob?.status === 'done';
+  const handleSyncExecution = async () => {
+    setPreSyncOpen(false);
+
+    // 1. Handle pending deletions first
+    const deletionSources = sources.filter(s => pendingDeletion.includes(s.id));
+    if (deletionSources.length > 0) {
+      try {
+        const allPaths: string[] = [];
+        const trackArrays = await Promise.all(deletionSources.map(s => fetchTracksForSource(s)));
+        const deletionTracks = trackArrays.flat();
+        
+        const paths = await invoke<string[]>('compute_sync_paths', {
+          tracks: deletionTracks.map(t => trackToSyncInfo(t, '')),
+          destDir: targetDir,
+          template: filenameTemplate,
+        });
+        allPaths.push(...paths);
+        
+        await invoke<number>('delete_device_files', { paths: allPaths });
+        removeSources(deletionSources.map(s => s.id));
+        showToast(
+          t('deviceSync.deleteComplete', { count: deletionSources.length }),
+          3000, 'info'
+        );
+      } catch {
+        showToast(t('deviceSync.fetchError'), 3000, 'error');
+      }
+    }
+
+    const allTracks = syncDelta.tracks;
+    if (allTracks.length === 0) {
+      scanDevice();
+      return;
+    }
+
+    const jobId = uuid();
+    useDeviceSyncJobStore.getState().startSync(jobId, allTracks.length);
+
+    showToast(t('deviceSync.syncInBackground'), 3000, 'info');
+
+    invoke('sync_batch_to_device', {
+      tracks: allTracks.map(track => trackToSyncInfo(track, buildDownloadUrl(track.id))),
+      destDir: targetDir,
+      template: filenameTemplate,
+      jobId,
+      expectedBytes: syncDelta.addBytes,
+    }).catch((err: string) => {
+      useDeviceSyncJobStore.getState().complete(0, 0, allTracks.length);
+      if (err.includes('NOT_ENOUGH_SPACE')) {
+        showToast(t('deviceSync.notEnoughSpace'), 5000, 'error');
+      } else if (err === 'NOT_MOUNTED_VOLUME') {
+        showToast(t('deviceSync.notMountedVolume'), 5000, 'error');
+      } else {
+        showToast(t('deviceSync.fetchError'), 3000, 'error');
+      }
+    });
+  };
+
+  // ─── Actions ────────────────────────────────────────────────────────────
+
+  const handleMarkCheckedForDeletion = () => {
+    if (checkedIds.length === 0) return;
+    markForDeletion(checkedIds);
+  };
 
   const allChecked = sources.length > 0 && sources.every(s => checkedIds.includes(s.id));
   const toggleAll  = () => setCheckedIds(allChecked ? [] : sources.map(s => s.id));
+
+  const pendingCount   = Array.from(sourceStatuses.values()).filter(s => s === 'pending').length;
+  const syncedCount    = Array.from(sourceStatuses.values()).filter(s => s === 'synced').length;
+  const deletionCount  = pendingDeletion.length;
+
+  // ─── Dynamic action button label ────────────────────────────────────────
+  const actionButtonLabel = useMemo(() => {
+    if (deletionCount > 0 && pendingCount === 0) return t('deviceSync.actionDelete');
+    if (pendingCount > 0 && deletionCount === 0) return t('deviceSync.actionTransfer');
+    if (pendingCount > 0 && deletionCount > 0)  return t('deviceSync.actionApplyAll');
+    return t('deviceSync.syncButton'); // both zero — button will be disabled
+  }, [pendingCount, deletionCount, t]);
+
+  const actionButtonDisabled =
+    !targetDir ||
+    sources.length === 0 ||
+    isRunning ||
+    (!driveDetected && !!targetDir) ||
+    (pendingCount === 0 && deletionCount === 0);
+
+  // ─── Template preview (dummy track) ─────────────────────────────────────
+  const PREVIEW_TRACK = {
+    artist: 'Volker Pispers',
+    album: '...Bis Neulich 2007',
+    title: 'Kapitalismus',
+    track_number: '01',
+    disc_number: '1',
+    year: '2007',
+  } as const;
+
+  const templatePreviewText = useMemo(() => {
+    try {
+      const result = filenameTemplate
+        .replace(/\{artist\}/g,       PREVIEW_TRACK.artist)
+        .replace(/\{album\}/g,        PREVIEW_TRACK.album)
+        .replace(/\{title\}/g,        PREVIEW_TRACK.title)
+        .replace(/\{track_number\}/g, PREVIEW_TRACK.track_number)
+        .replace(/\{disc_number\}/g,  PREVIEW_TRACK.disc_number)
+        .replace(/\{year\}/g,         PREVIEW_TRACK.year);
+      return `${result}.mp3`;
+    } catch {
+      return '';
+    }
+  }, [filenameTemplate]);
 
   const tabs: { key: SourceTab; icon: React.ReactNode; label: string }[] = [
     { key: 'playlists', icon: <ListMusic size={14} />, label: t('deviceSync.tabPlaylists') },
@@ -253,30 +504,93 @@ export default function DeviceSync() {
 
       {/* ── Header ── */}
       <div className="device-sync-header">
-        <HardDriveUpload size={20} />
-        <h1>{t('deviceSync.title')}</h1>
-        <div className="device-sync-header-config">
-          <span className="device-sync-folder-path" data-tooltip={targetDir ?? ''}>
-            {targetDir ?? t('deviceSync.noFolderChosen')}
-          </span>
-          <button className="btn btn-surface" onClick={handleChooseFolder}>
-            <FolderOpen size={13} />{t('deviceSync.chooseFolder')}
-          </button>
+        <div className="device-sync-header-title">
+          <HardDriveUpload size={20} />
+          <h1>{t('deviceSync.title')}</h1>
+        </div>
+
+        <div className="device-sync-config-row">
+          
+          {/* ── Left: Template ── */}
+          <div className="device-sync-template-section">
+            <span className="device-sync-label-inline">{t('deviceSync.filenameTemplate')}</span>
+            <div className="device-sync-template-input-wrap">
+              <input
+                className="input device-sync-template-input"
+                value={filenameTemplate}
+                onChange={e => setFilenameTemplate(e.target.value)}
+                spellCheck={false}
+                data-tooltip={t('deviceSync.templateHint')}
+                data-tooltip-pos="bottom"
+              />
+              {templatePreviewText && (
+                <span className="device-sync-template-preview">
+                  {t('deviceSync.templatePreview')}: {templatePreviewText}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ── Right: Drive config ── */}
+          <div className="device-sync-target-section">
+            <span className="device-sync-label-inline">{t('deviceSync.targetDevice')}</span>
+            <div className="device-sync-header-config">
+              <div className="device-sync-drive-layout">
+                {/* Row 1: Controls */}
+                <div className="device-sync-drive-controls">
+                  {/* Fallback manual folder picker & Refresh */}
+                  <button className="btn btn-ghost" onClick={handleChooseFolder} data-tooltip={t('deviceSync.browseManual')}>
+                    <FolderOpen size={18} />
+                  </button>
+                  <button
+                    className="btn btn-ghost device-sync-refresh-btn"
+                    onClick={refreshDrives}
+                    disabled={drivesLoading}
+                    data-tooltip={t('deviceSync.refreshDrives')}
+                  >
+                    <RefreshCw size={18} className={drivesLoading ? 'spin' : ''} />
+                  </button>
+
+                  {/* Dropdown element */}
+                  {drives.length > 0 ? (
+                    <>
+                      <Usb size={18} className="device-sync-drive-icon" />
+                      <CustomSelect
+                        className="input device-sync-drive-select"
+                        value={targetDir ?? ''}
+                        onChange={v => {
+                          setTargetDir(v);
+                          if (v) {
+                            setTimeout(() => scanDevice(), 100);
+                          }
+                        }}
+                        options={[
+                          { value: '', label: t('deviceSync.selectDrive') },
+                          ...drives.map(d => ({ value: d.mount_point, label: d.name || d.mount_point }))
+                        ]}
+                      />
+                    </>
+                  ) : (
+                    <span className="device-sync-no-drives">
+                      <AlertCircle size={18} />
+                      {t('deviceSync.noDrivesDetected')}
+                    </span>
+                  )}
+                </div>
+
+              {/* Row 2: Metadata */}
+              {activeDrive && (
+                <div className="device-sync-drive-meta">
+                  {formatBytes(activeDrive.available_space)} {t('deviceSync.free')} / {formatBytes(activeDrive.total_space)} &bull; {activeDrive.file_system}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+    </div>
 
-      {/* ── Template (collapsed row) ── */}
-      <div className="device-sync-template-row">
-        <span className="device-sync-label-inline">{t('deviceSync.filenameTemplate')}</span>
-        <input
-          className="input device-sync-template-input"
-          value={filenameTemplate}
-          onChange={e => setFilenameTemplate(e.target.value)}
-          spellCheck={false}
-          data-tooltip={t('deviceSync.templateHint')}
-          data-tooltip-pos="bottom"
-        />
-      </div>
+
 
       {/* ── Main ── */}
       <div className="device-sync-main">
@@ -301,24 +615,30 @@ export default function DeviceSync() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
+              {activeTab === 'albums' && (
+                <span className="device-sync-live-badge">
+                  <Zap size={10} />{t('deviceSync.liveSearch')}
+                </span>
+              )}
             </div>
             <div className="device-sync-list">
-              {loadingBrowser && (
+              {(loadingBrowser || albumSearchLoading) && (
                 <div className="device-sync-loading"><Loader2 size={16} className="spin" /></div>
+              )}
+              {activeTab === 'albums' && !search.trim() && !loadingBrowser && randomAlbums.length > 0 && (
+                <div className="device-sync-section-label">
+                  <Shuffle size={11} />{t('deviceSync.randomAlbumsLabel')}
+                </div>
               )}
               {activeTab === 'playlists' && filteredPlaylists.map(pl => (
                 <BrowserRow key={pl.id} name={pl.name} meta={`${pl.songCount} tracks`}
-                  selected={sources.some(s => s.id === pl.id)}
-                  onToggle={() => sources.some(s => s.id === pl.id)
-                    ? removeSource(pl.id)
-                    : addSource({ type: 'playlist', id: pl.id, name: pl.name })} />
+                  selected={sources.some(s => s.id === pl.id) && !pendingDeletion.includes(pl.id)}
+                  onToggle={() => handleToggleSource({ type: 'playlist', id: pl.id, name: pl.name })} />
               ))}
-              {activeTab === 'albums' && filteredAlbums.map(al => (
+              {activeTab === 'albums' && (search.trim() ? albumSearchResults : randomAlbums).map(al => (
                 <BrowserRow key={al.id} name={al.name} meta={al.artist}
-                  selected={sources.some(s => s.id === al.id)}
-                  onToggle={() => sources.some(s => s.id === al.id)
-                    ? removeSource(al.id)
-                    : addSource({ type: 'album', id: al.id, name: al.name })} />
+                  selected={sources.some(s => s.id === al.id) && !pendingDeletion.includes(al.id)}
+                  onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name })} />
               ))}
               {activeTab === 'artists' && filteredArtists.map(ar => (
                 <React.Fragment key={ar.id}>
@@ -335,16 +655,14 @@ export default function DeviceSync() {
                     </button>
                     <span className="device-sync-row-name">{ar.name}</span>
                     {ar.albumCount != null &&
-                      <span className="device-sync-row-meta">{ar.albumCount} Alben</span>}
+                      <span className="device-sync-row-meta">{ar.albumCount} Albums</span>}
                   </div>
                   {expandedArtistIds.has(ar.id) && artistAlbumsMap.has(ar.id) &&
                     artistAlbumsMap.get(ar.id)!.map(al => (
                       <BrowserRow key={al.id} name={al.name} meta={al.year?.toString()}
-                        selected={sources.some(s => s.id === al.id)}
+                        selected={sources.some(s => s.id === al.id) && !pendingDeletion.includes(al.id)}
                         indent
-                        onToggle={() => sources.some(s => s.id === al.id)
-                          ? removeSource(al.id)
-                          : addSource({ type: 'album', id: al.id, name: al.name })} />
+                        onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name })} />
                     ))
                   }
                 </React.Fragment>
@@ -352,33 +670,64 @@ export default function DeviceSync() {
             </div>
           </div>
 
-        {/* ── Device list (right) ── */}
+        {/* ── Device Manager (right) ── */}
         <div className="device-sync-device-panel">
           <div className="device-sync-panel-header">
-            <span className="device-sync-panel-title">{t('deviceSync.onDevice')}</span>
+            <span className="device-sync-panel-title">
+              {t('deviceSync.onDevice')}
+              {scanning && <Loader2 size={12} className="spin" style={{ marginLeft: 6 }} />}
+            </span>
             <div className="device-sync-panel-actions">
-              {!activeJob && (
-                <button
-                  className="btn btn-surface"
-                  onClick={handleSync}
-                  disabled={!targetDir || sources.length === 0}
-                >
-                  <HardDriveUpload size={13} />
-                  {t('deviceSync.syncButton')}
-                </button>
-              )}
+              {/* Sync button */}
+              <button
+                className="btn btn-surface"
+                onClick={promptSyncSummary}
+                disabled={actionButtonDisabled}
+              >
+                {isRunning
+                  ? <><Loader2 size={13} className="spin" /> {jobDone + jobSkip + jobFail}/{jobTotal}</>
+                  : <>
+                      {deletionCount > 0 && pendingCount === 0
+                        ? <Trash2 size={13} />
+                        : <HardDriveUpload size={13} />}
+                      {actionButtonLabel}
+                    </>
+                }
+              </button>
+
+              {/* Mark for deletion */}
               {checkedIds.length > 0 && !isRunning && (
                 <button
                   className="btn btn-danger"
-                  onClick={handleDeleteChecked}
-                  disabled={deleting}
+                  onClick={handleMarkCheckedForDeletion}
                 >
-                  {deleting ? <Loader2 size={13} className="spin" /> : <Trash2 size={13} />}
+                  <Trash2 size={13} />
                   {t('deviceSync.deleteFromDevice', { count: checkedIds.length })}
                 </button>
               )}
             </div>
           </div>
+
+          {/* Status summary badges */}
+          {sources.length > 0 && (
+            <div className="device-sync-status-summary">
+              {syncedCount > 0 && (
+                <span className="device-sync-badge synced">
+                  <CheckCircle2 size={11} /> {syncedCount} {t('deviceSync.statusSynced')}
+                </span>
+              )}
+              {pendingCount > 0 && (
+                <span className="device-sync-badge pending">
+                  <Clock size={11} /> {pendingCount} {t('deviceSync.statusPending')}
+                </span>
+              )}
+              {deletionCount > 0 && (
+                <span className="device-sync-badge deletion">
+                  <Trash2 size={11} /> {deletionCount} {t('deviceSync.statusDeletion')}
+                </span>
+              )}
+            </div>
+          )}
 
           {sources.length === 0 ? (
             <p className="device-sync-empty">{t('deviceSync.noSourcesSelected')}</p>
@@ -390,59 +739,157 @@ export default function DeviceSync() {
                 </label>
                 <span className="device-sync-list-col-name">{t('deviceSync.colName')}</span>
                 <span className="device-sync-list-col-type">{t('deviceSync.colType')}</span>
+                <span className="device-sync-list-col-status">{t('deviceSync.colStatus')}</span>
+                <span className="device-sync-list-col-actions" />
               </div>
               <div className="device-sync-device-list">
-                {sources.map(s => (
-                  <label key={s.id} className={`device-sync-device-row${checkedIds.includes(s.id) ? ' checked' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={checkedIds.includes(s.id)}
-                      onChange={() => toggleChecked(s.id)}
-                    />
-                    <span className="device-sync-row-name">{s.name}</span>
-                    <span className="device-sync-source-type">{s.type}</span>
-                  </label>
-                ))}
+                {sources.map(s => {
+                  const status = sourceStatuses.get(s.id) ?? 'pending';
+                  return (
+                    <label
+                      key={s.id}
+                      className={`device-sync-device-row ${status}${checkedIds.includes(s.id) ? ' checked' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checkedIds.includes(s.id)}
+                        onChange={() => toggleChecked(s.id)}
+                        disabled={status === 'deletion'}
+                      />
+                      <span className="device-sync-row-name">{s.name}</span>
+                      <span className="device-sync-source-type">{s.type}</span>
+                      <span className={`device-sync-status-icon ${status}`}>
+                        {status === 'synced'   && <CheckCircle2 size={13} />}
+                        {status === 'pending'  && <Clock size={13} />}
+                        {status === 'deletion' && <Trash2 size={13} />}
+                      </span>
+                      <span className="device-sync-row-actions">
+                        {status === 'synced' && (
+                          <button
+                            className="device-sync-action-btn danger"
+                            onClick={e => { e.preventDefault(); markForDeletion([s.id]); }}
+                            data-tooltip={t('deviceSync.markForDeletion')}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                        {status === 'pending' && (
+                          <button
+                            className="device-sync-action-btn muted"
+                            onClick={e => { e.preventDefault(); handleToggleSource(s); }}
+                            data-tooltip={t('deviceSync.removeSource')}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                        {status === 'deletion' && (
+                          <button
+                            className="device-sync-action-btn undo"
+                            onClick={e => { e.preventDefault(); unmarkDeletion(s.id); }}
+                            data-tooltip={t('deviceSync.undoDeletion')}
+                          >
+                            <Undo2 size={12} />
+                          </button>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </>
           )}
 
-          {/* Progress / sync result */}
-          {activeJob && (
-            <div className="device-sync-progress">
-              <div className="device-sync-progress-bar-wrap">
+          {/* Background sync progress (non-blocking) */}
+          {jobStatus === 'running' && (
+            <div className="device-sync-bg-progress">
+              <div className="device-sync-bg-progress-bar-wrap">
                 <div
-                  className="device-sync-progress-bar"
-                  style={{ width: activeJob.total > 0
-                    ? `${((activeJob.done + activeJob.skipped + activeJob.failed) / activeJob.total) * 100}%`
+                  className="device-sync-bg-progress-bar"
+                  style={{ width: jobTotal > 0
+                    ? `${((jobDone + jobSkip + jobFail) / jobTotal) * 100}%`
                     : '0%' }}
                 />
               </div>
-              <div className="device-sync-progress-stats">
-                {isRunning && <Loader2 size={13} className="spin" />}
-                {isDone    && <CheckCircle2 size={13} className="color-success" />}
-                <span>
-                  {isDone
-                    ? t('deviceSync.syncResult', { done: activeJob.done, skipped: activeJob.skipped, total: activeJob.total })
-                    : `${activeJob.done + activeJob.skipped + activeJob.failed} / ${activeJob.total}`}
-                </span>
-                {activeJob.failed > 0 && (
-                  <span className="device-sync-stat-error"><AlertCircle size={12} /> {activeJob.failed}</span>
-                )}
-                {activeJob.skipped > 0 && (
-                  <span className="device-sync-stat-muted"><SkipForward size={12} /> {activeJob.skipped}</span>
-                )}
-                {isRunning
-                  ? <button className="btn btn-ghost" onClick={handleCancel}>{t('deviceSync.cancel')}</button>
-                  : <button className="btn btn-ghost" onClick={() => setActiveJob(null)}>{t('deviceSync.dismiss')}</button>
-                }
-              </div>
+              <span className="device-sync-bg-progress-text">
+                <Loader2 size={12} className="spin" />
+                {t('deviceSync.syncInProgress', { done: jobDone + jobSkip, total: jobTotal })}
+                {jobFail > 0 && <span className="device-sync-stat-error"><AlertCircle size={11} /> {jobFail}</span>}
+              </span>
+            </div>
+          )}
+
+          {jobStatus === 'done' && (
+            <div className="device-sync-bg-progress done">
+              <span className="device-sync-bg-progress-text">
+                <CheckCircle2 size={12} className="color-success" />
+                {t('deviceSync.syncResult', { done: jobDone, skipped: jobSkip, total: jobTotal })}
+              </span>
+              <button className="btn btn-ghost" onClick={() => useDeviceSyncJobStore.getState().reset()}>
+                {t('deviceSync.dismiss')}
+              </button>
             </div>
           )}
 
         </div>
 
       </div>
+
+      {/* Pre-Sync Summary Modal */}
+      {preSyncOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content device-sync-modal">
+            <h2 className="modal-title">{t('deviceSync.syncSummary')}</h2>
+
+            {preSyncLoading ? (
+              <div className="device-sync-loading-modal" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px' }}>
+                <Loader2 size={32} className="spin" />
+                <p style={{ marginTop: '10px' }}>{t('deviceSync.calculating')}</p>
+              </div>
+            ) : (
+              <div className="device-sync-summary-stats" style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '10px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{t('deviceSync.filesToAdd')}</span>
+                  <span className="color-success">+{syncDelta.addCount} ({(syncDelta.addBytes / 1_048_576).toFixed(1)} MB)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{t('deviceSync.filesToDelete')}</span>
+                  <span className="color-error">-{syncDelta.delCount} ({(syncDelta.delBytes / 1_048_576).toFixed(1)} MB)</span>
+                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '10px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                  <span>{t('deviceSync.netChange')}</span>
+                  <span>{((syncDelta.addBytes - syncDelta.delBytes) / 1_048_576).toFixed(1)} MB</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: syncDelta.addBytes > syncDelta.availableBytes + syncDelta.delBytes ? 'var(--danger)' : 'inherit', marginTop: '10px' }}>
+                  <span>{t('deviceSync.availableSpace')}</span>
+                  <span>{(syncDelta.availableBytes / 1_048_576).toFixed(1)} MB</span>
+                </div>
+                {syncDelta.addBytes > syncDelta.availableBytes + syncDelta.delBytes && (
+                  <div className="sync-warning error" style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)', padding: '10px', borderRadius: 'var(--radius-md)', marginTop: '15px', display: 'flex', gap: '10px', color: 'var(--danger)', alignItems: 'flex-start' }}>
+                    <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <span>{t('deviceSync.spaceWarning')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!preSyncLoading && (
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '25px' }}>
+                <button className="btn btn-ghost" onClick={() => setPreSyncOpen(false)}>
+                  {t('deviceSync.cancel')}
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSyncExecution}
+                  disabled={syncDelta.addBytes > syncDelta.availableBytes + syncDelta.delBytes}
+                >
+                  {t('deviceSync.proceed')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

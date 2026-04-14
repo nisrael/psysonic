@@ -45,6 +45,7 @@ discord-rich-presence = "0.2"
 url = "2"
 thread-priority = "1"
 lofty = "0.22"
+sysinfo = { version = "0.33", default-features = false, features = ["disk"] }
 id3 = "1.16.4"
 
 [target.'cfg(unix)'.dependencies]

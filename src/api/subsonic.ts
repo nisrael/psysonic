@@ -23,7 +23,7 @@ function getAuthParams(username: string, password: string) {
   return { u: username, t: token, s: salt, v: '1.16.1', c: `psysonic/${version}`, f: 'json' };
 }
 
-function getClient() {
+export function getClient() {
   const { getBaseUrl, getActiveServer } = useAuthStore.getState();
   const server = getActiveServer();
   const baseUrl = getBaseUrl();
@@ -741,11 +741,18 @@ export async function fetchStatisticsFormatSample(): Promise<StatisticsFormatSam
 }
 
 export async function getArtists(): Promise<SubsonicArtist[]> {
-  const data = await api<{ artists: { index: Array<{ artist: SubsonicArtist[] }> } }>('getArtists.view', {
+  const data = await api<{ artists: { index: any } }>('getArtists.view', {
     ...libraryFilterParams(),
   });
-  const indices = data.artists?.index ?? [];
-  return indices.flatMap(i => i.artist ?? []);
+  const rawIdx = data.artists?.index;
+  const indices = Array.isArray(rawIdx) ? rawIdx : (rawIdx ? [rawIdx] : []);
+  const artists: SubsonicArtist[] = [];
+  for (const idx of indices) {
+    const rawArt = idx.artist;
+    const arr = Array.isArray(rawArt) ? rawArt : (rawArt ? [rawArt] : []);
+    artists.push(...arr);
+  }
+  return artists;
 }
 
 export async function getArtist(id: string): Promise<{ artist: SubsonicArtist; albums: SubsonicAlbum[] }> {

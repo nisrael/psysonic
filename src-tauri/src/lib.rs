@@ -1351,7 +1351,68 @@ async fn purge_hot_cache(custom_dir: Option<String>, app: tauri::AppHandle) -> R
 
 // ─── Device Sync ─────────────────────────────────────────────────────────────
 
-#[derive(serde::Deserialize)]
+/// Information about a single mounted removable drive.
+#[derive(Clone, serde::Serialize)]
+struct RemovableDrive {
+    name: String,
+    mount_point: String,
+    available_space: u64,
+    total_space: u64,
+    file_system: String,
+    is_removable: bool,
+}
+
+/// Returns all currently mounted removable drives.
+/// On Linux these are typically USB sticks / SD cards under /media or /run/media.
+/// On macOS they appear under /Volumes. On Windows they are separate drive letters.
+#[tauri::command]
+fn get_removable_drives() -> Vec<RemovableDrive> {
+    use sysinfo::Disks;
+    let disks = Disks::new_with_refreshed_list();
+    disks
+        .list()
+        .iter()
+        .filter(|d| d.is_removable())
+        .map(|d| RemovableDrive {
+            name: d.name().to_string_lossy().to_string(),
+            mount_point: d.mount_point().to_string_lossy().to_string(),
+            available_space: d.available_space(),
+            total_space: d.total_space(),
+            file_system: d.file_system().to_string_lossy().to_string(),
+            is_removable: true,
+        })
+        .collect()
+}
+
+/// Checks whether `path` sits on top of an active mount point (i.e. not the root
+/// filesystem). This prevents accidentally writing to `/media/usb` after the
+/// USB drive has been unmounted — at that point the path would fall through to `/`
+/// and fill the root partition.
+fn is_path_on_mounted_volume(path: &std::path::Path) -> bool {
+    use sysinfo::Disks;
+    let disks = Disks::new_with_refreshed_list();
+    let canonical = match path.canonicalize() {
+        Ok(c) => c,
+        Err(_) => return false, // path doesn't exist or isn't accessible
+    };
+    let canonical_str = canonical.to_string_lossy();
+    // Find the longest mount-point prefix that matches this path.
+    // Exclude the root "/" (or "C:\" on Windows) so we never "match" a fallback.
+    let mut best_len: usize = 0;
+    for disk in disks.list() {
+        let mp = disk.mount_point().to_string_lossy().to_string();
+        // Skip root mount points
+        if mp == "/" || (mp.len() == 3 && mp.ends_with(":\\")) {
+            continue;
+        }
+        if canonical_str.starts_with(&mp) && mp.len() > best_len {
+            best_len = mp.len();
+        }
+    }
+    best_len > 0
+}
+
+#[derive(serde::Deserialize, Clone)]
 struct TrackSyncInfo {
     id: String,
     url: String,
@@ -1364,6 +1425,14 @@ struct TrackSyncInfo {
     #[serde(rename = "discNumber")]
     disc_number: Option<u32>,
     year: Option<u32>,
+}
+
+/// Summary returned by `sync_batch_to_device` after all tracks are processed.
+#[derive(Clone, serde::Serialize)]
+struct SyncBatchResult {
+    done: u32,
+    skipped: u32,
+    failed: u32,
 }
 
 #[derive(serde::Serialize)]
@@ -1524,22 +1593,445 @@ async fn delete_device_file(path: String) -> Result<(), String> {
     let p = std::path::PathBuf::from(&path);
     if p.exists() {
         tokio::fs::remove_file(&p).await.map_err(|e| e.to_string())?;
-        // Prune empty parent dirs (album → artist)
-        let mut current = p.parent().map(|d| d.to_path_buf());
-        for _ in 0..2 {
-            let Some(dir) = current else { break };
-            let is_empty = std::fs::read_dir(&dir)
-                .map(|mut rd| rd.next().is_none())
-                .unwrap_or(false);
-            if is_empty {
-                let _ = tokio::fs::remove_dir(&dir).await;
-                current = dir.parent().map(|d| d.to_path_buf());
-            } else {
-                break;
+        prune_empty_parents(&p, 2).await;
+    }
+    Ok(())
+}
+
+/// Prune empty parent directories up to `levels` levels above `file_path`.
+async fn prune_empty_parents(file_path: &std::path::Path, levels: usize) {
+    let mut current = file_path.parent().map(|d| d.to_path_buf());
+    for _ in 0..levels {
+        let Some(dir) = current else { break };
+        let is_empty = std::fs::read_dir(&dir)
+            .map(|mut rd| rd.next().is_none())
+            .unwrap_or(false);
+        if is_empty {
+            let _ = tokio::fs::remove_dir(&dir).await;
+            current = dir.parent().map(|d| d.to_path_buf());
+        } else {
+            break;
+        }
+    }
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SubsonicAuthPayload {
+    base_url: String,
+    u: String,
+    t: String,
+    s: String,
+    v: String,
+    c: String,
+    f: String,
+}
+
+#[derive(serde::Deserialize)]
+struct DeviceSyncSourcePayload {
+    #[serde(rename = "type")]
+    source_type: String,
+    id: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SyncDeltaResult {
+    add_bytes: u64,
+    add_count: u32,
+    del_bytes: u64,
+    del_count: u32,
+    available_bytes: u64,
+    tracks: Vec<serde_json::Value>,
+}
+
+async fn fetch_subsonic_songs(
+    client: &reqwest::Client,
+    auth: &SubsonicAuthPayload,
+    endpoint: &str,
+    id: &str,
+) -> Result<Vec<serde_json::Value>, String> {
+    let url = format!("{}/{}", auth.base_url, endpoint);
+    let query = vec![
+        ("u", auth.u.as_str()),
+        ("t", auth.t.as_str()),
+        ("s", auth.s.as_str()),
+        ("v", auth.v.as_str()),
+        ("c", auth.c.as_str()),
+        ("f", auth.f.as_str()),
+        ("id", id),
+    ];
+    let res = client.get(&url).query(&query).send().await.map_err(|e| e.to_string())?;
+    let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+    
+    let root = json.get("subsonic-response").ok_or("No subsonic-response".to_string())?;
+    let songs = if endpoint == "getAlbum.view" {
+        root.get("album").and_then(|a| a.get("song"))
+    } else if endpoint == "getPlaylist.view" {
+        root.get("playlist").and_then(|p| p.get("entry"))
+    } else {
+        None
+    };
+
+    if let Some(arr) = songs.and_then(|s| s.as_array()) {
+        return Ok(arr.clone());
+    } else if let Some(obj) = songs.and_then(|s| s.as_object()) {
+        return Ok(vec![serde_json::Value::Object(obj.clone())]);
+    }
+    Ok(vec![])
+}
+
+#[tauri::command]
+async fn calculate_sync_payload(
+    sources: Vec<DeviceSyncSourcePayload>,
+    deletion_ids: Vec<String>,
+    auth: SubsonicAuthPayload,
+    target_dir: String,
+    template: String,
+) -> Result<SyncDeltaResult, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let mut add_bytes = 0;
+    let mut add_count = 0;
+    let mut del_bytes = 0;
+    let mut del_count = 0;
+    
+    let mut sync_tracks = Vec::new();
+    let (mut del_sources, mut add_sources) = (Vec::new(), Vec::new());
+    for s in sources {
+        if deletion_ids.contains(&s.id) {
+            del_sources.push(s);
+        } else {
+            add_sources.push(s);
+        }
+    }
+    
+    let mut handles = Vec::new();
+    for source in add_sources {
+        let auth_clone = SubsonicAuthPayload {
+            base_url: auth.base_url.clone(), u: auth.u.clone(), t: auth.t.clone(), s: auth.s.clone(),
+            v: auth.v.clone(), c: auth.c.clone(), f: auth.f.clone(),
+        };
+        let cli = client.clone();
+        handles.push(tokio::spawn(async move {
+            let mut res_tracks = Vec::new();
+            if source.source_type == "album" {
+                if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getAlbum.view", &source.id).await { res_tracks.extend(ts); }
+            } else if source.source_type == "playlist" {
+                if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getPlaylist.view", &source.id).await { res_tracks.extend(ts); }
+            } else if source.source_type == "artist" {
+                let url = format!("{}/getArtist.view", auth_clone.base_url);
+                let query = vec![("u", auth_clone.u.as_str()), ("t", auth_clone.t.as_str()), ("s", auth_clone.s.as_str()), ("v", auth_clone.v.as_str()), ("c", auth_clone.c.as_str()), ("f", auth_clone.f.as_str()), ("id", &source.id)];
+                if let Ok(re) = cli.get(&url).query(&query).send().await {
+                   if let Ok(js) = re.json::<serde_json::Value>().await {
+                       if let Some(root) = js.get("subsonic-response").and_then(|r| r.get("artist")).and_then(|a| a.get("album")) {
+                          let arr = root.as_array().map(|a| a.clone()).unwrap_or_else(|| {
+                              root.as_object().map(|o| vec![serde_json::Value::Object(o.clone())]).unwrap_or_else(|| vec![])
+                          });
+                          for al in arr {
+                              if let Some(aid) = al.get("id").and_then(|i| i.as_str()) {
+                                  if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getAlbum.view", aid).await {
+                                      res_tracks.extend(ts);
+                                  }
+                              }
+                          }
+                       }
+                   }
+                }
+            }
+            res_tracks
+        }));
+    }
+    
+    let mut del_handles = Vec::new();
+    for source in del_sources {
+        let auth_clone = SubsonicAuthPayload {
+            base_url: auth.base_url.clone(), u: auth.u.clone(), t: auth.t.clone(), s: auth.s.clone(),
+            v: auth.v.clone(), c: auth.c.clone(), f: auth.f.clone(),
+        };
+        let cli = client.clone();
+        del_handles.push(tokio::spawn(async move {
+            let mut res_tracks = Vec::new();
+            if source.source_type == "album" {
+                if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getAlbum.view", &source.id).await { res_tracks.extend(ts); }
+            } else if source.source_type == "playlist" {
+                if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getPlaylist.view", &source.id).await { res_tracks.extend(ts); }
+            }
+            res_tracks
+        }));
+    }
+
+    let mut seen = std::collections::HashSet::new();
+    for handle in handles {
+        if let Ok(ts) = handle.await {
+            for track in ts {
+                if let Some(tid) = track.get("id").and_then(|i| i.as_str()) {
+                    if !seen.contains(tid) {
+                        seen.insert(tid.to_string());
+                        // Build the expected path and skip files already present on device.
+                        let already_exists = {
+                            let suffix = track.get("suffix").and_then(|s| s.as_str()).unwrap_or("mp3");
+                            let sync_info = TrackSyncInfo {
+                                id: tid.to_string(),
+                                url: String::new(),
+                                suffix: suffix.to_string(),
+                                artist: track.get("artist").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                                album: track.get("album").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                                title: track.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                                track_number: track.get("track").and_then(|v| v.as_u64()).map(|n| n as u32),
+                                disc_number: track.get("discNumber").and_then(|v| v.as_u64()).map(|n| n as u32),
+                                year: track.get("year").and_then(|v| v.as_u64()).map(|n| n as u32),
+                            };
+                            let relative = apply_device_sync_template(&template, &sync_info);
+                            let file_name = format!("{}.{}", relative, suffix);
+                            std::path::Path::new(&target_dir).join(&file_name).exists()
+                        };
+                        if !already_exists {
+                            add_count += 1;
+                            let size = track.get("size").and_then(|s| s.as_u64()).unwrap_or_else(|| {
+                                track.get("duration").and_then(|d| d.as_u64()).unwrap_or(0) * 320_000 / 8
+                            });
+                            add_bytes += size;
+                            sync_tracks.push(track);
+                        }
+                    }
+                }
             }
         }
     }
-    Ok(())
+
+    for handle in del_handles {
+        if let Ok(ts) = handle.await {
+            for track in ts {
+                del_count += 1;
+                let size = track.get("size").and_then(|s| s.as_u64()).unwrap_or_else(|| {
+                    track.get("duration").and_then(|d| d.as_u64()).unwrap_or(0) * 320_000 / 8
+                });
+                del_bytes += size;
+            }
+        }
+    }
+    
+    let mut available_bytes = 0;
+    for drive in get_removable_drives() {
+        if target_dir.starts_with(&drive.mount_point) {
+            available_bytes = drive.available_space;
+            break;
+        }
+    }
+
+    Ok(SyncDeltaResult {
+        add_bytes, add_count, del_bytes, del_count, available_bytes, tracks: sync_tracks,
+    })
+}
+
+/// Downloads a batch of tracks to a USB/SD device with controlled concurrency.
+/// At most 2 parallel writes run simultaneously to prevent I/O choking on USB.
+/// Emits throttled `device:sync:progress` events (max once per 500ms) and a
+/// final `device:sync:complete` event with the summary.
+#[tauri::command]
+async fn sync_batch_to_device(
+    tracks: Vec<TrackSyncInfo>,
+    dest_dir: String,
+    template: String,
+    job_id: String,
+    expected_bytes: u64,
+    app: tauri::AppHandle,
+) -> Result<SyncBatchResult, String> {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::time::{Duration, Instant};
+    use tokio::sync::Mutex;
+
+    let dest_root = std::path::PathBuf::from(&dest_dir);
+    if !dest_root.exists() {
+        return Err("VOLUME_NOT_FOUND".to_string());
+    }
+    // Safety: verify dest_dir is on an actual mounted volume, not the root FS.
+    // This catches the case where a USB drive was unmounted but the empty
+    // mount-point directory still exists — writing there fills the root partition.
+    if !is_path_on_mounted_volume(&dest_root) {
+        return Err("NOT_MOUNTED_VOLUME".to_string());
+    }
+
+    // Safety: Ensure target logic hasn't exceeded physical volume capacities securely stopping dead bytes natively.
+    let drives = get_removable_drives();
+    let dest_canon = dest_root.canonicalize().unwrap_or_else(|_| dest_root.clone());
+    let dest_str = dest_canon.to_string_lossy();
+    
+    for drive in drives {
+        if dest_str.starts_with(&drive.mount_point) {
+            // Buffer of ~10 MB padding boundary natively mapped
+            if expected_bytes > drive.available_space.saturating_sub(10_000_000) {
+                return Err(format!("NOT_ENOUGH_SPACE"));
+            }
+            break;
+        }
+    }
+
+    // Shared reqwest client — reused across all downloads.
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(300))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    // Concurrency limiter: max 2 parallel USB writes.
+    let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(2));
+
+    // Counters.
+    let done    = std::sync::Arc::new(AtomicU32::new(0));
+    let skipped = std::sync::Arc::new(AtomicU32::new(0));
+    let failed  = std::sync::Arc::new(AtomicU32::new(0));
+
+    // Throttled event emission (max once per 500ms).
+    let last_emit = std::sync::Arc::new(Mutex::new(Instant::now()));
+    let total = tracks.len() as u32;
+
+    let mut handles = Vec::with_capacity(tracks.len());
+
+    for track in tracks {
+        let sem = semaphore.clone();
+        let cli = client.clone();
+        let app2 = app.clone();
+        let job = job_id.clone();
+        let tmpl = template.clone();
+        let dest = dest_dir.clone();
+        let d = done.clone();
+        let s = skipped.clone();
+        let f = failed.clone();
+        let le = last_emit.clone();
+
+        handles.push(tokio::spawn(async move {
+            let _permit = sem.acquire().await.expect("semaphore closed");
+
+            let relative = apply_device_sync_template(&tmpl, &track);
+            let file_name = format!("{}.{}", relative, track.suffix);
+            let dest_path = std::path::Path::new(&dest).join(&file_name);
+            let path_str = dest_path.to_string_lossy().to_string();
+
+            let status;
+            if dest_path.exists() {
+                s.fetch_add(1, Ordering::Relaxed);
+                status = "skipped";
+            } else {
+                // Ensure parent directories exist.
+                if let Some(parent) = dest_path.parent() {
+                    if let Err(e) = tokio::fs::create_dir_all(parent).await {
+                        f.fetch_add(1, Ordering::Relaxed);
+                        let _ = app2.emit("device:sync:progress", serde_json::json!({
+                            "jobId": job, "trackId": track.id, "status": "error",
+                            "error": e.to_string(),
+                        }));
+                        return;
+                    }
+                }
+
+                let response = match cli.get(&track.url).send().await {
+                    Ok(r) if r.status().is_success() => r,
+                    Ok(r) => {
+                        f.fetch_add(1, Ordering::Relaxed);
+                        let _ = app2.emit("device:sync:progress", serde_json::json!({
+                            "jobId": job, "trackId": track.id, "status": "error",
+                            "error": format!("HTTP {}", r.status().as_u16()),
+                        }));
+                        return;
+                    }
+                    Err(e) => {
+                        f.fetch_add(1, Ordering::Relaxed);
+                        let _ = app2.emit("device:sync:progress", serde_json::json!({
+                            "jobId": job, "trackId": track.id, "status": "error",
+                            "error": e.to_string(),
+                        }));
+                        return;
+                    }
+                };
+
+                let part_path = dest_path.with_extension(format!("{}.part", track.suffix));
+                if let Err(e) = stream_to_file(response, &part_path).await {
+                    let _ = tokio::fs::remove_file(&part_path).await;
+                    f.fetch_add(1, Ordering::Relaxed);
+                    let _ = app2.emit("device:sync:progress", serde_json::json!({
+                        "jobId": job, "trackId": track.id, "status": "error",
+                        "error": e,
+                    }));
+                    return;
+                }
+                if let Err(e) = tokio::fs::rename(&part_path, &dest_path).await {
+                    let _ = tokio::fs::remove_file(&part_path).await;
+                    f.fetch_add(1, Ordering::Relaxed);
+                    let _ = app2.emit("device:sync:progress", serde_json::json!({
+                        "jobId": job, "trackId": track.id, "status": "error",
+                        "error": e.to_string(),
+                    }));
+                    return;
+                }
+
+                d.fetch_add(1, Ordering::Relaxed);
+                status = "done";
+            }
+
+            // Throttled progress event — max once per 500ms.
+            let should_emit = {
+                let mut guard = le.lock().await;
+                if guard.elapsed() >= Duration::from_millis(500) {
+                    *guard = Instant::now();
+                    true
+                } else {
+                    false
+                }
+            };
+            if should_emit {
+                let _ = app2.emit("device:sync:progress", serde_json::json!({
+                    "jobId": job, "trackId": track.id, "status": status, "path": path_str,
+                    "done": d.load(Ordering::Relaxed),
+                    "skipped": s.load(Ordering::Relaxed),
+                    "failed": f.load(Ordering::Relaxed),
+                    "total": total,
+                }));
+            }
+        }));
+    }
+
+    // Wait for all tasks to complete.
+    for handle in handles {
+        let _ = handle.await;
+    }
+
+    let result = SyncBatchResult {
+        done:    done.load(Ordering::Relaxed),
+        skipped: skipped.load(Ordering::Relaxed),
+        failed:  failed.load(Ordering::Relaxed),
+    };
+
+    // Final event so the frontend always sees 100%.
+    let _ = app.emit("device:sync:complete", serde_json::json!({
+        "jobId": job_id,
+        "done": result.done,
+        "skipped": result.skipped,
+        "failed": result.failed,
+        "total": total,
+    }));
+
+    Ok(result)
+}
+
+/// Deletes multiple files from the device in one call and prunes empty parent
+/// directories. Returns the number of files successfully deleted.
+#[tauri::command]
+async fn delete_device_files(paths: Vec<String>) -> Result<u32, String> {
+    let mut deleted: u32 = 0;
+    for path in &paths {
+        let p = std::path::PathBuf::from(path);
+        if p.exists() {
+            if tokio::fs::remove_file(&p).await.is_ok() {
+                deleted += 1;
+                prune_empty_parents(&p, 2).await;
+            }
+        }
+    }
+    Ok(deleted)
 }
 
 /// Builds and returns a new system-tray icon with all menu items and event handlers.
@@ -1884,6 +2376,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            calculate_sync_payload,
             exit_app,
             set_window_decorations,
             no_compositing_mode,
@@ -1932,9 +2425,12 @@ pub fn run() {
             delete_hot_cache_track,
             purge_hot_cache,
             sync_track_to_device,
+            sync_batch_to_device,
             compute_sync_paths,
             list_device_dir_files,
             delete_device_file,
+            delete_device_files,
+            get_removable_drives,
             toggle_tray_icon,
             check_dir_accessible,
             download_zip,
