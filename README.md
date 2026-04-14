@@ -169,6 +169,10 @@ If you want to build Psysonic from source or contribute to the project:
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18+)
 - [Rust](https://www.rust-lang.org/) (v1.75+)
+- **`cmake`** — required to compile the bundled libopus (Opus audio support). Install it before running `cargo build` or `npm run tauri:build`:
+  - Linux: `sudo apt install cmake` / `sudo pacman -S cmake`
+  - macOS: `brew install cmake`
+  - Windows: [cmake.org/download](https://cmake.org/download/) or `winget install cmake`
 - OS-specific build dependencies for Tauri (see the [Tauri prerequisites guide](https://tauri.app/v2/guides/getting-started/prerequisites)).
 
 ### Setup

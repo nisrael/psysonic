@@ -6,6 +6,7 @@ import CachedImage from './CachedImage';
 import CoverLightbox from './CoverLightbox';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useThemeStore } from '../store/themeStore';
 import StarRating from './StarRating';
 import type { EntityRatingSupportLevel } from '../api/subsonic';
 import { useThemeStore } from '../store/themeStore';
@@ -129,6 +130,7 @@ export default function AlbumHeader({
   const totalDuration = songs.reduce((acc, s) => acc + s.duration, 0);
   const totalSize = songs.reduce((acc, s) => acc + (s.size ?? 0), 0);
   const formatLabel = [...new Set(songs.map(s => s.suffix).filter((f): f is string => !!f))].map(f => f.toUpperCase()).join(' / ');
+  const enableCoverArtBackground = useThemeStore(s => s.enableCoverArtBackground);
 
   return (
     <>

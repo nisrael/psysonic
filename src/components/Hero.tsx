@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { playAlbum } from '../utils/playAlbum';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { filterAlbumsByMixRatings, getMixMinRatingsConfigFromAuth } from '../utils/mixRatingFilter';
 
 const INTERVAL_MS = 10000;
@@ -58,6 +59,7 @@ export default function Hero({ albums: albumsProp }: HeroProps = {}) {
   const isMobile = useIsMobile();
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
   const mixMinRatingFilterEnabled = useAuthStore(s => s.mixMinRatingFilterEnabled);
+  const enableCoverArtBackground = useThemeStore(s => s.enableCoverArtBackground);
   const mixMinRatingAlbum = useAuthStore(s => s.mixMinRatingAlbum);
   const mixMinRatingArtist = useAuthStore(s => s.mixMinRatingArtist);
   const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
@@ -141,8 +143,8 @@ export default function Hero({ albums: albumsProp }: HeroProps = {}) {
       onClick={() => navigate(`/album/${album.id}`)}
       style={{ cursor: 'pointer' }}
     >
-      <HeroBg url={stableBgUrl.current} />
-      <div className="hero-overlay" aria-hidden="true" />
+      {enableCoverArtBackground && <HeroBg url={stableBgUrl.current} />}
+      {enableCoverArtBackground && <div className="hero-overlay" aria-hidden="true" />}
 
       {/* key causes re-mount → animate-fade-in triggers on each album change */}
       <div className="hero-content animate-fade-in" key={album.id}>

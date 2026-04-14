@@ -10,6 +10,7 @@ import { AddToPlaylistSubmenu } from './ContextMenu';
 import { useIsMobile } from '../hooks/useIsMobile';
 import StarRating from './StarRating';
 import { useSelectionStore } from '../store/selectionStore';
+import { useThemeStore } from '../store/themeStore';
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -19,11 +20,11 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function codecLabel(song: { suffix?: string; bitRate?: number }): string {
+function codecLabel(song: { suffix?: string; bitRate?: number }, showBitrate: boolean): string {
   const parts: string[] = [];
   if (song.suffix) parts.push(song.suffix.toUpperCase());
-  if (song.bitRate) parts.push(`${song.bitRate}`);
-  return parts.join(' ');
+  if (showBitrate && song.bitRate) parts.push(`${song.bitRate} kbps`);
+  return parts.join(' · ');
 }
 
 // ── Column configuration ──────────────────────────────────────────────────────
@@ -108,6 +109,7 @@ const TrackRow = React.memo(function TrackRow({
 }: TrackRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const showBitrate = useThemeStore(s => s.showBitrate);
   // Fine-grained: only re-renders when THIS row's selection boolean flips.
   const isSelected = useSelectionStore(s => s.selectedIds.has(song.id));
   const isActive = currentTrackId === song.id;
@@ -192,8 +194,8 @@ const TrackRow = React.memo(function TrackRow({
       case 'format':
         return (
           <div key="format" className="track-meta">
-            {(song.suffix || song.bitRate) && (
-              <span className="track-codec">{codecLabel(song)}</span>
+            {(song.suffix || (showBitrate && song.bitRate)) && (
+              <span className="track-codec">{codecLabel(song, showBitrate)}</span>
             )}
           </div>
         );

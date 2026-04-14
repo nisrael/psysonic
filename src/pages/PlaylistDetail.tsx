@@ -117,6 +117,10 @@ export default function PlaylistDetail() {
   const enablePlaylistCoverPhoto = useThemeStore(s => s.enablePlaylistCoverPhoto);
   const showBitrate = useThemeStore(s => s.showBitrate);
 
+  const enableCoverArtBackground = useThemeStore(s => s.enableCoverArtBackground);
+  const enablePlaylistCoverPhoto = useThemeStore(s => s.enablePlaylistCoverPhoto);
+  const showBitrate = useThemeStore(s => s.showBitrate);
+
   const [playlist, setPlaylist] = useState<SubsonicPlaylist | null>(null);
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [loading, setLoading] = useState(true);

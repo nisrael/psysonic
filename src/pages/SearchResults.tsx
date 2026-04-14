@@ -8,6 +8,7 @@ import ArtistRow from '../components/ArtistRow';
 import { useTranslation } from 'react-i18next';
 import { useDragDrop } from '../contexts/DragDropContext';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 
 function formatDuration(s: number) {
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
@@ -23,6 +24,7 @@ export default function SearchResults() {
   const currentTrack = usePlayerStore(s => s.currentTrack);
   const psyDrag = useDragDrop();
   const musicLibraryFilterVersion = useAuthStore(s => s.musicLibraryFilterVersion);
+  const showBitrate = useThemeStore(s => s.showBitrate);
 
   useEffect(() => {
     if (!query.trim()) { setResults(null); return; }
@@ -116,7 +118,7 @@ export default function SearchResults() {
                     <div className="track-artist-cell"><span className="track-artist" title={song.artist}>{song.artist}</span></div>
                     <div className="track-artist-cell"><span className="track-artist" title={song.album}>{song.album}</span></div>
                     <span className="track-codec" style={{ alignSelf: 'center' }}>
-                      {[song.suffix?.toUpperCase(), song.bitRate ? `${song.bitRate} kbps` : ''].filter(Boolean).join(' · ')}
+                      {[song.suffix?.toUpperCase(), showBitrate && song.bitRate ? `${song.bitRate} kbps` : ''].filter(Boolean).join(' · ')}
                     </span>
                     <span className="track-duration" style={{ textAlign: 'right' }}>
                       {formatDuration(song.duration)}

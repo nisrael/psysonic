@@ -57,7 +57,7 @@ export const useThemeStore = create<ThemeState>()(
       setEnableCoverArtBackground: (v) => set({ enableCoverArtBackground: v }),
       enablePlaylistCoverPhoto: true,
       setEnablePlaylistCoverPhoto: (v) => set({ enablePlaylistCoverPhoto: v }),
-      showBitrate: false,
+      showBitrate: true,
       setShowBitrate: (v) => set({ showBitrate: v }),
     }),
     {

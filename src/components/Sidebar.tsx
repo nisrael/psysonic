@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../store/playerStore';
 import { useOfflineStore } from '../store/offlineStore';
 import { useOfflineJobStore } from '../store/offlineJobStore';
+import { useDeviceSyncJobStore } from '../store/deviceSyncJobStore';
 import { useAuthStore } from '../store/authStore';
 import { useSidebarStore } from '../store/sidebarStore';
 import { NavLink } from 'react-router-dom';
@@ -50,6 +51,12 @@ export default function Sidebar({
   const offlineJobs = useOfflineJobStore(s => s.jobs);
   const cancelAllDownloads = useOfflineJobStore(s => s.cancelAllDownloads);
   const activeJobs = offlineJobs.filter(j => j.status === 'queued' || j.status === 'downloading');
+  const syncJobStatus = useDeviceSyncJobStore(s => s.status);
+  const syncJobDone   = useDeviceSyncJobStore(s => s.done);
+  const syncJobSkip   = useDeviceSyncJobStore(s => s.skipped);
+  const syncJobFail   = useDeviceSyncJobStore(s => s.failed);
+  const syncJobTotal  = useDeviceSyncJobStore(s => s.total);
+  const isSyncing     = syncJobStatus === 'running';
   const offlineAlbums = useOfflineStore(s => s.albums);
   const serverId = useAuthStore(s => s.activeServerId ?? '');
   const isLoggedIn = useAuthStore(s => s.isLoggedIn);
@@ -367,6 +374,19 @@ export default function Sidebar({
             >
               <X size={12} />
             </button>
+          </div>
+        )}
+
+        {isSyncing && (
+          <div
+            className={`sidebar-offline-queue sidebar-sync-queue ${isCollapsed ? 'sidebar-offline-queue--collapsed' : ''}`}
+            data-tooltip={isCollapsed ? t('sidebar.syncingTracks', { done: syncJobDone + syncJobSkip + syncJobFail, total: syncJobTotal }) : undefined}
+            data-tooltip-pos="right"
+          >
+            <HardDriveUpload size={isCollapsed ? 18 : 14} className="spin-slow" />
+            {!isCollapsed && (
+              <span>{t('sidebar.syncingTracks', { done: syncJobDone + syncJobSkip + syncJobFail, total: syncJobTotal })}</span>
+            )}
           </div>
         )}
       </nav>

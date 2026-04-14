@@ -7,7 +7,7 @@ license = ""
 repository = ""
 default-run = "psysonic"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.89"
 
 [lib]
 name = "psysonic_lib"
@@ -45,7 +45,9 @@ discord-rich-presence = "0.2"
 url = "2"
 thread-priority = "1"
 lofty = "0.22"
+sysinfo = { version = "0.33", default-features = false, features = ["disk"] }
 id3 = "1.16.4"
+symphonia-adapter-libopus = "0.2.7"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
