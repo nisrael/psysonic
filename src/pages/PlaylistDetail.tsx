@@ -766,7 +766,7 @@ export default function PlaylistDetail() {
 
           const scoredMatches = searchResult.songs.map(s => {
             // Fast ISRC path: if both have ISRC and they match, perfect score
-            if (track.isrc && s.isrc && track.isrc.toUpperCase() === s.isrc.toUpperCase()) {
+            if (track.isrc && s.isrc && typeof s.isrc === 'string' && track.isrc.toUpperCase() === s.isrc.toUpperCase()) {
               return { song: s, score: 1.0, titleScore: 1.0, artistScore: 1.0, isrcMatch: true };
             }
 
@@ -822,7 +822,6 @@ export default function PlaylistDetail() {
           existingIds.add(bestMatch.song.id);
           return bestMatch.song;
         } catch {
-          // Network error/timeout - distinguish from "not found"
           searchErrors.push(track);
           return null;
         }
