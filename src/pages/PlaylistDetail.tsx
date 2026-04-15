@@ -385,11 +385,6 @@ export default function PlaylistDetail() {
   const [suggestions, setSuggestions] = useState<SubsonicSong[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // ── Column picker portal dropdown state ────────────────────────────────────
-  const [pickerPos, setPickerPos] = useState<{ top: number; right: number } | null>(null);
-  const pickerBtnRef = useRef<HTMLButtonElement>(null);
-  const pickerMenuRef = useRef<HTMLDivElement>(null);
-
   // ── Column resize/visibility ──────────────────────────────────────────────
   const {
     colVisible, visibleCols, gridStyle,
@@ -403,41 +398,6 @@ export default function PlaylistDetail() {
   useEffect(() => {
     if (!contextMenuOpen) setContextMenuSongId(null);
   }, [contextMenuOpen]);
-
-  // Click-outside handler for column picker portal dropdown
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        pickerBtnRef.current?.contains(target) ||
-        pickerRef.current?.contains(target) ||
-        pickerMenuRef.current?.contains(target)
-      ) {
-        return;
-      }
-      setPickerOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [pickerOpen, setPickerOpen]);
-
-  // Update picker position on resize/scroll while open
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const updatePos = () => {
-      if (pickerBtnRef.current) {
-        const rect = pickerBtnRef.current.getBoundingClientRect();
-        setPickerPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-      }
-    };
-    window.addEventListener('resize', updatePos);
-    window.addEventListener('scroll', updatePos, true);
-    return () => {
-      window.removeEventListener('resize', updatePos);
-      window.removeEventListener('scroll', updatePos, true);
-    };
-  }, [pickerOpen]);
 
   // ── Load ─────────────────────────────────────────────────────
   const lastModified = usePlaylistStore(s => (id ? s.lastModified[id] : undefined));
@@ -1432,6 +1392,38 @@ export default function PlaylistDetail() {
           </div>
         )}
 
+        {/* Column visibility picker */}
+        <div className="tracklist-col-picker-wrapper" ref={pickerRef}>
+          <div className="tracklist-col-picker">
+            <button
+              className="tracklist-col-picker-btn"
+              onClick={e => { e.stopPropagation(); setPickerOpen(v => !v); }}
+              data-tooltip={t('albumDetail.columns')}
+            >
+              <ChevronDown size={14} />
+            </button>
+            {pickerOpen && (
+              <div className="tracklist-col-picker-menu">
+                <div className="tracklist-col-picker-label">{t('albumDetail.columns')}</div>
+                {PL_COLUMNS.filter(c => !c.required).map(c => {
+                  const label = c.i18nKey ? t(`albumDetail.${c.i18nKey}`) : c.key;
+                  const isOn = colVisible.has(c.key);
+                  return (
+                    <button
+                      key={c.key}
+                      className={`tracklist-col-picker-item${isOn ? ' active' : ''}`}
+                      onClick={() => toggleColumn(c.key)}
+                    >
+                      <span className="tracklist-col-picker-check">{isOn && <Check size={13} />}</span>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Header */}
         <div style={{ position: 'relative' }}>
           <div className="tracklist-header tracklist-va" style={gridStyle}>
@@ -1542,47 +1534,6 @@ export default function PlaylistDetail() {
                 </div>
               );
             })}
-          </div>
-          <div className="tracklist-col-picker" ref={pickerRef}>
-            <button
-              ref={pickerBtnRef}
-              className="tracklist-col-picker-btn"
-              onClick={e => {
-                e.stopPropagation();
-                if (!pickerOpen && pickerBtnRef.current) {
-                  const rect = pickerBtnRef.current.getBoundingClientRect();
-                  setPickerPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-                }
-                setPickerOpen(v => !v);
-              }}
-              data-tooltip={t('albumDetail.columns')}
-            >
-              <ChevronDown size={14} />
-            </button>
-            {pickerOpen && pickerPos && createPortal(
-              <div
-                ref={pickerMenuRef}
-                className="tracklist-col-picker-menu"
-                style={{ position: 'fixed', top: pickerPos.top, right: pickerPos.right, zIndex: 9999 }}
-              >
-                <div className="tracklist-col-picker-label">{t('albumDetail.columns')}</div>
-                {PL_COLUMNS.filter(c => !c.required).map(c => {
-                  const label = c.i18nKey ? t(`albumDetail.${c.i18nKey}`) : c.key;
-                  const isOn = colVisible.has(c.key);
-                  return (
-                    <button
-                      key={c.key}
-                      className={`tracklist-col-picker-item${isOn ? ' active' : ''}`}
-                      onClick={() => toggleColumn(c.key)}
-                    >
-                      <span className="tracklist-col-picker-check">{isOn && <Check size={13} />}</span>
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>,
-              document.body
-            )}
           </div>
         </div>
 

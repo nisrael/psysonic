@@ -36,9 +36,6 @@ export default function AdvancedSearch() {
   const qFromUrl = params.get('q') ?? '';
   const navigate = useNavigate();
   const psyDrag = useDragDrop();
-  const total = results
-    ? results.artists.length + results.albums.length + results.songs.length
-    : 0;
 
   const { playTrack, openContextMenu } = usePlayerStore(
     useShallow(s => ({
@@ -61,6 +58,9 @@ export default function AdvancedSearch() {
   const [resultType, setResultType] = useState<ResultType>('all');
   const [genres, setGenres] = useState<SubsonicGenre[]>([]);
   const [results, setResults] = useState<Results | null>(null);
+  const total = results
+    ? results.artists.length + results.albums.length + results.songs.length
+    : 0;
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [genreNote, setGenreNote] = useState(false);

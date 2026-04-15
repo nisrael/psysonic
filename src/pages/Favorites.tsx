@@ -472,6 +472,30 @@ export default function Favorites() {
                   </div>
                 )}
 
+                {/* Column visibility picker */}
+                <div className="tracklist-col-picker-wrapper" ref={pickerRef}>
+                  <div className="tracklist-col-picker">
+                    <button className="tracklist-col-picker-btn" onClick={e => { e.stopPropagation(); setPickerOpen(v => !v); }} data-tooltip={t('albumDetail.columns')}>
+                      <ChevronDown size={14} />
+                    </button>
+                    {pickerOpen && (
+                      <div className="tracklist-col-picker-menu">
+                        <div className="tracklist-col-picker-label">{t('albumDetail.columns')}</div>
+                        {FAV_COLUMNS.filter(c => !c.required).map(c => {
+                          const label = c.i18nKey ? t(`albumDetail.${c.i18nKey}`) : c.key;
+                          const isOn = colVisible.has(c.key);
+                          return (
+                            <button key={c.key} className={`tracklist-col-picker-item${isOn ? ' active' : ''}`} onClick={() => toggleColumn(c.key)}>
+                              <span className="tracklist-col-picker-check">{isOn && <Check size={13} />}</span>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div style={{ position: 'relative' }}>
                   <div className="tracklist-header tracklist-va" style={gridStyle}>
                     {visibleCols.map((colDef, colIndex) => {
@@ -550,26 +574,6 @@ export default function Favorites() {
                         </div>
                       );
                     })}
-                  </div>
-                  <div className="tracklist-col-picker" ref={pickerRef}>
-                    <button className="tracklist-col-picker-btn" onClick={e => { e.stopPropagation(); setPickerOpen(v => !v); }} data-tooltip={t('albumDetail.columns')}>
-                      <ChevronDown size={14} />
-                    </button>
-                    {pickerOpen && (
-                      <div className="tracklist-col-picker-menu">
-                        <div className="tracklist-col-picker-label">{t('albumDetail.columns')}</div>
-                        {FAV_COLUMNS.filter(c => !c.required).map(c => {
-                          const label = c.i18nKey ? t(`albumDetail.${c.i18nKey}`) : c.key;
-                          const isOn = colVisible.has(c.key);
-                          return (
-                            <button key={c.key} className={`tracklist-col-picker-item${isOn ? ' active' : ''}`} onClick={() => toggleColumn(c.key)}>
-                              <span className="tracklist-col-picker-check">{isOn && <Check size={13} />}</span>
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 </div>
                 {visibleSongs.map((song, i) => {
