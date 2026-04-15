@@ -921,6 +921,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  position: relative; /* Para que el picker posicionado absoluto funcione */
 }
 
 .album-detail-header {
@@ -1396,7 +1397,13 @@
 /* ─ Tracklist ─ */
 .tracklist {
   padding: 0 var(--space-6) var(--space-6);
-  overflow-x: auto;
+  /* El scroll horizontal ahora es natural de la página, no confinado al tracklist */
+  overflow-x: visible;
+}
+
+/* Wrapper para el header con position relative para el picker */
+.tracklist-header-wrapper {
+  position: relative;
 }
 
 .col-center {
@@ -1490,14 +1497,19 @@
 }
 
 /* ── Column visibility picker ── */
+/* Wrapper fuera del tracklist - alineado a la derecha del álbum */
+.tracklist-col-picker-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 var(--space-6);
+  margin-bottom: 4px;
+  z-index: 50;
+}
+
 .tracklist-col-picker {
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
+  position: relative;
   display: flex;
   align-items: center;
-  padding-right: 4px;
 }
 
 .tracklist-col-picker-btn {
