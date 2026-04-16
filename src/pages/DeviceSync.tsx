@@ -5,7 +5,7 @@ import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import {
   HardDriveUpload, FolderOpen, Loader2,
   ListMusic, Disc3, Users, CheckCircle2, AlertCircle, Clock,
-  ChevronRight, ChevronDown, Trash2, Undo2, Search, Usb, RefreshCw, Shuffle, Zap,
+  ChevronRight, ChevronDown, Trash2, Undo2, Search, Usb, RefreshCw, Shuffle, Zap, X,
 } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 import { useTranslation } from 'react-i18next';
@@ -103,6 +103,9 @@ export default function DeviceSync() {
 
   // Map source IDs → computed device paths (for status derivation)
   const [sourcePathsMap, setSourcePathsMap] = useState<Map<string, string[]>>(new Map());
+  // Template stored in the manifest — may differ from local filenameTemplate when reading a
+  // manifest written on another OS. Used only for status checks, not for new syncs.
+  const [deviceManifestTemplate, setDeviceManifestTemplate] = useState<string | null>(null);
 
   // ─── Removable drive detection ──────────────────────────────────────────
   const [drives, setDrives] = useState<RemovableDrive[]>([]);
@@ -167,12 +170,13 @@ export default function DeviceSync() {
   useEffect(() => {
     if (!targetDir || !driveDetected || manifestImportedRef.current) return;
     manifestImportedRef.current = true;
-    invoke<{ version: number; sources: DeviceSyncSource[] } | null>(
+    invoke<{ version: number; sources: DeviceSyncSource[]; filenameTemplate?: string } | null>(
       'read_device_manifest', { destDir: targetDir }
     ).then(manifest => {
       if (manifest?.sources?.length) {
         useDeviceSyncStore.getState().clearSources();
         manifest.sources.forEach(s => useDeviceSyncStore.getState().addSource(s));
+        setDeviceManifestTemplate(manifest.filenameTemplate ?? null);
         showToast(t('deviceSync.manifestImported', { count: manifest.sources.length }), 4000, 'info');
       }
     }).catch(() => {});
@@ -182,6 +186,7 @@ export default function DeviceSync() {
   useEffect(() => {
     if (!driveDetected) {
       setDeviceFilePaths([]);
+      setDeviceManifestTemplate(null);
       manifestImportedRef.current = false;
     }
   }, [driveDetected]);
@@ -192,6 +197,9 @@ export default function DeviceSync() {
       setSourcePathsMap(new Map());
       return;
     }
+    // Use the template from the manifest (written by the original sync machine) so that
+    // status checks work correctly even when the local template differs (e.g. Windows→Linux).
+    const templateForStatus = deviceManifestTemplate ?? filenameTemplate;
     let cancelled = false;
     (async () => {
       const map = new Map<string, string[]>();
@@ -202,7 +210,7 @@ export default function DeviceSync() {
           const paths = await invoke<string[]>('compute_sync_paths', {
             tracks: tracks.map(t => trackToSyncInfo(t, '')),
             destDir: targetDir,
-            template: filenameTemplate,
+            template: templateForStatus,
           });
           map.set(source.id, paths);
         } catch {
@@ -212,7 +220,7 @@ export default function DeviceSync() {
       if (!cancelled) setSourcePathsMap(map);
     })();
     return () => { cancelled = true; };
-  }, [targetDir, filenameTemplate, sources]);
+  }, [targetDir, filenameTemplate, deviceManifestTemplate, sources]);
 
   // Derive sync status per source
   const sourceStatuses = useMemo(() => {
@@ -292,8 +300,8 @@ export default function DeviceSync() {
             5000, 'info'
           );
           // Write manifest so another machine can read the synced sources from the stick
-          const { targetDir: dir, sources: srcs } = useDeviceSyncStore.getState();
-          if (dir) invoke('write_device_manifest', { destDir: dir, sources: srcs }).catch(() => {});
+          const { targetDir: dir, sources: srcs, filenameTemplate: tpl } = useDeviceSyncStore.getState();
+          if (dir) invoke('write_device_manifest', { destDir: dir, sources: srcs, filenameTemplate: tpl }).catch(() => {});
         }
         // Re-scan the device after sync completes (cancelled or not)
         scanDevice();
@@ -380,12 +388,13 @@ export default function DeviceSync() {
       // If the device has a psysonic-sync.json, always import it — replacing any
       // sources from a previous device so switching sticks works correctly.
       try {
-        const manifest = await invoke<{ version: number; sources: DeviceSyncSource[] } | null>(
+        const manifest = await invoke<{ version: number; sources: DeviceSyncSource[]; filenameTemplate?: string } | null>(
           'read_device_manifest', { destDir: dir }
         );
         if (manifest?.sources?.length) {
           useDeviceSyncStore.getState().clearSources();
           manifest.sources.forEach(s => useDeviceSyncStore.getState().addSource(s));
+          setDeviceManifestTemplate(manifest.filenameTemplate ?? null);
           showToast(t('deviceSync.manifestImported', { count: manifest.sources.length }), 4000, 'info');
         }
       } catch { /* no manifest, that's fine */ }
@@ -515,14 +524,46 @@ export default function DeviceSync() {
     (!driveDetected && !!targetDir) ||
     (pendingCount === 0 && deletionCount === 0);
 
+  // ─── Template presets & token insertion ────────────────────────────────
+  const TEMPLATE_PRESETS = useMemo(() => [
+    { key: 'standard',  value: '{artist}/{album}/{track_number} - {title}',              label: t('deviceSync.templatePresetStandard') },
+    { key: 'multidisc', value: '{artist}/{album}/{disc_number}-{track_number} - {title}', label: t('deviceSync.templatePresetMultiDisc') },
+    { key: 'altfolder', value: '{artist} - {album}/{track_number} - {title}',             label: t('deviceSync.templatePresetAltFolder') },
+  ], [t]);
+
+  const TEMPLATE_TOKENS = ['{artist}', '{album}', '{title}', '{track_number}', '{disc_number}', '{year}', '/', '-'];
+
+  const activePreset = TEMPLATE_PRESETS.find(p => p.value === filenameTemplate)?.key ?? null;
+
+  const templateInputRef = useRef<HTMLInputElement>(null);
+  const cursorPosRef = useRef<number>(filenameTemplate.length);
+
+  const insertToken = useCallback((token: string) => {
+    const input = templateInputRef.current;
+    const pos = cursorPosRef.current;
+    const next = filenameTemplate.slice(0, pos) + token + filenameTemplate.slice(pos);
+    setFilenameTemplate(next);
+    requestAnimationFrame(() => {
+      if (!input) return;
+      input.focus();
+      const newPos = pos + token.length;
+      input.setSelectionRange(newPos, newPos);
+      cursorPosRef.current = newPos;
+    });
+  }, [filenameTemplate, setFilenameTemplate]);
+
+  const trackCursor = useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
+    cursorPosRef.current = (e.currentTarget.selectionStart ?? filenameTemplate.length);
+  }, [filenameTemplate.length]);
+
   // ─── Template preview (dummy track) ─────────────────────────────────────
   const PREVIEW_TRACK = {
-    artist: 'Volker Pispers',
-    album: '...Bis Neulich 2007',
-    title: 'Kapitalismus',
+    artist: 'Artist Name',
+    album: 'Album Title',
+    title: 'Track Title',
     track_number: '01',
     disc_number: '1',
-    year: '2007',
+    year: '2024',
   } as const;
 
   const templatePreviewText = useMemo(() => {
@@ -561,15 +602,53 @@ export default function DeviceSync() {
           {/* ── Left: Template ── */}
           <div className="device-sync-template-section">
             <span className="device-sync-label-inline">{t('deviceSync.filenameTemplate')}</span>
+            <div className="device-sync-template-presets">
+              {TEMPLATE_PRESETS.map(p => (
+                <button
+                  key={p.key}
+                  className={`device-sync-template-preset-btn${activePreset === p.key ? ' active' : ''}`}
+                  onClick={() => setFilenameTemplate(p.value)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
             <div className="device-sync-template-input-wrap">
-              <input
-                className="input device-sync-template-input"
-                value={filenameTemplate}
-                onChange={e => setFilenameTemplate(e.target.value)}
-                spellCheck={false}
-                data-tooltip={t('deviceSync.templateHint')}
-                data-tooltip-pos="bottom"
-              />
+              <div className="device-sync-template-input-row">
+                <input
+                  ref={templateInputRef}
+                  className="input device-sync-template-input"
+                  value={filenameTemplate}
+                  onChange={e => { setFilenameTemplate(e.target.value); trackCursor(e); }}
+                  onSelect={trackCursor}
+                  onKeyUp={trackCursor}
+                  onClick={trackCursor}
+                  spellCheck={false}
+                />
+                {filenameTemplate && (
+                  <button
+                    className="device-sync-template-clear"
+                    onClick={() => { setFilenameTemplate(''); cursorPosRef.current = 0; templateInputRef.current?.focus(); }}
+                    data-tooltip={t('common.clear')}
+                    data-tooltip-pos="bottom"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+              <div className="device-sync-template-tokens">
+                {TEMPLATE_TOKENS.map(tok => (
+                  <button
+                    key={tok}
+                    className="device-sync-template-token"
+                    onClick={() => insertToken(tok)}
+                    data-tooltip={tok === '/' ? t('deviceSync.tokenSlashHint') : undefined}
+                    data-tooltip-pos="bottom"
+                  >
+                    {tok}
+                  </button>
+                ))}
+              </div>
               {templatePreviewText && (
                 <span className="device-sync-template-preview">
                   {t('deviceSync.templatePreview')}: {templatePreviewText}

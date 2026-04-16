@@ -1586,6 +1586,33 @@
   color: var(--accent);
 }
 
+.tracklist-col-picker-divider {
+  height: 1px;
+  background: var(--ctp-surface1);
+  margin: 4px 0;
+}
+
+.tracklist-col-picker-reset {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.tracklist-col-picker-reset:hover {
+  background: var(--ctp-surface0);
+  color: var(--text-primary);
+}
+
 /* Delete button in playlist row */
 .playlist-row-delete-cell {
   display: flex;
@@ -7739,11 +7766,45 @@ html.no-compositing .fs-seekbar-played {
   white-space: nowrap;
 }
 
+.device-sync-template-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.device-sync-template-preset-btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.device-sync-template-preset-btn:hover {
+  background: var(--ctp-surface0);
+  color: var(--text-primary);
+}
+
+.device-sync-template-preset-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .device-sync-template-input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   position: relative;
+}
+
+.device-sync-template-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .device-sync-template-input {
@@ -7751,8 +7812,51 @@ html.no-compositing .fs-seekbar-played {
   font-family: monospace;
   font-size: 0.95rem;
   height: 40px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   line-height: normal;
+}
+
+.device-sync-template-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.device-sync-template-clear:hover {
+  color: var(--text-primary);
+}
+
+.device-sync-template-tokens {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.device-sync-template-token {
+  padding: 2px 7px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--ctp-surface0);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  line-height: 1.6;
+}
+
+.device-sync-template-token:hover {
+  background: color-mix(in srgb, var(--accent) 15%, var(--ctp-surface0));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .device-sync-template-preview {
@@ -7764,10 +7868,7 @@ html.no-compositing .fs-seekbar-played {
   text-overflow: ellipsis;
   padding-left: 2px;
   opacity: 0.75;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
+  margin-bottom: 10px;
 }
 
 /* ── Main area (device panel + browser) ── */

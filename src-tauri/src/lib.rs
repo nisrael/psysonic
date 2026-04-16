@@ -1420,9 +1420,9 @@ fn get_removable_drives() -> Vec<RemovableDrive> {
 /// The file records which sources (albums/playlists/artists) are synced to this
 /// device so that another machine can pick them up without relying on localStorage.
 #[tauri::command]
-fn write_device_manifest(dest_dir: String, sources: serde_json::Value) -> Result<(), String> {
+fn write_device_manifest(dest_dir: String, sources: serde_json::Value, filename_template: String) -> Result<(), String> {
     let path = std::path::Path::new(&dest_dir).join("psysonic-sync.json");
-    let payload = serde_json::json!({ "version": 1, "sources": sources });
+    let payload = serde_json::json!({ "version": 1, "sources": sources, "filenameTemplate": filename_template });
     let json = serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| e.to_string())
 }

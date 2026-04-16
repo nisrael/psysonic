@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronLeft, Play, ListPlus, Trash2, Search, X, Loader2, Plus, GripVertical, Star, RefreshCw, Shuffle, Heart, HardDriveDownload, Check, Pencil, Globe, Lock, Camera, Download, FileUp } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Play, ListPlus, Trash2, Search, X, Loader2, Plus, GripVertical, Star, RefreshCw, Shuffle, Heart, HardDriveDownload, Check, Pencil, Globe, Lock, Camera, Download, FileUp, RotateCcw } from 'lucide-react';
 import { useTracklistColumns, type ColDef } from '../utils/useTracklistColumns';
 import { AddToPlaylistSubmenu } from '../components/ContextMenu';
 import {
@@ -388,7 +388,7 @@ export default function PlaylistDetail() {
   // ── Column resize/visibility ──────────────────────────────────────────────
   const {
     colVisible, visibleCols, gridStyle,
-    startResize, toggleColumn,
+    startResize, toggleColumn, resetColumns,
     pickerOpen, setPickerOpen, pickerRef, tracklistRef,
   } = useTracklistColumns(PL_COLUMNS, 'psysonic_playlist_columns');
 
@@ -1419,6 +1419,11 @@ export default function PlaylistDetail() {
                     </button>
                   );
                 })}
+                <div className="tracklist-col-picker-divider" />
+                <button className="tracklist-col-picker-reset" onClick={resetColumns}>
+                  <RotateCcw size={13} />
+                  {t('albumDetail.resetColumns')}
+                </button>
               </div>
             )}
           </div>
@@ -1693,6 +1698,11 @@ export default function PlaylistDetail() {
                     case 'artist': return (
                       <div key="artist" className="track-artist-cell">
                         <span className={`track-artist${song.artistId ? ' track-artist-link' : ''}`} style={{ cursor: song.artistId ? 'pointer' : 'default' }} onClick={e => { if (song.artistId) { e.stopPropagation(); navigate(`/artist/${song.artistId}`); } }}>{song.artist}</span>
+                      </div>
+                    );
+                    case 'album': return (
+                      <div key="album" className="track-artist-cell">
+                        <span className={`track-artist${song.albumId ? ' track-artist-link' : ''}`} style={{ cursor: song.albumId ? 'pointer' : 'default' }} onClick={e => { if (song.albumId) { e.stopPropagation(); navigate(`/album/${song.albumId}`); } }}>{song.album}</span>
                       </div>
                     );
                     case 'favorite': return <div key="favorite" />;

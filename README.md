@@ -208,12 +208,6 @@ Distributed under the **GNU General Public License v3.0**. See `LICENSE` for mor
 
 This means: you are free to use, study, and modify Psysonic. If you distribute a modified version, you must release it under the same GPL v3 license and keep the original copyright notice intact. You may **not** incorporate this code into proprietary software.
 
-## 📄 Privacy
+## 🔒 Privacy
 
-Psysonic is a privacy-first, client-side application. It does not collect, store, or transmit any personal user data to any third-party servers or the developers. All communication occurs directly between the application and the Subsonic/Navidrome server instance configured by the user.
-
-No Data Collection: The application does not use analytics, tracking pixels, or telemetry.
-
-Local Storage: All configuration data (Server URLs, credentials, and theme settings) is stored locally on the user's device and is never shared.
-
-Direct Integration: Third-party integrations (like Last.fm scrobbling or LRC Lib for lyrics) are optional and only active if explicitly enabled by the user.
+Psysonic contains no telemetry or analytics. All third-party integrations (Last.fm, LRCLIB, Discord) are opt-in. See [PRIVACY.md](PRIVACY.md) for full details.

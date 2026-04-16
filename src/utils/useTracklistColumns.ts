@@ -164,6 +164,14 @@ export function useTracklistColumns(columns: readonly ColDef[], storageKey: stri
     [columns, storageKey],
   );
 
+  const resetColumns = useCallback(() => {
+    const defaultWidths = Object.fromEntries(columns.map(c => [c.key, c.defaultWidth]));
+    const defaultVisible = new Set(columns.map(c => c.key));
+    setColWidths(defaultWidths);
+    setColVisible(defaultVisible);
+    localStorage.removeItem(storageKey);
+  }, [columns, storageKey]);
+
   useEffect(() => {
     if (!pickerOpen) return;
     const handler = (e: MouseEvent) => {
@@ -180,6 +188,7 @@ export function useTracklistColumns(columns: readonly ColDef[], storageKey: stri
     gridStyle,
     startResize,
     toggleColumn,
+    resetColumns,
     pickerOpen,
     setPickerOpen,
     pickerRef,

@@ -10,7 +10,7 @@ import {
 } from '../api/subsonic';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import StarRating from '../components/StarRating';
-import { Cast, ChevronDown, ChevronLeft, ChevronRight, Check, Heart, ListPlus, Play, Star, X, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { Cast, ChevronDown, ChevronLeft, ChevronRight, Check, Heart, ListPlus, Play, Star, X, SlidersHorizontal, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { unstar } from '../api/subsonic';
@@ -63,7 +63,7 @@ export default function Favorites() {
   // ── Column resize/visibility (must be before early return) ───────────────
   const {
     colVisible, visibleCols, gridStyle,
-    startResize, toggleColumn,
+    startResize, toggleColumn, resetColumns,
     pickerOpen, setPickerOpen, pickerRef, tracklistRef,
   } = useTracklistColumns(FAV_COLUMNS, 'psysonic_favorites_columns');
 
@@ -491,6 +491,11 @@ export default function Favorites() {
                             </button>
                           );
                         })}
+                        <div className="tracklist-col-picker-divider" />
+                        <button className="tracklist-col-picker-reset" onClick={resetColumns}>
+                          <RotateCcw size={13} />
+                          {t('albumDetail.resetColumns')}
+                        </button>
                       </div>
                     )}
                   </div>

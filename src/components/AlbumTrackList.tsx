@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Heart, ListPlus, X, ChevronDown, Check } from 'lucide-react';
+import { Play, Heart, ListPlus, X, ChevronDown, Check, RotateCcw } from 'lucide-react';
 import { useTracklistColumns, type ColDef } from '../utils/useTracklistColumns';
 import { SubsonicSong } from '../api/subsonic';
 import { Track, usePlayerStore, songToTrack } from '../store/playerStore';
@@ -290,7 +290,7 @@ export default function AlbumTrackList({
   // ── Column state ──────────────────────────────────────────────────────────
   const {
     colVisible, visibleCols, gridStyle,
-    startResize, toggleColumn,
+    startResize, toggleColumn, resetColumns,
     pickerOpen, setPickerOpen, pickerRef, tracklistRef,
   } = useTracklistColumns(COLUMNS, 'psysonic_tracklist_columns');
 
@@ -562,6 +562,11 @@ export default function AlbumTrackList({
                   </button>
                 );
               })}
+              <div className="tracklist-col-picker-divider" />
+              <button className="tracklist-col-picker-reset" onClick={resetColumns}>
+                <RotateCcw size={13} />
+                {t('albumDetail.resetColumns')}
+              </button>
             </div>
           )}
         </div>
