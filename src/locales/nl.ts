@@ -1,1163 +1,2264 @@
 export const nlTranslation = {
+
   sidebar: {
+
     library: 'Bibliotheek',
+
     mainstage: 'Hoofdpodium',
+
     newReleases: 'Nieuw',
+
     allAlbums: 'Alle albums',
+
     randomAlbums: 'Willekeurige albums',
+
     randomPicker: 'Mix samenstellen',
+
     artists: 'Artiesten',
+
     randomMix: 'Willekeurige mix',
+
     favorites: 'Favorieten',
+
     nowPlaying: 'Nu bezig',
+
     system: 'Systeem',
+
     statistics: 'Statistieken',
+
     settings: 'Instellingen',
+
     help: 'Help',
+
     expand: 'Zijbalk uitklappen',
+
     collapse: 'Zijbalk inklappen',
+
     downloadingTracks: '{{n}} nummers worden gecached…',
+
     syncingTracks: 'Synchroniseren {{done}}/{{total}}…',
+
     cancelDownload: 'Download annuleren',
+
     offlineLibrary: 'Offline bibliotheek',
+
     genres: 'Genres',
+
     playlists: 'Playlists',
+
     mostPlayed: 'Meest gespeeld',
+
     radio: 'Internetradio',
+
     folderBrowser: 'Mappenverkenner',
+
     deviceSync: 'Apparaatsync',
+
     libraryScope: 'Bibliotheekbereik',
+
     allLibraries: 'Alle bibliotheken',
+
     expandPlaylists: 'Afspeellijsten uitklappen',
+
     collapsePlaylists: 'Afspeellijsten inklappen',
+
   },
+
   home: {
+
     hero: 'Uitgelicht',
+
     starred: 'Persoonlijke favorieten',
+
     recent: 'Recent toegevoegd',
+
     mostPlayed: 'Meest gespeeld',
+
     recentlyPlayed: 'Recent afgespeeld',
+
     discover: 'Ontdekken',
+
     loadMore: 'Meer laden',
+
     discoverMore: 'Meer ontdekken',
+
     discoverArtists: 'Artiesten ontdekken',
+
     discoverArtistsMore: 'Alle artiesten'
+
   },
+
   hero: {
+
     eyebrow: 'Uitgelicht album',
+
     playAlbum: 'Album afspelen',
+
     enqueue: 'In wachtrij',
+
     enqueueTooltip: 'Volledig album aan wachtrij toevoegen',
+
   },
+
   search: {
+
     placeholder: 'Zoek naar artiest, album of nummer…',
+
     noResults: 'Geen resultaten voor "{{query}}"',
+
     artists: 'Artiesten',
+
     albums: 'Albums',
+
     songs: 'Nummers',
+
     clearLabel: 'Zoekopdracht wissen',
+
     title: 'Zoeken',
+
     resultsFor: 'Resultaten voor "{{query}}"',
+
     album: 'Album',
+
     advanced: 'Geavanceerd zoeken',
+
     advancedSearchTerm: 'Zoekterm',
+
     advancedSearchPlaceholder: 'Titel, album, artiest…',
+
     advancedGenre: 'Genre',
+
     advancedAllGenres: 'Alle genres',
+
     advancedYear: 'Jaar',
+
     advancedYearFrom: 'van',
+
     advancedYearTo: 'tot',
+
     advancedAll: 'Alle',
+
     advancedSearch: 'Zoeken',
+
     advancedEmpty: 'Voer een zoekterm in of selecteer een filter.',
+
     advancedNoResults: 'Geen resultaten gevonden.',
+
     advancedGenreNote: 'Nummers worden willekeurig uit dit genre geselecteerd.',
+
     recentSearches: 'Recente zoekopdrachten',
+
     browse: 'Bladeren',
+
     emptyHint: 'Wat wil je horen?',
+
     genres: 'Genres',
+
   },
+
   nowPlaying: {
+
     tooltip: 'Wie luistert er?',
+
     title: 'Wie luistert er?',
+
     loading: 'Laden…',
+
     nobody: 'Er luistert momenteel niemand.',
+
     minutesAgo: '{{n}} min geleden',
+
     nothingPlaying: 'Nog niets bezig. Start een nummer!',
+
     aboutArtist: 'Over de artiest',
+
     fromAlbum: 'Van dit album',
+
     viewAlbum: 'Album openen',
+
     goToArtist: 'Naar artiest',
+
     readMore: 'Meer lezen',
+
     showLess: 'Minder tonen',
+
     genreInfo: 'Genre',
+
     trackInfo: 'Trackinfo',
+
   },
+
   contextMenu: {
+
     playNow: 'Nu afspelen',
+
     playNext: 'Volgende afspelen',
+
     addToQueue: 'Aan wachtrij toevoegen',
+
     enqueueAlbum: 'Album in wachtrij',
+
     startRadio: 'Radio starten',
+
     instantMix: 'Instant Mix',
+
     instantMixFailed: 'Instant Mix mislukt — server- of pluginfout.',
+
     cliMixNeedsTrack: 'Er speelt niets — start eerst afspelen en voer het mix-commando opnieuw uit.',
+
     lfmLove: 'Liken op Last.fm',
+
     lfmUnlove: 'Niet meer liken op Last.fm',
+
     favorite: 'Favoriet',
+
     favoriteArtist: 'Favoriete artiest',
+
     favoriteAlbum: 'Favoriet album',
+
     unfavorite: 'Verwijderen uit favorieten',
+
     unfavoriteArtist: 'Artiest uit favorieten verwijderen',
+
     unfavoriteAlbum: 'Album uit favorieten verwijderen',
+
     removeFromQueue: 'Uit wachtrij verwijderen',
+
     openAlbum: 'Album openen',
+
     goToArtist: 'Naar artiest',
+
     download: 'Downloaden (ZIP)',
+
     addToPlaylist: 'Toevoegen aan playlist',
+
     selectedPlaylists: '{{count}} playlists geselecteerd',
+
     selectedAlbums: '{{count}} albums geselecteerd',
+
     selectedArtists: '{{count}} artiesten geselecteerd',
+
     songInfo: 'Nummerinfo',
+
   },
+
   albumDetail: {
+
     back: 'Terug',
+
     playAll: 'Alles afspelen',
+
     enqueue: 'In wachtrij',
+
     enqueueTooltip: 'Volledig album aan wachtrij toevoegen',
+
     artistBio: 'Artiest biografie',
+
     download: 'Downloaden (ZIP)',
+
     downloading: 'Laden…',
+
     cacheOffline: 'Offline beschikbaar maken',
+
     offlineCached: 'Offline beschikbaar',
+
     offlineDownloading: 'Wordt gecached… ({{n}}/{{total}})',
+
     removeOffline: 'Offline cache verwijderen',
+
     offlineStorageFull: 'Offline opslag vol (limiet: {{mb}} MB). Verwijder een album uit je offline bibliotheek of verhoog de limiet in de instellingen.',
+
     offlineStorageGoToSettings: 'Instellingen',
+
     offlineStorageGoToLibrary: 'Offline bibliotheek',
+
     favoriteAdd: 'Aan favorieten toevoegen',
+
     favoriteRemove: 'Uit favorieten verwijderen',
+
     favorite: 'Favoriet',
+
     noBio: 'Geen biografie beschikbaar.',
+
     moreByArtist: 'Meer van {{artist}}',
+
     tracksCount: '{{n}} nummers',
+
     goToArtist: 'Naar {{artist}}',
+
     moreLabelAlbums: 'Meer albums op {{label}}',
+
     trackTitle: 'Titel',
+
     trackAlbum: 'Album',
+
     trackArtist: 'Artiest',
+
     trackGenre: 'Genre',
+
     trackFormat: 'Formaat',
+
     trackFavorite: 'Favoriet',
+
     trackRating: 'Beoordeling',
+
     trackDuration: 'Duur',
+
     trackTotal: 'Totaal',
+
     columns: 'Kolommen',
-    resetColumns: 'Standaard herstellen',
+
     notFound: 'Album niet gevonden.',
+
     bioModal: 'Artiest biografie',
+
     bioClose: 'Sluiten',
+
     ratingLabel: 'Beoordeling',
+
     enlargeCover: 'Vergroten',
+
     filterSongs: 'Filteren…',
+
     sortNatural: 'Natuurlijk',
+
     sortByTitle: 'A–Z (Titel)',
+
     sortByArtist: 'A–Z (Artiest)',
+
     sortByAlbum: 'A–Z (Album)',
+
   },
+
   entityRating: {
+
     albumShort: 'Albumbeoordeling',
+
     artistShort: 'Artiestbeoordeling',
+
     albumAriaLabel: 'Albumbeoordeling',
+
     artistAriaLabel: 'Artiestbeoordeling',
+
     saveFailed: 'Beoordeling opslaan mislukt.',
+
   },
+
   artistDetail: {
+
     back: 'Terug',
+
     albums: 'Albums',
+
     album: 'Album',
+
     playAll: 'Alles afspelen',
+
     shuffle: 'Willekeurig',
+
     radio: 'Radio',
+
     loading: 'Laden…',
+
     noRadio: 'Geen vergelijkbare nummers gevonden voor deze artiest.',
+
     notFound: 'Artiest niet gevonden.',
+
     albumsBy: 'Albums van {{name}}',
+
     topTracks: 'Populaire nummers',
+
     noAlbums: 'Geen albums gevonden.',
+
     trackTitle: 'Titel',
+
     trackAlbum: 'Album',
+
     trackDuration: 'Duur',
+
     favoriteAdd: 'Aan favorieten toevoegen',
+
     favoriteRemove: 'Uit favorieten verwijderen',
+
     favorite: 'Favoriet',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} albums',
+
     openedInBrowser: 'Geopend in browser',
+
     featuredOn: 'Ook te vinden op',
+
     similarArtists: 'Vergelijkbare artiesten',
+
     cacheOffline: 'Discografie offline opslaan',
+
     offlineCached: 'Discografie gecached',
+
     offlineDownloading: 'Cachen… ({{done}}/{{total}} albums)',
+
     uploadImage: 'Artiestafbeelding uploaden',
+
     uploadImageError: 'Uploaden van afbeelding mislukt',
+
   },
+
   favorites: {
+
     title: 'Favorieten',
+
     empty: 'Je hebt nog geen favorieten opgeslagen.',
+
     artists: 'Artiesten',
+
     albums: 'Albums',
+
     songs: 'Nummers',
+
     enqueueAll: 'Alles aan wachtrij toevoegen',
+
     playAll: 'Alles afspelen',
+
     removeSong: 'Verwijderen uit favorieten',
+
     stations: 'Radiostations',
+
     showingFiltered: 'Toont {{filtered}} van {{total}} ({{artist}})',
+
     showingCount: 'Toont {{filtered}} van {{total}}',
+
     clearArtistFilter: 'Artiestfilter wissen',
+
     noFilterResults: 'Geen resultaten met de geselecteerde filters.',
+
     allArtists: 'Alle artiesten',
+
   },
+
   randomLanding: {
+
     title: 'Mix samenstellen',
+
     mixByTracks: 'Mix op nummers',
+
     mixByTracksDesc: 'Willekeurige selectie uit je volledige mediatheek',
+
     mixByAlbums: 'Mix op albums',
+
     mixByAlbumsDesc: 'Willekeurige albums voor nieuwe ontdekkingen',
+
   },
+
   randomAlbums: {
+
     title: 'Willekeurige albums',
+
     refresh: 'Vernieuwen',
+
   },
+
   genres: {
+
     title: 'Genres',
+
     genreCount: 'genres',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} albums',
+
     loading: 'Genres laden…',
+
     empty: 'Geen genres gevonden.',
+
     albumsLoading: 'Albums laden…',
+
     albumsEmpty: 'Geen albums gevonden voor dit genre.',
+
     loadMore: 'Meer laden',
+
     back: 'Terug',
+
   },
+
   randomMix: {
+
     title: 'Willekeurige mix',
+
     remix: 'Opnieuw mixen',
+
     remixTooltip: 'Nieuwe willekeurige nummers laden',
+
     remixGenre: '{{genre}} mixen',
+
     remixTooltipGenre: 'Nieuwe {{genre}}-nummers laden',
+
     playAll: 'Alles afspelen',
+
     trackTitle: 'Titel',
+
     trackArtist: 'Artiest',
+
     trackAlbum: 'Album',
+
     trackFavorite: 'Favoriet',
+
     trackDuration: 'Duur',
+
     favoriteAdd: 'Aan favorieten toevoegen',
+
     favoriteRemove: 'Uit favorieten verwijderen',
+
     play: 'Afspelen',
+
     trackGenre: 'Genre',
+
     excludeAudiobooks: 'Luisterboeken en hoorspelen uitsluiten',
+
     excludeAudiobooksDesc: 'Vergelijkt trefwoorden met genre, titel, album en artiest — bijv. Hörbuch, Audiobook, Spoken Word, …',
+
     genreBlocked: 'Trefwoord geblokkeerd',
+
     genreAddedToBlacklist: 'Aan filterlijst toegevoegd',
+
     genreAlreadyBlocked: 'Al geblokkeerd',
+
     artistBlocked: 'Artiest geblokkeerd',
+
     artistAddedToBlacklist: 'Artiest aan filterlijst toegevoegd',
+
     artistClickHint: 'Klik om deze artiest te blokkeren',
+
     blacklistToggle: 'Trefwoordfilter',
+
     genreMixTitle: 'Genremix',
+
     genreMixDesc: 'Top 20 genres op aantal nummers — klik voor een willekeurige mix',
+
     genreMixAll: 'Alle nummers',
+
     genreMixLoadMore: '10 meer laden',
+
     genreMixNoGenres: 'Geen genres gevonden op server.',
+
     shuffleGenres: 'Andere genres tonen',
+
     filterPanelTitle: 'Filters',
+
     filterPanelDesc: 'Klik op een genre-tag of artiestennaam in de lijst om deze uit toekomstige mixes te weren.',
+
     genreClickHint: 'Klik op een genre-tag om het\ntoe te voegen als filtertrefwoord.\nVergelijkt genre, titel, album & artiest.',
+
   },
+
   albums: {
+
     title: 'Alle albums',
+
     sortByName: 'A–Z (Album)',
+
     sortByArtist: 'A–Z (Artiest)',
+
     sortNewest: 'Nieuwste eerst',
+
     sortRandom: 'Willekeurig',
+
     yearFrom: 'Van',
+
     yearTo: 'Tot',
+
     yearFilterClear: 'Jaarfilter wissen',
+
     yearFilterLabel: 'Jaar',
+
     select: 'Meervoudige selectie',
+
     startSelect: 'Meervoudige selectie inschakelen',
+
     cancelSelect: 'Annuleren',
+
     selectionCount: '{{count}} geselecteerd',
+
     downloadZips: 'ZIPs downloaden',
+
     addOffline: 'Offline toevoegen',
+
     downloadingZip: 'Downloaden {{current}}/{{total}}: {{name}}',
+
     downloadZipDone: '{{count}} ZIP(s) gedownload',
+
     downloadZipFailed: 'Downloaden van {{name}} mislukt',
+
     offlineQueuing: '{{count}} album(s) in wachtrij voor offline…',
+
     offlineFailed: 'Toevoegen van {{name}} offline mislukt',
+
   },
+
   artists: {
+
     title: 'Artiesten',
+
     search: 'Zoeken…',
+
     all: 'Alle',
+
     gridView: 'Rasterweergave',
+
     listView: 'Lijstweergave',
+
     imagesOn: 'Artiestafbeeldingen aan — kan netwerk- en systeembelasting verhogen',
+
     imagesOff: 'Artiestafbeeldingen uit — toont alleen initialen',
+
     loadMore: 'Meer laden',
+
     notFound: 'Geen artiesten gevonden.',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} albums',
+
     selectionCount: '{{count}} geselecteerd',
+
     select: 'Meervoudige selectie',
+
     startSelect: 'Meervoudige selectie inschakelen',
+
     cancelSelect: 'Annuleren',
+
     addToPlaylist: 'Toevoegen aan playlist',
+
   },
+
   login: {
+
     subtitle: 'Jouw Navidrome-desktopspeler',
+
     serverName: 'Servernaam (optioneel)',
+
     serverNamePlaceholder: 'Mijn Navidrome',
+
     serverUrl: 'Server-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 of https://music.voorbeeld.nl',
+
     username: 'Gebruikersnaam',
+
     usernamePlaceholder: 'admin',
+
     password: 'Wachtwoord',
+
     showPassword: 'Wachtwoord tonen',
+
     hidePassword: 'Wachtwoord verbergen',
+
     connect: 'Verbinden',
+
     connecting: 'Verbinden…',
+
     connected: 'Verbonden!',
+
     error: 'Verbinding mislukt — controleer je gegevens.',
+
     urlRequired: 'Voer een server-URL in.',
+
     savedServers: 'Opgeslagen servers',
+
     addNew: 'Of een nieuwe server toevoegen',
+
   },
+
   connection: {
+
     connected: 'Verbonden',
+
     connectedTo: 'Verbonden met {{server}}',
+
     disconnected: 'Verbroken',
+
     disconnectedFrom: 'Kan {{server}} niet bereiken — klik om instellingen te controleren',
+
     checking: 'Verbinden…',
+
     extern: 'Extern',
+
     offlineTitle: 'Geen serververbinding',
+
     offlineSubtitle: 'Kan {{server}} niet bereiken. Controleer je netwerk of server.',
+
     offlineModeBanner: 'Offline modus — afspelen vanuit lokale cache',
+
     offlineNoCacheBanner: 'Geen serververbinding — {{server}} niet bereikbaar',
+
     offlineLibraryTitle: 'Offline bibliotheek',
+
     offlineLibraryEmpty: 'Nog geen albums gecached. Ga online, open een album en klik op "Offline beschikbaar maken".',
+
     offlineAlbumCount: '{{n}} album',
+
     offlineAlbumCount_plural: '{{n}} albums',
+
     offlineFilterAll: 'Alles',
+
     offlineFilterAlbums: 'Albums',
+
     offlineFilterPlaylists: 'Afspeellijsten',
+
     offlineFilterArtists: 'Discografieën',
+
     retry: 'Opnieuw proberen',
+
     serverSettings: 'Serverinstellingen',
+
     switchServerTitle: 'Server wisselen',
+
     switchServerHint: 'Klik om een andere opgeslagen server te kiezen.',
+
     manageServers: 'Servers beheren…',
+
     switchFailed: 'Wisselen mislukt — server niet bereikbaar.',
+
     lastfmConnected: 'Last.fm verbonden als @{{user}}',
+
     lastfmSessionInvalid: 'Sessie ongeldig — klik om opnieuw te verbinden',
+
   },
+
   common: {
+
     albums: 'Albums',
+
     album: 'Album',
+
     loading: 'Laden…',
+
     loadingMore: 'Laden…',
+
     loadingPlaylists: 'Afspeellijsten laden…',
+
     noAlbums: 'Geen albums gevonden.',
+
     downloading: 'Downloaden…',
+
     downloadZip: 'Downloaden (ZIP)',
+
     back: 'Terug',
+
     cancel: 'Annuleren',
+
     save: 'Opslaan',
+
     delete: 'Verwijderen',
+
     use: 'Gebruiken',
+
     add: 'Toevoegen',
+
     active: 'Actief',
+
     download: 'Downloaden',
+
     chooseDownloadFolder: 'Downloadmap kiezen',
+
     noFolderSelected: 'Geen map geselecteerd',
+
     rememberDownloadFolder: 'Deze map onthouden',
+
     filterGenre: 'Genre-filter',
+
     filterSearchGenres: 'Genres zoeken…',
+
     filterNoGenres: 'Geen genres gevonden',
+
     filterClear: 'Wissen',
+
     play: 'Afspelen',
+
     bulkSelected: '{{count}} geselecteerd',
+
     clearSelection: 'Selectie wissen',
+
     bulkAddToPlaylist: 'Toevoegen aan afspeellijst',
+
     bulkRemoveFromPlaylist: 'Verwijderen uit afspeellijst',
+
     bulkClear: 'Selectie wissen',
+
     updaterAvailable: 'Update beschikbaar',
+
     updaterVersion: 'v{{version}} beschikbaar',
+
     updaterWebsite: 'Website',
+
     updaterModalTitle: 'Nieuwe versie beschikbaar',
+
     updaterChangelog: 'Wat is er nieuw',
+
     updaterDownloadBtn: 'Nu downloaden',
+
     updaterSkipBtn: 'Deze versie overslaan',
+
     updaterRemindBtn: 'Later herinneren',
+
     updaterDone: 'Download voltooid',
+
     updaterShowFolder: 'Tonen in map',
+
     updaterInstallHint: 'Sluit Psysonic en voer het installatieprogramma handmatig uit.',
+
     updaterAurHint: 'Update installeren via AUR:',
+
     updaterErrorMsg: 'Downloaden mislukt',
+
     updaterRetryBtn: 'Opnieuw proberen',
+
     durationHoursMinutes: '{{hours}} u {{minutes}} min',
+
     durationMinutesOnly: '{{minutes}} min',
+
     updaterOpenGitHub: 'Openen op GitHub',
+
     filters: 'Filters',
+
     more: 'meer',
+
     yearRange: 'Jaarbereik',
+
     clearAll: 'Alles wissen',
+
   },
+
   settings: {
+
     title: 'Instellingen',
+
     language: 'Taal',
+
     languageEn: 'Engels',
+
     languageDe: 'Duits',
+
     languageFr: 'Frans',
+
     languageNl: 'Nederlands',
+
     languageZh: 'Chinees',
+
     languageNb: 'Noors',
+
     languageRu: 'Russisch',
+
     font: 'Lettertype',
+
     theme: 'Thema',
+
     appearance: 'Weergave',
+
     servers: 'Servers',
+
     serverName: 'Servernaam',
+
     serverUrl: 'Server-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 of https://music.voorbeeld.nl',
+
     serverUsername: 'Gebruikersnaam',
+
     serverPassword: 'Wachtwoord',
+
     addServer: 'Server toevoegen',
+
     addServerTitle: 'Nieuwe server toevoegen',
+
     useServer: 'Gebruiken',
+
     deleteServer: 'Verwijderen',
+
     noServers: 'Geen servers opgeslagen.',
+
     serverActive: 'Actief',
+
     confirmDeleteServer: 'Server "{{name}}" verwijderen?',
+
     serverConnecting: 'Verbinden…',
+
     serverConnected: 'Verbonden!',
+
     serverFailed: 'Verbinding mislukt.',
+
     testBtn: 'Verbinding testen',
+
     testingBtn: 'Testen…',
+
     serverCompatible: 'Compatibel met: Navidrome · Gonic · Airsonic · Subsonic',
+
     audiomuseTitle: 'AudioMuse-AI (Navidrome)',
+
     audiomuseDesc:
+
       'Zet aan als deze server de <pluginLink>AudioMuse-AI Navidrome-plugin</pluginLink> gebruikt. Schakelt Instant Mix per nummer in en toont vergelijkbare artiesten van de server i.p.v. Last.fm op artiestpagina’s.',
+
     audiomuseIssueHint:
+
       'Instant Mix is onlangs mislukt — controleer de Navidrome-plugin en AudioMuse API. Zonder serverresultaten worden vergelijkbare artiesten via Last.fm geladen.',
+
     connected: 'Verbonden',
+
     failed: 'Mislukt',
+
     eqTitle: 'Equalizer',
+
     eqEnabled: 'Equalizer inschakelen',
+
     eqPreset: 'Voorinstelling',
+
     eqPresetCustom: 'Aangepast',
+
     eqPresetBuiltin: 'Ingebouwde voorinstellingen',
+
     eqPresetCustomGroup: 'Mijn voorinstellingen',
+
     eqSavePreset: 'Opslaan als voorinstelling',
+
     eqPresetName: 'Naam voorinstelling…',
+
     eqDeletePreset: 'Voorinstelling verwijderen',
+
     eqResetBands: 'Terugzetten naar vlak',
+
     eqPreGain: 'Voorversterking',
+
     eqResetPreGain: 'Voorversterking resetten',
+
     eqAutoEqTitle: 'AutoEQ Hoofdtelefoon Zoeken',
+
     eqAutoEqPlaceholder: 'Zoek hoofdtelefoon / IEM model…',
+
     eqAutoEqSearching: 'Zoeken…',
+
     eqAutoEqNoResults: 'Geen resultaten gevonden',
+
     eqAutoEqError: 'Zoeken mislukt',
+
     eqAutoEqRateLimit: 'GitHub limiet bereikt — probeer over een minuut opnieuw',
+
     eqAutoEqFetchError: 'EQ-profiel kon niet worden geladen',
+
     lfmTitle: 'Last.fm',
+
     lfmConnect: 'Verbinden met Last.fm',
+
     lfmConnecting: 'Wachten op autorisatie…',
+
     lfmConfirm: 'Ik heb de app geautoriseerd',
+
     lfmConnected: 'Verbonden als',
+
     lfmDisconnect: 'Verbinding verbreken',
+
     lfmConnectDesc: 'Verbind je Last.fm-account om scrobbling en Nu bezig-updates rechtstreeks vanuit Psysonic in te schakelen — geen Navidrome-configuratie vereist.',
+
     lfmOpenBrowser: 'Er opent een browservenster. Autoriseer Psysonic op Last.fm en klik daarna op de knop hieronder.',
+
     lfmScrobbles: '{{n}} scrobbles',
+
     lfmMemberSince: 'Lid sinds {{year}}',
+
     scrobbleEnabled: 'Scrobbling ingeschakeld',
+
     scrobbleDesc: 'Nummers naar Last.fm sturen na 50% afspeeltijd',
+
     behavior: 'App-gedrag',
+
     cacheTitle: 'Max. opslaggrootte',
+
     cacheDesc: 'Albumhoezen en artiestafbeeldingen. Als de cache vol is, worden de oudste items automatisch verwijderd. Offline albums worden niet automatisch verwijderd, maar wel bij handmatig leegmaken.',
+
     cacheUsedImages: 'Afbeeldingen:',
+
     cacheUsedOffline: 'Offline nummers:',
+
     cacheUsedHot: 'Schijfgebruik:',
+
     hotCacheTrackCount: 'Nummers in cache:',
+
     cacheMaxLabel: 'Max. grootte',
+
     cacheClearBtn: 'Cache wissen',
+
     cacheClearWarning: 'Dit verwijdert ook alle offline albums uit de bibliotheek.',
+
     cacheClearConfirm: 'Alles wissen',
+
     cacheClearCancel: 'Annuleren',
+
     offlineDirTitle: 'Offline-bibliotheek (In-app)',
+
     offlineDirDesc: 'Opslaglocatie voor nummers die je offline beschikbaar maakt in Psysonic.',
+
     offlineDirDefault: 'Standaard (app-gegevens)',
+
     offlineDirChange: 'Map wijzigen',
+
     offlineDirClear: 'Terugzetten naar standaard',
+
     offlineDirHint: 'Nieuwe downloads worden op deze locatie opgeslagen. Bestaande downloads blijven op hun oorspronkelijke locatie.',
+
     hotCacheTitle: 'Warme afspeelcache',
+
     hotCacheAlphaBadge: 'Alpha',
+
     hotCacheDisclaimer: 'Laadt aankomende wachtrijtracks voor en bewaart eerdere. Indien ingeschakeld: schijfruimte en netwerk.',
+
     hotCacheDirDefault: 'Standaard (app-gegevens)',
+
     hotCacheDirChange: 'Map wijzigen',
+
     hotCacheDirClear: 'Terugzetten naar standaard',
+
     hotCacheDirHint: 'Een andere map kiest: de index in de app wordt gereset; oude bestanden blijven staan tot je ze verwijdert.',
+
     hotCacheEnabled: 'Warme afspeelcache inschakelen',
+
     hotCacheMaxMb: 'Maximale cachegrootte',
+
     hotCacheDebounce: 'Uitstel bij wachtrijwijziging',
+
     hotCacheDebounceImmediate: 'Direct',
+
     hotCacheDebounceSeconds: '{{n}} s',
+
     hotCacheClearBtn: 'Warme cache wissen',
+
     audioOutputDevice: 'Audio-uitvoerapparaat',
+
     audioOutputDeviceDesc: 'Kies via welk audioapparaat Psysonic afspeelt. Wijzigingen worden direct toegepast en starten het huidige nummer opnieuw.',
+
     audioOutputDeviceDefault: 'Systeemstandaard',
+
     audioOutputDeviceRefresh: 'Apparatenlijst vernieuwen',
+
     audioOutputDeviceOsDefaultNow: 'huidige systeemuitvoer',
+
     audioOutputDeviceListError: 'De lijst met audio-apparaten kon niet worden geladen.',
+
     audioOutputDeviceNotInCurrentList: 'staat niet in de huidige lijst',
+
     hiResTitle: 'Natieve hi-res-weergave',
+
     hiResEnabled: 'Natieve hi-res-weergave inschakelen',
+
     hiResDesc: "Beperkt de uitvoer standaard tot 44,1 kHz voor maximale stabiliteit. Alleen inschakelen als hardware en netwerk hoge samplerates (88,2 kHz+) ondersteunen.",
+
     showArtistImages: 'Artiestafbeeldingen weergeven',
+
     showArtistImagesDesc: 'Laadt en toont artiestafbeeldingen in het artiestenoverzicht. Standaard uitgeschakeld om server-I/O en netwerkbelasting bij grote bibliotheken te beperken.',
+
     showTrayIcon: 'Tray-pictogram weergeven',
+
     showTrayIconDesc: 'Toont het Psysonic-pictogram in het systeemvak / de menubalk.',
+
     minimizeToTray: 'Minimaliseren naar systeemvak',
+
     minimizeToTrayDesc: 'Bij het sluiten van het venster blijft Psysonic actief in het systeemvak in plaats van af te sluiten.',
+
     discordRichPresence: 'Discord Rich Presence',
+
     discordRichPresenceDesc: 'Toont het huidige nummer op je Discord-profiel. Discord moet daarvoor geopend zijn.',
+
     discordAppleCovers: 'Hoezen ophalen via Apple Music voor Discord',
+
     discordAppleCoversDesc: 'Stuurt artiest- en albumnaam naar de Apple-zoek-API om een hoes te vinden voor je Discord-profiel. Standaard uitgeschakeld vanwege privacy.',
+
+    discordTemplates: 'Aangepaste tekstsjablonen',
+
+    discordTemplatesDesc: 'Pas aan welke informatie wordt weergegeven op je Discord-profiel. Variabelen: {title}, {artist}, {album}, {paused}',
+
+    discordTemplateDetails: 'Primaire regel (details)',
+
+    discordTemplateState: 'Secundaire regel (state)',
+
+    discordTemplateLargeText: 'Album-tooltip (largeText)',
+
     nowPlayingEnabled: 'Weergeven in live-venster',
+
     nowPlayingEnabledDesc: 'Stuurt het huidige nummer naar de live-luisteraarsweergave van de server. Uitschakelen om geen afspeelgegevens te verzenden.',
+
     lyricsServerFirst: 'Server-songtekst voorrang geven',
+
     lyricsServerFirstDesc: 'Controleer eerst door de server geleverde songteksten (ingebedde tags, sidecar-bestanden) vóór LRCLIB. Uitschakelen om LRCLIB eerst te gebruiken.',
+
     enableNeteaselyrics: 'Netease Cloud Music songteksten',
+
     enableNeteaselyricsDesc: 'Gebruik Netease Cloud Music als laatste bron wanneer server en LRCLIB niets opleveren. Beste dekking voor Aziatische en internationale muziek.',
+
     lyricsSourcesTitle: 'Songtekstbronnen',
+
     lyricsSourcesDesc: 'Kies welke bronnen worden geraadpleegd en in welke volgorde. Sleep om te sorteren. Uitgeschakelde bronnen worden overgeslagen.',
+
     lyricsSourceServer: 'Server',
+
     lyricsSourceLrclib: 'LRCLIB',
+
     lyricsSourceNetease: 'Netease Cloud Music',
+
     downloadsTitle: 'ZIP-export & Archivering',
+
     downloadsFolderDesc: 'Doelmap voor albums die je als ZIP-bestand naar je computer downloadt.',
+
     downloadsDefault: 'Standaard downloadmap',
+
     pickFolder: 'Selecteren',
+
     pickFolderTitle: 'Downloadmap selecteren',
+
     clearFolder: 'Map wissen',
+
     logout: 'Uitloggen',
+
     aboutTitle: 'Over Psysonic',
+
     aboutDesc: 'Een moderne desktopmuziekspeeler voor Subsonic-compatibele servers (Navidrome, Gonic en anderen). Gebouwd op Tauri v2 met een native Rust audio-engine — licht en snel, maar boordevol functies: golfvorm-zoekbalk, gesynchroniseerde songteksten, Last.fm-integratie, 10-bands equalizer, crossfade, naadloos afspelen, Replay Gain, genres en een uitgebreide themabibliotheek.',
+
     aboutLicense: 'Licentie',
+
     aboutLicenseText: 'GNU GPL v3 — vrij te gebruiken, wijzigen en verspreiden onder dezelfde licentie.',
+
     aboutRepo: 'Broncode op GitHub',
+
     aboutVersion: 'Versie',
+
     aboutBuiltWith: 'Gebouwd met Tauri · React · TypeScript · Rust/rodio',
+
     aboutAiCredit: 'Ontwikkeld met ondersteuning van Claude Code door Anthropic',
+
     aboutContributorsLabel: 'Bijdragers',
+
     aboutSpecialThanksLabel: 'Speciale dank',
+
     changelog: 'Wijzigingslog',
+
     showChangelogOnUpdate: "'Wat is nieuw' tonen bij update",
+
     showChangelogOnUpdateDesc: 'Toont automatisch de nieuwigheden bij de eerste start van een nieuwe versie.',
+
     randomMixTitle: 'Willekeurige mix',
+
     randomMixBlacklistTitle: 'Aangepaste filtertrefwoorden',
+
     randomMixBlacklistDesc: 'Nummers worden uitgesloten als een trefwoord overeenkomt met hun genre, titel, album of artiest (actief wanneer het selectievakje hierboven is aangevinkt).',
+
     randomMixBlacklistPlaceholder: 'Trefwoord toevoegen…',
+
     randomMixBlacklistAdd: 'Toevoegen',
+
     randomMixBlacklistEmpty: 'Nog geen aangepaste trefwoorden toegevoegd.',
+
     randomMixHardcodedTitle: 'Ingebouwde trefwoorden (actief wanneer selectievakje is aangevinkt)',
+
     tabAudio: 'Audio',
+
     tabStorage: 'Opslag & Downloads',
+
     tabAppearance: 'Weergave',
+
     homeCustomizerTitle: 'Startpagina',
+
     sidebarTitle: 'Zijbalk',
+
     sidebarReset: 'Standaard herstellen',
+
     sidebarDrag: 'Slepen om te herordenen',
+
     sidebarFixed: 'Altijd zichtbaar',
-    randomNavSplitTitle: 'Mix-navigatie splitsen',
-    randomNavSplitDesc: 'Toon "Willekeurige mix" en "Willekeurige albums" als afzonderlijke zijbalkitems in plaats van de "Mix samenstellen"-hub.',
+
     tabInput: 'Invoer',
+
     tabServer: 'Server',
+
     shortcutsReset: 'Standaard herstellen',
+
     shortcutListening: 'Druk op een toets…',
+
     shortcutUnbound: '—',
+
     shortcutClear: 'Wissen',
+
     globalShortcutsTitle: 'Globale sneltoetsen',
+
     globalShortcutsNote: 'Werken systeembreed, ook als Psysonic op de achtergrond draait. Vereist Ctrl, Alt of Super als modifier.',
+
     shortcutPlayPause: 'Afspelen / Pauzeren',
+
     shortcutNext: 'Volgend nummer',
+
     shortcutPrev: 'Vorig nummer',
+
     shortcutVolumeUp: 'Volume omhoog',
+
     shortcutVolumeDown: 'Volume omlaag',
+
     shortcutSeekForward: '10s vooruitspoelen',
+
     shortcutSeekBackward: '10s terugspoelen',
+
     shortcutToggleQueue: 'Wachtrij tonen/verbergen',
+
     shortcutOpenFolderBrowser: '{{folderBrowser}} openen',
+
     shortcutFullscreenPlayer: 'Volledigschermspeler',
+
     shortcutNativeFullscreen: 'Systeemvolledig scherm',
+
     tabSystem: 'Systeem',
+
     tabGeneral: 'Algemeen',
+
     ratingsSectionTitle: 'Beoordelingen',
+
     ratingsSkipStarTitle: 'Overslaan voor 1 ster',
+
     ratingsSkipStarDesc:
+
       'Na meerdere overslagen op rij: nummer op 1 ster zetten. Alleen voor nummers die nog niet beoordeeld waren.',
+
     ratingsSkipStarThresholdLabel: 'Overslagen',
+
     ratingsMixFilterTitle: 'Filter op beoordeling',
+
     ratingsMixFilterDesc:
+
       'Content met lage beoordeling filteren in {{mix}} en {{albums}}. Klik opnieuw op de gekozen ster om de drempel uit te zetten.',
+
     ratingsMixMinSong: 'Nummers',
+
     ratingsMixMinAlbum: 'Albums',
+
     ratingsMixMinArtist: 'Artiesten',
+
     ratingsMixMinThresholdAria: 'Minimum sterren: {{label}}',
+
     backupTitle: 'Back-up & Herstel',
+
     backupExport: 'Instellingen exporteren',
+
     backupExportDesc: 'Slaat alle instellingen, serverprofielen, Last.fm-configuratie, thema, EQ en sneltoetsen op in een .psybkp-bestand. Wachtwoorden worden opgeslagen als leesbare tekst — bewaar het bestand veilig.',
+
     backupImport: 'Instellingen importeren',
+
     backupImportDesc: 'Herstelt instellingen vanuit een .psybkp-bestand. De app wordt herladen na het importeren.',
+
     backupImportConfirm: 'Alle huidige instellingen worden overschreven. Doorgaan?',
+
     backupSuccess: 'Back-up opgeslagen',
+
     backupImportSuccess: 'Instellingen hersteld — herladen…',
+
     backupImportError: 'Ongeldig of beschadigd back-upbestand.',
+
     playbackTitle: 'Afspelen',
+
     replayGain: 'Replay Gain',
+
     replayGainDesc: 'Nummervolume normaliseren met ReplayGain-metadata',
+
     replayGainMode: 'Modus',
+
     replayGainTrack: 'Nummer',
+
     replayGainAlbum: 'Album',
+
     replayGainPreGain: 'Pre-Gain (getagde bestanden)',
+
     replayGainFallback: 'Terugval (zonder tags / radio)',
+
     crossfade: 'Overgang',
+
     crossfadeDesc: 'Fade tussen nummers',
+
     crossfadeSecs: '{{n}} s',
+
     notWithGapless: 'Niet beschikbaar als naadloos afspelen actief is',
+
     notWithCrossfade: 'Niet beschikbaar als overgang actief is',
+
     gapless: 'Naadloos afspelen',
+
     gaplessDesc: 'Volgend nummer vooraf bufferen om stiltes tussen nummers te elimineren',
+
     preloadMode: 'Volgend nummer vooraf laden',
+
     preloadModeDesc: 'Wanneer met het bufferen van het volgende nummer wordt begonnen',
+
     nextTrackBufferingTitle: 'Volgend nummer – buffering',
+
     preloadHotCacheMutualExclusive: 'Preload en Hot Cache dienen hetzelfde doel — slechts één kan tegelijk actief zijn. Het inschakelen van de ene schakelt de andere automatisch uit.',
+
     preloadOff: 'Uit',
+
     preloadBalanced: 'Gebalanceerd (30 s voor einde)',
+
     preloadEarly: 'Vroeg (na 5 s afspelen)',
+
     preloadCustom: 'Aangepast',
+
     preloadCustomSeconds: 'Seconden voor einde: {{n}}',
+
     infiniteQueue: 'Oneindige wachtrij',
+
     infiniteQueueDesc: 'Automatisch willekeurige nummers toevoegen als de wachtrij leeg raakt',
+
     experimental: 'Experimenteel',
+
     fsPlayerSection: 'Volledig scherm speler',
+
     fsShowArtistPortrait: 'Artiestfoto tonen',
+
     fsShowArtistPortraitDesc: 'Artiestfoto (of albumhoes) weergeven aan de rechterkant van de volledigschermspeler.',
+
     fsPortraitDim: 'Verduistering foto',
+
     seekbarStyle: 'Zoekbalkstijl',
+
     seekbarStyleDesc: 'Kies het uiterlijk van de afspeelbalk',
+
     seekbarWaveform: 'Golfvorm',
+
     seekbarLinedot: 'Lijn & punt',
+
     seekbarBar: 'Balk',
+
     seekbarThick: 'Dikke balk',
+
     seekbarSegmented: 'Gesegmenteerd',
+
     seekbarNeon: 'Neon',
+
     seekbarPulsewave: 'Pulsgolf',
+
     seekbarParticletrail: 'Deeltjesspoor',
+
     seekbarLiquidfill: 'Vloeistofbuis',
+
     seekbarRetrotape: 'Retrotape',
+
     themeSchedulerTitle: 'Thema-planner',
+
     themeSchedulerEnable: 'Thema-planner inschakelen',
+
     themeSchedulerEnableSub: 'Schakelt automatisch tussen twee thema\'s op basis van de tijd',
+
     themeSchedulerDayTheme: 'Dagthema',
+
     themeSchedulerDayStart: 'Dag begint om',
+
     themeSchedulerNightTheme: 'Nachtthema',
+
     themeSchedulerNightStart: 'Nacht begint om',
+
     themeSchedulerActiveHint: "Thema-planner is actief - thema's worden automatisch gewisseld.",
+
     visualOptionsTitle: 'Visuele Opties',
+
     coverArtBackground: 'Cover Achtergrond',
+
     coverArtBackgroundSub: 'Toon vervaagde cover als achtergrond in album/playlist headers',
+
     playlistCoverPhoto: 'Playlist Coverfoto',
+
     playlistCoverPhotoSub: 'Toon coverfoto raster in playlist detailweergave',
+
     showBitrate: 'Toon Bitrate',
+
     showBitrateSub: 'Toon audio bitrate in tracklijsten',
+
     uiScaleTitle: 'Interface schaal',
+
     uiScaleLabel: 'Zoom',
+
   },
+
   changelog: {
+
     modalTitle: 'Wat is nieuw',
+
     dontShowAgain: 'Niet meer weergeven',
+
     close: 'Begrepen',
+
   },
+
   help: {
+
     title: 'Help',
+
     s1: 'Aan de slag',
+
     q1: 'Welke servers zijn compatibel?',
+
     a1: 'Psysonic werkt met elke Subsonic-compatibele server: Navidrome, Gonic, Subsonic, Airsonic en anderen. Navidrome is de aanbevolen keuze.',
+
     q2: 'Hoe verbind ik me met mijn server?',
+
     a2: 'Open Instellingen en klik op "Server toevoegen". Voer de server-URL in (bijv. 192.168.1.100:4533), je gebruikersnaam en wachtwoord. Psysonic test de verbinding voor het opslaan.',
+
     q3: 'Kan ik meerdere servers gebruiken?',
+
     a3: 'Ja. Je kunt zoveel servers toevoegen als je wilt in Instellingen en er op elk moment tussen wisselen. Slechts één server is tegelijk actief.',
+
     s2: 'Afspelen',
+
     q4: 'Hoe speel ik muziek af?',
+
     a4: 'Dubbelklik op een nummer om het af te spelen. Gebruik op album- en artiestpagina\'s "Alles afspelen" om het hele album te starten. Je kunt ook nummers naar de wachtrij slepen.',
+
     q5: 'Welke sneltoetsen zijn beschikbaar?',
+
     a5: 'Spatie = Afspelen / Pauzeren · Escape = Volledig scherm sluiten. Mediatoetsen werken op alle platforms. Gebruik op Linux de knoppen van de spelerbalk. In-app sneltoetsen en systeembrede globale sneltoetsen zijn aan te passen via Instellingen → Sneltoetsen / Globale sneltoetsen.',
+
     q6: 'Wat is de wachtrij?',
+
     a6: 'De wachtrij toont alle komende nummers. Open deze met het paneelpictogram rechtsboven. Je kunt nummers herordenen door te slepen, shufflen en de wachtrij opslaan als afspeellijst.',
+
     q7: 'Hoe open ik de volledig-schermspeler?',
+
     a7: 'Klik op de albumhoes in de spelerbalk onderaan, of het uitvouwpictogram ernaast. Druk op Escape om te sluiten.',
+
     q8: 'Hoe werkt herhalen?',
+
     a8: 'Klik op de herhalknop om te wisselen: Uit → Alles herhalen → Één herhalen.',
+
     s3: 'Bibliotheek',
+
     q9: 'Hoe download ik een album?',
+
     a9: 'Open de detailpagina van een album en klik op "Downloaden (ZIP)". De server comprimeert het album eerst naar een ZIP-bestand — voor grote albums of verliesvrije bestanden (FLAC / WAV) kan het even duren voordat de download daadwerkelijk start. De voortgangsbalk verschijnt pas als de server klaar is met inpakken.',
+
     q10: 'Hoe markeer ik nummers en albums als favoriet?',
+
     a10: 'Klik op het sterpictogram op een nummervak of de albumkoptekst. Gemarkeerde items verschijnen in de sectie Favorieten in de zijbalk.',
+
     q11: 'Wat is de hero-carrousel op de startpagina?',
+
     a11: 'De banner bovenaan de startpagina kiest willekeurig albums uit je bibliotheek en wisselt deze elke 10 seconden af. Klik op de puntjes om naar een specifiek album te springen.',
+
     s4: 'Instellingen',
+
     q12: 'Hoe verander ik het thema?',
+
     a12: 'Instellingen → Thema. Een ruime keuze aan thema\'s in 8 groepen: Psysonic Themes, Mediaplayer, Besturingssystemen, Games, Films, Series, Social Media en Open Source Classics (Catppuccin, Nord, Gruvbox, Nightfox).',
+
     q13: 'Hoe verander ik de taal?',
+
     a13: 'Instellingen → Taal. Engels, Duits, Frans, Nederlands en Chinees worden momenteel ondersteund.',
+
     q15: 'Hoe stel ik een downloadmap in?',
+
     a15: 'Instellingen → App-gedrag → Downloadmap. Gedownloade albums worden daar opgeslagen als ZIP-bestanden.',
+
     s5: 'Scrobbling',
+
     q16: 'Hoe werkt scrobbling?',
+
     a16: 'Psysonic scrobbelt rechtstreeks naar Last.fm — geen Navidrome-configuratie nodig. Verbind je Last.fm-account in Instellingen → Last.fm en schakel scrobbling in.',
+
     q17: 'Wanneer wordt een scrobble verstuurd?',
+
     a17: 'Een scrobble wordt verstuurd nadat je 50% van een nummer hebt geluisterd.',
+
     q22: 'Wat is de golfvorm in de spelerbalk?',
+
     a22: 'De golfvormzoekbalk vervangt de klassieke voortgangsschuifregelaar. Klik ergens om naar die positie te springen, of sleep om door het nummer te navigeren.',
+
     q24: 'Kan ik de wachtrij shufflen?',
+
     a24: 'Ja. Open het wachtrijpaneel en klik op het shufflepictogram. Het huidige nummer blijft op positie 1 — alle overige nummers worden willekeurig geherordend.',
+
     q25: 'Openen Last.fm- en Wikipedia-links in een browser?',
+
     a25: 'Ja — ze openen in je standaard systeembrowser. De knop toont kort een bevestiging bij klikken.',
+
     s7: 'Willekeurige mix',
+
     q26: 'Wat is de Willekeurige mix?',
+
     a26: 'De Willekeurige mix bouwt een afspeellijst van willekeurige nummers uit je hele bibliotheek. Open het via "Willekeurige mix" in de zijbalk en klik op "Nieuwe mix".',
+
     q27: 'Wat is het Trefwoordfilter?',
+
     a27: 'Het Trefwoordfilter sluit nummers uit waarvan het genre, de titel of de albumnaam bepaalde woorden bevat. Luisterboeken worden automatisch gefilterd. Voeg aangepaste trefwoorden toe in Instellingen → Willekeurige mix.',
+
     q28: 'Wat is de Super-genremix?',
+
     a28: 'De Super-genremix groepeert je bibliotheek in brede categorieën (Rock, Metal, Elektronisch, Jazz, Klassiek, enz.) en bouwt een gerichte mix van die stijl. Selecteer een categoriechip onder de lijst.',
+
     s6: 'Probleemoplossing',
+
     q18: 'Albumhoezen en artiestenafbeeldingen laden langzaam.',
+
     a18: 'Afbeeldingen worden bij het eerste laden van de schijf van je server opgehaald en vervolgens 30 dagen lokaal gecachet. Volgende bezoeken zijn direct.',
+
     q19: 'De verbindingstest mislukt.',
+
     a19: 'Controleer de URL inclusief de poort (bijv. http://192.168.1.100:4533). Zorg dat geen firewall de verbinding blokkeert. Probeer http:// in plaats van https:// op een lokaal netwerk.',
+
     q20: 'Geen audio op Linux.',
+
     a20: 'Psysonic is beschikbaar als .deb (Ubuntu/Debian), .rpm (Fedora/RHEL) en via AUR voor Arch/CachyOS (yay -S psysonic). Er is geen AppImage. Controleer of PipeWire of PulseAudio actief is als er geen audio is.',
+
     q21: 'De app toont een zwart scherm op Linux.',
+
     a21: 'Dit is meestal een GPU/EGL-driverprobleem in WebKitGTK. Start met GDK_BACKEND=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1. Het AUR-pakket en officiële .deb/.rpm-installatieprogramma\'s doen dit automatisch.',
+
     q29: 'Wat zijn overgang (crossfade) en naadloos afspelen?',
+
     a29: 'Dit zijn experimentele audiofuncties in Instellingen → Audio. Naadloos afspelen buffert het volgende nummer voor om stiltes te elimineren. Overgang fadeert het huidige nummer uit terwijl het volgende infadeert — duur (1–10 s) instelbaar.',
+
     q30: 'Toont Psysonic songteksten?',
+
     a30: 'Ja. Klik op het microfoonpictogram in de spelerbalk om het tabblad Songteksten te openen. Psysonic haalt teksten automatisch op van LRCLIB. Als gesynchroniseerde teksten beschikbaar zijn, wordt de actieve regel gemarkeerd en scrolt mee in realtime. Anders wordt de volledige tekst statisch getoond.',
+
     q31: 'Kan ik sneltoetsen aanpassen?',
+
     a31: 'Ja. Instellingen → Sneltoetsen laat je in-app acties (Afspelen/Pauzeren, Volgende, Vorige, Volume, Volledig scherm, enz.) hertoewijzen. Instellingen → Globale sneltoetsen laat je systeembrede sneltoetsen instellen die werken ook als de app op de achtergrond staat.',
+
     q32: 'Kan ik het lettertype wijzigen?',
+
     a32: 'Ja. Instellingen → Lettertype biedt 10 lettertypen waaronder IBM Plex Mono, Fira Code, JetBrains Mono en Courier Prime. Het gekozen lettertype geldt voor de gehele interface.',
+
     s8: 'Offlinemodus',
+
     q34: 'Wat is de Offlinemodus?',
+
     a34: 'De Offlinemodus (Beta) laat je albums op het apparaat opslaan zodat je zonder actieve serververbinding kunt luisteren. Gecachte nummers worden lokaal opgeslagen en direct van schijf afgespeeld — zonder netwerkverzoek.',
+
     q35: 'Hoe sla ik een album op voor offline gebruik?',
+
     a35: 'Open een album en klik op het downloadpictogram in de albumkoptekst. Psysonic downloadt alle nummers op de achtergrond. De voortgang wordt op de knop weergegeven. Na het cachen wordt het pictogram groen. Gecachte albums zijn te bekijken en verwijderen via de Offline bibliotheek (zijbalk).',
+
     q36: 'Hoeveel opslagruimte mag de offlinecache gebruiken?',
+
     a36: 'Je kunt een maximale cachegrootte instellen via Instellingen → Bibliotheek. Als de limiet is bereikt, verschijnt er een waarschuwingsbanner op de albumpagina. Je kunt afzonderlijke albums verwijderen in de Offline bibliotheek om ruimte vrij te maken.',
+
     q37: 'Hoe beoordeel ik nummers, albums en artiesten?',
+
     a37: 'Psysonic ondersteunt 1–5 sterrenwaarderingen via de OpenSubsonic API (vereist Navidrome ≥ 0.53). Beoordeel nummers in de tracklist van een album of afspeellijst, via het rechtsklikmenu of in de spelersbalk. Albums worden beoordeeld op hun detailpagina, artiesten op hun artiestenpagina.',
+
     q38: 'Kan ik een beoordeling verwijderen of wijzigen?',
+
     a38: 'Ja. Klik opnieuw op de actieve ster om de beoordeling volledig te verwijderen — een tweede klik op dezelfde ster wist hem. Klik op een andere ster om de beoordeling te wijzigen.',
+
     q39: 'Wat is Skip-to-1★ en het beoordelingsfilter?',
+
     a39: 'Skip-to-1★ kent automatisch een 1-sterrenbeoordeling toe na een bepaald aantal opeenvolgende skips. Activeer het in Instellingen → Beoordelingen. Stel daar ook een minimale sterrenbeoordeling in voor willekeurige mixen.',
+
     q40: 'Wat is de Mappenverkenner?',
+
     a40: 'De Mappenverkenner (zijbalk) laat je de muziekmap van de server navigeren via Miller-kolommen. Klik op een map om de inhoud te bekijken; gebruik het afspeelpictogram om de inhoud direct af te spelen of toe te voegen aan de wachtrij.',
+
     q41: 'Wat is de themasplanner?',
+
     a41: 'Instellingen → Uiterlijk → Thema automatisch wisselen: stel een dagthema en een nachtthema in met starttijden. Psysonic wisselt automatisch op de ingestelde tijden.',
+
     q42: 'Kan ik de interface schalen?',
+
     a42: 'Ja. Instellingen → Uiterlijk → Interfaceschaal laat je de volledige UI schalen tussen 80 % en 125 %.',
+
     q43: 'Kan ik de zoekbalkstijl wijzigen?',
+
     a43: 'Ja. Instellingen → Uiterlijk → Zoekbalkstijl biedt 10 stijlen: Golfvorm, Lijn & Punt, Balk, Dikke balk, Gesegmenteerd, Neon Glow, Pulsgolf, Partikelspoor, Vloeistofvulling en Retro Tape.',
+
     q44: 'Wat is AutoEQ?',
+
     a44: 'De 10-bands equalizer in Instellingen → Audio bevat een AutoEQ-zoekopdracht. Voer je hoofdtelefoonmodel in om automatisch een correctieprofiel te laden.',
+
     q45: 'Wat is Replay Gain?',
+
     a45: 'Replay Gain normaliseert het volume zodat harde en stille albums op een consistent niveau worden afgespeeld. Activeer het in Instellingen → Audio → Replay Gain; kies modus Track of Album.',
+
     q46: 'Wat is de Hot Cache?',
+
     a46: 'De Hot Cache (Alpha, Instellingen → Bibliotheek) laadt de volgende nummers in de wachtrij vooraf naar de schijf voor directe weergave. Psysonic bewaart het huidige nummer en de volgende 5 en verwijdert oudere items wanneer de limiet is bereikt.',
+
     q47: 'Kan ik een afspeellijst offline cachen?',
+
     a47: 'Ja. Open de afspeellijstdetails en klik op het downloadpictogram. Zodra alle tracks zijn gecached, verandert het pictogram in een rode prullenbak; klik erop om de afspeellijst uit de offlinecache te verwijderen.',
-    q48: 'Wat is de Infinite Queue?',
-    a48: 'Als de wachtrij leeg raakt en herhalen uitgeschakeld is, voegt Psysonic automatisch willekeurige nummers toe zodat het afspelen nooit stopt. Automatisch toegevoegde nummers verschijnen onder het scheidingsteken "— Automatisch toegevoegd —". Schakel in/uit via het oneindig-pictogram in de wachtrij-header.',
-    q49: 'Kan ik Psysonic via de opdrachtregel bedienen?',
-    a49: 'Ja. Voorbeelden: psysonic --player play / pause / next / prev, --player volume 75, --player seek 15, --player mute, --player shuffle, --player repeat off|all|one. Ook: van server wisselen, audioapparaat wijzigen, bibliotheek filteren en zoeken. Volledige hulp: psysonic --player --help.',
-    q50: 'Hoe beheer ik afspeellijsten?',
-    a50: 'Via "Afspeellijsten" in de zijbalk. Maak een afspeellijst aan met "Nieuwe afspeellijst". In de detailweergave kunt u nummers slepen om te herordenen, verwijderen met ×, nieuwe toevoegen via zoeken en "Suggesties" gebruiken voor slimme aanbevelingen.',
-    q51: 'Kan ik mijn instellingen back-uppen en herstellen?',
-    a51: 'Ja. Instellingen → Back-up & Herstel exporteert alle instellingen, serverprofielen, thema\'s en snelkoppelingen naar een JSON-bestand. Importeer het op een ander apparaat om alles in één keer te herstellen.',
-    q52: 'Hoe wijzig ik het audio-uitvoerapparaat?',
-    a52: 'Instellingen → Audio → Uitvoerapparaat. Psysonic toont alle beschikbare uitgangen. De selectie wordt direct van kracht. Gebruik de verversknop als een apparaat na het starten van de app is aangesloten.',
-    q53: 'Wat is Device Sync?',
-    a53: 'Device Sync kopieert albums, afspeellijsten of artiesten naar een USB-stick of SD-kaart. Open het via "Device Sync" in de zijbalk, kies een doelmap, selecteer bronnen en klik op "Naar apparaat overbrengen".',
-    q54: 'Wat is de bestandsnaamsjabloon in Device Sync?',
-    a54: 'Het sjabloon bepaalt hoe nummers worden benoemd en georganiseerd. Gebruik de voorinstellingen of bouw uw eigen sjabloon met de klikbare tokens: {artist}, {album}, {title}, {track_number}, {disc_number}, {year} en / als mapscheidingsteken.',
-    q55: 'Werkt Device Sync platformoverschrijdend?',
-    a55: 'Ja. Het manifest op het apparaat bevat het gebruikte sjabloon. Op een ander besturingssysteem herkent Psysonic bestaande bestanden correct, ook bij een ander sjabloon.',
-    s9: 'Device Sync',
-    q56: 'Wat is internetradio?',
-    a56: 'De internetradiopagina speelt live streams af in Psysonic. Stations komen van uw Navidrome-server — voeg ze toe via het beheerpaneel of importeer een .pls/.m3u-bestand. Afspelen gebruikt HTML5-audio.',
-    q57: 'Welke streamformaten ondersteunt internetradio?',
-    a57: 'MP3, AAC, OGG Vorbis en de meeste HLS-streams. MP3 en AAC werken op alle platforms.',
-    s10: 'Internetradio',
-    q58: 'Waar haalt Psysonic songteksten vandaan?',
-    a58: 'Drie configureerbare bronnen in Instellingen → Songteksten: uw Navidrome-server, LRCLIB en NetEase Cloud Music. Elke bron kan worden in-/uitgeschakeld en geprioriteerd door te slepen.',
-    q59: 'Is er een weergave van wat andere gebruikers luisteren?',
-    a59: 'Ja. Klik op het uitzendpictogram rechtsboven om te zien wat andere gebruikers op uw Navidrome-server beluisteren, elke 10 seconden bijgewerkt.',
+
   },
+
   queue: {
+
     title: 'Wachtrij',
+
     savePlaylist: 'Afspeellijst opslaan',
+
     updatePlaylist: 'Afspeellijst bijwerken',
+
     filterPlaylists: 'Afspeellijsten filteren…',
+
     playlistName: 'Naam afspeellijst',
+
     cancel: 'Annuleren',
+
     save: 'Opslaan',
+
     loadPlaylist: 'Afspeellijst laden',
+
     loading: 'Laden…',
+
     noPlaylists: 'Geen afspeellijsten gevonden.',
+
     load: 'Wachtrij vervangen & afspelen',
+
     appendToQueue: 'Toevoegen aan wachtrij',
+
     delete: 'Verwijderen',
+
     deleteConfirm: 'Afspeellijst "{{name}}" verwijderen?',
+
     clear: 'Leegmaken',
+
     shuffle: 'Wachtrij shufflen',
+
     gapless: 'Naadloos',
+
     crossfade: 'Overgang',
+
     infiniteQueue: 'Oneindige wachtrij',
+
     autoAdded: '— Automatisch toegevoegd —',
+
     radioAdded: '— Radio —',
+
     hide: 'Verbergen',
+
     close: 'Sluiten',
+
     nextTracks: 'Volgende nummers',
+
     emptyQueue: 'De wachtrij is leeg.',
+
     trackSingular: 'nummer',
+
     trackPlural: 'nummers',
+
     showRemaining: 'Resterende tijd tonen',
+
     showTotal: 'Totale tijd tonen',
+
   },
+
   statistics: {
+
     title: 'Statistieken',
+
     recentlyPlayed: 'Recent afgespeeld',
+
     mostPlayed: 'Meest gespeelde albums',
+
     highestRated: 'Best beoordeelde albums',
+
     genreDistribution: 'Genreverdeling (Top 20)',
+
     loadMore: 'Meer laden',
+
     statArtists: 'Artiesten',
+
     statArtistsTooltip: 'Alleen albumartiesten — artiesten die enkel als trackartiest voorkomen (featuring, gast, enz.) zonder eigen album worden niet meegeteld.',
+
     statAlbums: 'Albums',
+
     statSongs: 'Nummers',
+
     statGenres: 'Genres',
+
     statPlaytime: 'Totale speelduur',
+
     genreInsights: 'Genre-inzichten',
+
     formatDistribution: 'Formaatdistributie',
+
     formatSample: 'Steekproef van {{n}} nummers',
+
     computing: 'Berekenen…',
+
     genreSongs: '{{count}} nummers',
+
     genreAlbums: '{{count}} albums',
+
     recentlyAdded: 'Recent toegevoegd',
+
     decadeDistribution: 'Albums per decennium',
+
     decadeAlbums_one: '{{count}} album',
+
     decadeAlbums_other: '{{count}} albums',
+
     decadeUnknown: 'Onbekend',
+
     lfmTitle: 'Last.fm-statistieken',
+
     lfmTopArtists: 'Topartiesten',
+
     lfmTopAlbums: 'Topalbums',
+
     lfmTopTracks: 'Topnummers',
+
     lfmPlays: '{{count}} keer gespeeld',
+
     lfmPeriodOverall: 'Alle tijd',
+
     lfmPeriod7day: '7 dagen',
+
     lfmPeriod1month: '1 maand',
+
     lfmPeriod3month: '3 maanden',
+
     lfmPeriod6month: '6 maanden',
+
     lfmPeriod12month: '12 maanden',
+
     lfmNotConnected: 'Verbind Last.fm in Instellingen om je statistieken te zien.',
+
     lfmRecentTracks: 'Recente scrobbles',
+
     lfmNowPlaying: 'Nu bezig',
+
     lfmJustNow: 'zojuist',
+
     lfmMinutesAgo: '{{n}} min geleden',
+
     lfmHoursAgo: '{{n}} uur geleden',
+
     lfmDaysAgo: '{{n}} dagen geleden',
+
     topRatedSongs: 'Best beoordeelde nummers',
+
     topRatedArtists: 'Best beoordeelde artiesten',
+
     noRatedSongs: 'Nog geen beoordeelde nummers. Beoordeel nummers in album- of afspeellijstweergave.',
+
     noRatedArtists: 'Nog geen beoordeelde artiesten.',
+
   },
+
   player: {
+
     regionLabel: 'Muziekspeler',
+
     openFullscreen: 'Volledig-schermspeler openen',
+
     fullscreen: 'Volledig-schermspeler',
+
     closeFullscreen: 'Volledig scherm sluiten',
+
     closeTooltip: 'Sluiten (Escape)',
+
     noTitle: 'Geen titel',
+
     stop: 'Stoppen',
+
     prev: 'Vorig nummer',
+
     play: 'Afspelen',
+
     pause: 'Pauzeren',
+
     next: 'Volgend nummer',
+
     repeat: 'Herhalen',
+
     repeatOff: 'Uit',
+
     repeatAll: 'Alles',
+
     repeatOne: 'Één',
+
     progress: 'Nummervoortgang',
+
     volume: 'Volume',
+
     toggleQueue: 'Wachtrij in-/uitschakelen',
+
     lyrics: 'Songtekst',
+
     fsLyricsToggle: 'Songtekst in volledig scherm',
+
     lyricsLoading: 'Songtekst laden…',
+
     lyricsNotFound: 'Geen songtekst gevonden voor dit nummer',
+
     lyricsSourceServer: 'Bron: Server',
+
     lyricsSourceLrclib: 'Bron: LRCLIB',
+
     lyricsSourceNetease: 'Bron: Netease',
+
   },
+
   songInfo: {
+
     title: 'Nummerinfo',
+
     songTitle: 'Titel',
+
     artist: 'Artiest',
+
     album: 'Album',
+
     albumArtist: 'Albumartiest',
+
     year: 'Jaar',
+
     genre: 'Genre',
+
     duration: 'Duur',
+
     track: 'Track',
+
     format: 'Formaat',
+
     bitrate: 'Bitrate',
+
     sampleRate: 'Samplefrequentie',
+
     bitDepth: 'Bitdiepte',
+
     channels: 'Kanalen',
+
     fileSize: 'Bestandsgrootte',
+
     path: 'Locatie',
+
     replayGainTrack: 'RG Track Gain',
+
     replayGainAlbum: 'RG Album Gain',
+
     replayGainPeak: 'RG Track Peak',
+
     mono: 'Mono',
+
     stereo: 'Stereo',
+
   },
+
   playlists: {
+
     title: 'Playlists',
+
     newPlaylist: 'Nieuwe playlist',
+
     unnamed: 'Naamloze playlist',
+
     createName: 'Playlistnaam…',
+
     create: 'Aanmaken',
+
     cancel: 'Annuleren',
+
     empty: 'Nog geen playlists.',
+
     emptyPlaylist: 'Deze playlist is leeg.',
+
     addFirstSong: 'Voeg je eerste nummer toe',
+
     notFound: 'Playlist niet gevonden.',
+
     songs: '{{n}} nummers',
+
     playAll: 'Alles afspelen',
+
     shuffle: 'Willekeurig',
+
     addToQueue: 'Aan wachtrij toevoegen',
+
     back: 'Terug naar playlists',
+
     deletePlaylist: 'Verwijderen',
+
     confirmDelete: 'Nogmaals klikken om te bevestigen',
+
     removeSong: 'Uit playlist verwijderen',
+
     addSongs: 'Nummers toevoegen',
+
     searchPlaceholder: 'Doorzoek bibliotheek…',
+
     noResults: 'Geen resultaten.',
+
     suggestions: 'Aanbevolen nummers',
+
     noSuggestions: 'Geen suggesties beschikbaar.',
+
     titleBadge: 'Playlist',
+
     refreshSuggestions: 'Nieuwe suggesties',
+
     addSong: 'Toevoegen aan playlist',
+
     addSelected: 'Geselecteerde toevoegen',
+
     cacheOffline: 'Playlist offline opslaan',
+
     offlineCached: 'Playlist gecached',
+
     removeOffline: 'Verwijder uit offline cache',
+
     offlineDownloading: 'Cachen… ({{done}}/{{total}} albums)',
+
     publicLabel: 'Openbaar',
+
     privateLabel: 'Privé',
+
     editMeta: 'Playlist bewerken',
+
     editNamePlaceholder: 'Playlistnaam…',
+
     editCommentPlaceholder: 'Beschrijving toevoegen…',
+
     editPublic: 'Openbare playlist',
+
     editSave: 'Opslaan',
+
     editCancel: 'Annuleren',
+
     changeCover: 'Omslagafbeelding wijzigen',
+
     changeCoverLabel: 'Foto wijzigen',
+
     removeCover: 'Foto verwijderen',
+
     coverUpdated: 'Omslag bijgewerkt',
+
     metaSaved: 'Playlist bijgewerkt',
+
     downloadZip: 'Downloaden (ZIP)',
+
     // Toast notifications for multi-select
+
     addSuccess: '{{count}} nummers toegevoegd aan {{playlist}}',
+
     addPartial: '{{added}} toegevoegd, {{skipped}} overgeslagen (duplicaten)',
+
     addAllSkipped: 'Alles overgeslagen ({{count}} duplicaten)',
+
     addError: 'Fout bij toevoegen van nummers',
+
     createAndAddSuccess: 'Playlist "{{playlist}}" aangemaakt met {{count}} nummers',
+
     createError: 'Fout bij aanmaken van playlist',
+
     deleteSuccess: '{{count}} playlists verwijderd',
+
     deleteFailed: 'Fout bij verwijderen van {{name}}',
+
     deleteSelected: 'Geselecteerde verwijderen',
+
     mergeSuccess: '{{count}} nummers samengevoegd in {{playlist}}',
+
     mergeNoNewSongs: 'Geen nieuwe nummers om toe te voegen',
+
     mergeError: 'Fout bij samenvoegen van playlists',
+
     mergeInto: 'Samenvoegen in',
+
     selectionCount: '{{count}} geselecteerd',
+
     select: 'Selecteren',
+
     startSelect: 'Selectie inschakelen',
+
     cancelSelect: 'Annuleren',
+
     loadingAlbums: '{{count}} albums oplossen…',
+
     loadingArtists: '{{count}} artiesten oplossen…',
+
     myPlaylists: 'Mijn playlists',
+
     noOtherPlaylists: 'Geen andere playlists beschikbaar',
+
     addToPlaylistSuccess: '{{count}} nummers toegevoegd aan {{playlist}}',
+
     addToPlaylistNoNew: 'Geen nieuwe nummers voor {{playlist}}',
+
     addToPlaylistError: 'Fout bij toevoegen aan playlist',
+
     removeSuccess: 'Nummer verwijderd van playlist',
+
     removeError: 'Fout bij verwijderen uit playlist',
+
     importCSV: 'CSV Importeren',
+
     importCSVTooltip: 'Importeren vanuit Spotify CSV',
+
     csvImportReport: 'CSV-importrapport',
+
     csvImportTotal: 'Totaal',
+
     csvImportAdded: 'Toegevoegd',
+
     csvImportDuplicates: 'Duplicaten',
+
     csvImportNotFound: 'Niet Gevonden',
+
     csvImportNetworkErrors: 'Netwerkfouten',
+
     csvImportDuplicatesTitle: 'Dubbele nummers (al in playlist):',
+
     csvImportNotFoundTitle: 'Niet gevonden nummers:',
+
     csvImportNetworkErrorsTitle: 'Netwerkfouten (import kan opnieuw proberen):',
+
     csvImportDownloadReport: 'Rapport downloaden',
+
     csvImportClose: 'Sluiten',
+
     csvImportNoValidTracks: 'Geen geldige nummers gevonden in CSV-bestand',
+
     csvImportFailed: 'CSV-import mislukt',
+
     csvImportToast: '{{added}} toegevoegd, {{notFound}} niet gevonden, {{duplicates}} duplicaten',
+
   },
+
   mostPlayed: {
+
     title: 'Meest gespeeld',
+
     topArtists: 'Topkunstenaars',
+
     topAlbums: 'Topalbums',
+
     plays: '{{n}} keer gespeeld',
+
     sortMost: 'Meest gespeeld eerst',
+
     sortLeast: 'Minst gespeeld eerst',
+
     loadMore: 'Meer albums laden',
+
     noData: 'Nog geen afspeelgegevens. Begin met luisteren!',
+
     noArtists: 'Alle artiesten gefilterd.',
+
     filterCompilations: 'Compilatie-artiesten verbergen (Various Artists, Soundtracks, etc.)',
+
     filterCompilationsShort: 'Compilaties verbergen',
+
   },
+
   radio: {
+
     title: 'Internetradio',
+
     empty: 'Geen radiostations geconfigureerd.',
+
     addStation: 'Station toevoegen',
+
     editStation: 'Bewerken',
+
     deleteStation: 'Station verwijderen',
+
     confirmDelete: 'Klik opnieuw om te bevestigen',
+
     stationName: 'Stationsnaam…',
+
     streamUrl: 'Stream-URL…',
+
     homepageUrl: 'Homepage-URL (optioneel)',
+
     save: 'Opslaan',
+
     cancel: 'Annuleren',
+
     live: 'LIVE',
+
     liveStream: 'Internetradio',
+
     openHomepage: 'Homepage openen',
+
     changeCoverLabel: 'Cover wijzigen',
+
     removeCover: 'Cover verwijderen',
+
     browseDirectory: 'Gids doorzoeken',
+
     directoryPlaceholder: 'Stations zoeken…',
+
     noResults: 'Geen stations gevonden.',
+
     stationAdded: 'Station toegevoegd',
+
     filterAll: 'Alle',
+
     filterFavorites: 'Favorieten',
+
     sortManual: 'Handmatig',
+
     sortAZ: 'A → Z',
+
     sortZA: 'Z → A',
+
     sortNewest: 'Nieuwste',
+
     favorite: 'Toevoegen aan favorieten',
+
     unfavorite: 'Verwijderen uit favorieten',
+
     noFavorites: 'Geen favoriete stations.',
+
     listenerCount_one: '{{count}} luisteraar',
+
     listenerCount_other: '{{count}} luisteraars',
+
     recentlyPlayed: 'Recent gespeeld',
+
     upNext: 'Volgende',
+
   },
+
   folderBrowser: {
+
     empty: 'Lege map',
+
     error: 'Laden mislukt',
+
   },
+
   deviceSync: {
+
     title: 'Apparaatsync',
+
     targetFolder: 'Doelmap',
+
     noFolderChosen: 'Geen map gekozen',
+
     selectDrive: 'Selecteer een schijf…',
+
     refreshDrives: 'Schijven vernieuwen',
+
     noDrivesDetected: 'Geen verwijderbare schijven gedetecteerd',
+
     browseManual: 'Handmatig bladeren…',
+
     free: 'vrij',
+
     notMountedVolume: 'Het doel bevindt zich niet op een gekoppeld volume. De schijf is mogelijk losgekoppeld.',
+
     chooseFolder: 'Kiezen…',
+
     filenameTemplate: 'Bestandsnaamsjabloon',
+
     targetDevice: 'Doelapparaat',
+
     templateHint: 'Variabelen: {artist}, {album}, {title}, {track_number}, {disc_number}, {year}',
+
     cleanupButton: 'Niet-geselecteerde bestanden verwijderen',
+
     cleanupNothingToDelete: 'Niets te verwijderen — apparaat is al gesynchroniseerd.',
+
     confirmCleanup: '{{count}} bestand(en) verwijderen van het apparaat die niet in de huidige selectie staan. Doorgaan?',
+
     cleanupComplete: '{{count}} bestand(en) van het apparaat verwijderd.',
+
     selectedSources: 'Geselecteerde bronnen',
+
     noSourcesSelected: 'Geen bronnen geselecteerd. Klik op items in de browser om ze toe te voegen.',
+
     clearAll: 'Alles wissen',
+
     tabPlaylists: 'Afspeellijsten',
+
     tabAlbums: 'Albums',
+
     tabArtists: 'Artiesten',
+
     searchPlaceholder: 'Zoeken…',
+
     syncButton: 'Synchroniseren naar apparaat',
+
     actionTransfer: 'Overdragen naar apparaat',
+
     actionDelete: 'Verwijderen van apparaat',
+
     actionApplyAll: 'Alle wijzigingen toepassen',
+
     templatePreview: 'Voorbeeld',
-    templatePresetStandard: 'Standaard',
-    templatePresetMultiDisc: 'Multi-Disc',
-    templatePresetAltFolder: 'Alt. map',
-    tokenSlashHint: '/ = mapscheidingsteken',
+
     cancel: 'Annuleren',
+
     noTargetDir: 'Kies eerst een doelmap.',
+
     noSources: 'Selecteer minimaal één bron.',
+
     noTracks: 'Geen nummers gevonden in de geselecteerde bronnen.',
+
     fetchError: 'Ophalen van nummers van de server mislukt.',
+
     syncComplete: 'Synchronisatie voltooid.',
+
     dismiss: 'Sluiten',
-    cancelSync: 'Annuleren',
-    syncCancelled: 'Synchronisatie geannuleerd ({{done}} / {{total}} overgebracht).',
+
     colName: 'Naam',
+
     colType: 'Type',
+
     colStatus: 'Status',
+
     onDevice: 'Apparaatbeheer',
+
     addSources: 'Toevoegen…',
+
     syncResult: '{{done}} overgedragen, {{skipped}} al up-to-date ({{total}} totaal)',
+
     deleteFromDevice: 'Markeren voor verwijdering ({{count}})',
+
     confirmDelete: '{{count}} item(s) van het apparaat verwijderen: {{names}}?',
+
     deleteComplete: '{{count}} item(s) van het apparaat verwijderd.',
-    manifestImported: '{{count}} bron(nen) geïmporteerd uit apparaatmanifest.',
+
     statusSynced: 'Gesynchroniseerd',
+
     statusPending: 'In behandeling',
+
     statusDeletion: 'Verwijdering',
+
     markForDeletion: 'Markeren voor verwijdering',
+
     removeSource: 'Verwijderen',
+
     undoDeletion: 'Verwijdering ongedaan maken',
+
     syncInBackground: 'Sync gestart op achtergrond — u kunt navigeren.',
+
     syncInProgress: '{{done}} / {{total}} nummers…',
+
     syncSummary: 'Synchronisatieoverzicht',
+
     calculating: 'Vereiste payload berekenen…',
+
     filesToAdd: 'Te toevoegen bestanden:',
+
     filesToDelete: 'Te verwijderen bestanden:',
+
     netChange: 'Nettoverandering:',
+
     availableSpace: 'Beschikbare schijfruimte:',
+
     spaceWarning: 'Waarschuwing: Het doelapparaat heeft niet genoeg gerapporteerde ruimte.',
+
     proceed: 'Doorgaan met synchronisatie',
+
     notEnoughSpace: 'Onvoldoende fysieke schijfruimte gedetecteerd!',
+
     liveSearch: 'Live',
+
     randomAlbumsLabel: 'Willekeurige albums',
+
   },
+
 };
+

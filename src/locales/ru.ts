@@ -1,1222 +1,2382 @@
 /** Russian UI strings — natural phrasing for a music desktop app */
+
 export const ruTranslation = {
+
   sidebar: {
+
     library: 'Медиатека',
+
     mainstage: 'Для вас',
+
     newReleases: 'Новинки',
+
     allAlbums: 'Все альбомы',
+
     randomAlbums: 'Случайные альбомы',
+
     randomPicker: 'Собрать микс',
+
     artists: 'Исполнители',
+
     randomMix: 'Случайный микс',
+
     favorites: 'Избранное',
+
     nowPlaying: 'Сейчас играет',
+
     system: 'Система',
+
     statistics: 'Статистика',
+
     settings: 'Настройки',
+
     help: 'Справка',
+
     expand: 'Развернуть боковую панель',
+
     collapse: 'Свернуть боковую панель',
+
     downloadingTracks: 'Кэширование {{n}} треков…',
+
     syncingTracks: 'Синхронизация {{done}}/{{total}}…',
+
     cancelDownload: 'Отменить загрузку',
+
     offlineLibrary: 'Офлайн-библиотека',
+
     genres: 'Жанры',
+
     playlists: 'Плейлисты',
+
     mostPlayed: 'Популярное',
+
     radio: 'Онлайн-радио',
+
     folderBrowser: 'Браузер папок',
+
     deviceSync: 'Синхронизация устройства',
+
     libraryScope: 'Область медиатеки',
+
     allLibraries: 'Все библиотеки',
+
     expandPlaylists: 'Развернуть плейлисты',
+
     collapsePlaylists: 'Свернуть плейлисты',
+
   },
+
   home: {
+
     hero: 'Подборка',
+
     starred: 'Личное избранное',
+
     recent: 'Недавно добавлено',
+
     mostPlayed: 'Популярное',
+
     recentlyPlayed: 'Недавно проиграно',
+
     discover: 'Обзор',
+
     loadMore: 'Ещё',
+
     discoverMore: 'Смотреть ещё',
+
     discoverArtists: 'Исполнители',
+
     discoverArtistsMore: 'Все исполнители',
+
   },
+
   hero: {
+
     eyebrow: 'Альбом дня',
+
     playAlbum: 'Воспроизвести альбом',
+
     enqueue: 'В очередь',
+
     enqueueTooltip: 'Добавить весь альбом в очередь',
+
   },
+
   search: {
+
     placeholder: 'Исполнитель, альбом или трек…',
+
     noResults: 'Ничего не найдено по запросу «{{query}}»',
+
     artists: 'Исполнители',
+
     albums: 'Альбомы',
+
     songs: 'Треки',
+
     clearLabel: 'Очистить поиск',
+
     title: 'Поиск',
+
     resultsFor: 'Результаты по «{{query}}»',
+
     album: 'Альбом',
+
     advanced: 'Расширенный поиск',
+
     advancedSearchTerm: 'Поисковый запрос',
+
     advancedSearchPlaceholder: 'Название, альбом, исполнитель…',
+
     advancedGenre: 'Жанр',
+
     advancedAllGenres: 'Все жанры',
+
     advancedYear: 'Год',
+
     advancedYearFrom: 'от',
+
     advancedYearTo: 'до',
+
     advancedAll: 'Все',
+
     advancedSearch: 'Найти',
+
     advancedEmpty: 'Введите запрос или выберите фильтр.',
+
     advancedNoResults: 'Ничего не найдено.',
+
     advancedGenreNote: 'Треки выбираются случайно в рамках жанра.',
+
     recentSearches: 'Недавние запросы',
+
     browse: 'Обзор',
+
     emptyHint: 'Что хочешь послушать?',
+
     genres: 'Жанры',
+
   },
+
   nowPlaying: {
+
     tooltip: 'Кто сейчас слушает?',
+
     title: 'Кто сейчас слушает?',
+
     loading: 'Загрузка…',
+
     nobody: 'Сейчас никто не слушает.',
+
     minutesAgo: '{{n}} мин назад',
+
     nothingPlaying: 'Пока ничего не играет — включите трек.',
+
     aboutArtist: 'Об исполнителе',
+
     fromAlbum: 'Из этого альбома',
+
     viewAlbum: 'Просмотр альбома',
+
     goToArtist: 'Перейти к исполнителю',
+
     readMore: 'Читать далее',
+
     showLess: 'Свернуть',
+
     genreInfo: 'Жанр',
+
     trackInfo: 'О треке',
+
   },
+
   contextMenu: {
+
     playNow: 'Играть сейчас',
+
     playNext: 'Играть следующим',
+
     addToQueue: 'В конец очереди',
+
     enqueueAlbum: 'Альбом в очередь',
+
     startRadio: 'Радио по похожим',
+
     instantMix: 'Instant Mix',
+
     instantMixFailed: 'Не удалось собрать Instant Mix — ошибка сервера или плагина.',
+
     cliMixNeedsTrack: 'Ничего не играет — сначала начните воспроизведение, затем снова выполните команду микса.',
+
     lfmLove: 'Любимое на Last.fm',
+
     lfmUnlove: 'Убрать с Last.fm',
+
     favorite: 'В избранное',
+
     favoriteArtist: 'Исполнитель в избранное',
+
     favoriteAlbum: 'Альбом в избранное',
+
     unfavorite: 'Убрать из избранного',
+
     unfavoriteArtist: 'Убрать исполнителя из избранного',
+
     unfavoriteAlbum: 'Убрать альбом из избранного',
+
     removeFromQueue: 'Убрать из очереди',
+
     removeFromPlaylist: 'Убрать из плейлиста',
+
     openAlbum: 'Открыть альбом',
+
     goToArtist: 'К исполнителю',
+
     download: 'Скачать (ZIP)',
+
     addToPlaylist: 'В плейлист',
+
     selectedPlaylists: '{{count}} плейлистов выбрано',
+
     selectedAlbums: '{{count}} альбомов выбрано',
+
     selectedArtists: '{{count}} исполнителей выбрано',
+
     songInfo: 'Сведения о треке',
+
   },
+
   albumDetail: {
+
     back: 'Назад',
+
     playAll: 'Воспроизвести всё',
+
     enqueue: 'В очередь',
+
     enqueueTooltip: 'Добавить весь альбом в очередь',
+
     artistBio: 'Биография',
+
     download: 'Скачать (ZIP)',
+
     downloading: 'Загрузка…',
+
     cacheOffline: 'Сохранить офлайн',
+
     offlineCached: 'Доступно офлайн',
+
     offlineDownloading: 'Кэширование… ({{n}} из {{total}})',
+
     removeOffline: 'Удалить офлайн-копию',
+
     offlineStorageFull:
+
       'Место для офлайн закончилось (лимит {{mb}} МБ). Освободите место в офлайн-библиотеке или увеличьте лимит в настройках.',
+
     offlineStorageGoToLibrary: 'Офлайн-библиотека',
+
     offlineStorageGoToSettings: 'Настройки',
+
     favoriteAdd: 'В избранное',
+
     favoriteRemove: 'Убрать из избранного',
+
     favorite: 'Избранное',
+
     noBio: 'Биография недоступна.',
+
     moreByArtist: 'Ещё от {{artist}}',
+
     tracksCount: 'Композиций: {{n}}',
+
     goToArtist: 'Перейти к {{artist}}',
+
     moreLabelAlbums: 'Другие альбомы на {{label}}',
+
     trackTitle: 'Название',
+
     trackAlbum: 'Альбом',
+
     trackArtist: 'Исполнитель',
+
     trackGenre: 'Жанр',
+
     trackFormat: 'Формат',
+
     trackFavorite: 'Избранное',
+
     trackRating: 'Оценка',
+
     trackDuration: 'Длительность',
+
     trackTotal: 'Итого',
+
     columns: 'Колонки',
-    resetColumns: 'Сбросить',
+
     notFound: 'Альбом не найден.',
+
     bioModal: 'Биография исполнителя',
+
     bioClose: 'Закрыть',
+
     ratingLabel: 'Оценка',
+
     enlargeCover: 'Увеличить обложку',
+
     filterSongs: 'Фильтр треков…',
+
     sortNatural: 'По умолчанию',
+
     sortByTitle: 'А–Я (название)',
+
     sortByArtist: 'А–Я (исполнитель)',
+
     sortByAlbum: 'А–Я (альбом)',
+
   },
+
   entityRating: {
+
     albumShort: 'Оценка альбома',
+
     artistShort: 'Оценка исполнителя',
+
     albumAriaLabel: 'Оценка альбома',
+
     artistAriaLabel: 'Оценка исполнителя',
+
     saveFailed: 'Не удалось сохранить оценку.',
+
   },
+
   artistDetail: {
+
     back: 'Назад',
+
     albums: 'Альбомы',
+
     album: 'Альбом',
+
     playAll: 'Воспроизвести всё',
+
     shuffle: 'Перемешать',
+
     radio: 'Радио',
+
     loading: 'Загрузка…',
+
     noRadio: 'Похожие треки для этого исполнителя не найдены.',
+
     notFound: 'Исполнитель не найден.',
+
     albumsBy: 'Альбомы — {{name}}',
+
     topTracks: 'Популярные треки',
+
     noAlbums: 'Альбомов нет.',
+
     trackTitle: 'Название',
+
     trackAlbum: 'Альбом',
+
     trackDuration: 'Длительность',
+
     favoriteAdd: 'В избранное',
+
     favoriteRemove: 'Убрать из избранного',
+
     favorite: 'Избранное',
+
     albumCount_one: '{{count}} альбом',
+
     albumCount_few: '{{count}} альбома',
+
     albumCount_many: '{{count}} альбомов',
+
     albumCount_other: '{{count}} альбомов',
+
     openedInBrowser: 'Открыто в браузере',
+
     featuredOn: 'Также участвует в',
+
     similarArtists: 'Похожие исполнители',
+
     cacheOffline: 'Сохранить дискографию офлайн',
+
     offlineCached: 'Дискография сохранена',
+
     offlineDownloading: 'Кэширование… ({{done}} из {{total}} альбомов)',
+
     uploadImage: 'Загрузить фото исполнителя',
+
     uploadImageError: 'Не удалось загрузить изображение',
+
   },
+
   favorites: {
+
     title: 'Избранное',
+
     empty: 'Пока ничего не отмечено звёздочкой.',
+
     artists: 'Исполнители',
+
     albums: 'Альбомы',
+
     songs: 'Треки',
+
     enqueueAll: 'Всё в очередь',
+
     playAll: 'Воспроизвести всё',
+
     removeSong: 'Убрать из избранного',
+
     stations: 'Радиостанции',
+
     showingFiltered: 'Показано {{filtered}} из {{total}} ({{artist}})',
+
     showingCount: 'Показано {{filtered}} из {{total}}',
+
     clearArtistFilter: 'Сбросить фильтр исполнителя',
+
     noFilterResults: 'Нет результатов с выбранными фильтрами.',
+
     allArtists: 'Все исполнители',
+
   },
+
   randomLanding: {
+
     title: 'Собрать микс',
+
     mixByTracks: 'Микс по трекам',
+
     mixByTracksDesc: 'Случайная подборка треков со всей медиатеки',
+
     mixByAlbums: 'Микс по альбомам',
+
     mixByAlbumsDesc: 'Случайная подборка альбомов для открытий',
+
   },
+
   randomAlbums: {
+
     title: 'Случайные альбомы',
+
     refresh: 'Обновить',
+
   },
+
   genres: {
+
     title: 'Жанры',
+
     genreCount: 'Жанры',
+
     albumCount_one: '{{count}} альбом',
+
     albumCount_few: '{{count}} альбома',
+
     albumCount_many: '{{count}} альбомов',
+
     albumCount_other: '{{count}} альбомов',
+
     loading: 'Загрузка жанров…',
+
     empty: 'Жанры не найдены.',
+
     albumsLoading: 'Загрузка альбомов…',
+
     albumsEmpty: 'В этом жанре альбомов нет.',
+
     loadMore: 'Ещё',
+
     back: 'Назад',
+
   },
+
   randomMix: {
+
     title: 'Случайный микс',
+
     remix: 'Новый микс',
+
     remixTooltip: 'Подобрать другие случайные треки',
+
     remixGenre: 'Новый микс: {{genre}}',
+
     remixTooltipGenre: 'Подобрать другие треки жанра {{genre}}',
+
     playAll: 'Воспроизвести всё',
+
     trackTitle: 'Название',
+
     trackArtist: 'Исполнитель',
+
     trackAlbum: 'Альбом',
+
     trackFavorite: 'Избранное',
+
     trackDuration: 'Длительность',
+
     favoriteAdd: 'В избранное',
+
     favoriteRemove: 'Убрать из избранного',
+
     play: 'Играть',
+
     trackGenre: 'Жанр',
+
     excludeAudiobooks: 'Исключать аудиокниги и радиоспектакли',
+
     excludeAudiobooksDesc:
+
       'По ключевым словам в жанре, названии, альбоме и исполнителе — например Hörbuch, Audiobook, Spoken Word и т. п.',
+
     genreBlocked: 'Слово отфильтровано',
+
     genreAddedToBlacklist: 'Добавлено в список фильтра',
+
     genreAlreadyBlocked: 'Уже в списке',
+
     artistBlocked: 'Исполнитель отфильтрован',
+
     artistAddedToBlacklist: 'Исполнитель добавлен в фильтр',
+
     artistClickHint: 'Нажмите, чтобы скрыть этого исполнителя',
+
     blacklistToggle: 'Фильтр по словам',
+
     genreMixTitle: 'Микс по жанру',
+
     genreMixDesc: 'Топ-20 жанров по числу треков — нажмите, чтобы собрать микс',
+
     genreMixAll: 'Все треки',
+
     genreMixLoadMore: 'Ещё 10 жанров',
+
     genreMixNoGenres: 'На сервере нет данных о жанрах.',
+
     shuffleGenres: 'Другие жанры',
+
     filterPanelTitle: 'Фильтры',
+
     filterPanelDesc:
+
       'Нажмите на тег жанра или имя исполнителя в списке ниже, чтобы исключить их из будущих миксов.',
+
     genreClickHint:
+
       'Нажмите на тег жанра — слово попадёт в фильтр.\nУчитываются жанр, название, альбом и исполнитель.',
+
   },
+
   albums: {
+
     title: 'Все альбомы',
+
     sortByName: 'А–Я (альбом)',
+
     sortByArtist: 'А–Я (исполнитель)',
+
     sortNewest: 'Сначала новые',
+
     sortRandom: 'Случайно',
+
     yearFrom: 'С',
+
     yearTo: 'По',
+
     yearFilterClear: 'Сбросить год',
+
     yearFilterLabel: 'Год',
+
     select: 'Множественный выбор',
+
     startSelect: 'Включить множественный выбор',
+
     cancelSelect: 'Отмена',
+
     selectionCount: '{{count}} выбрано',
+
     downloadZips: 'Скачать ZIP-архивы',
+
     addOffline: 'Добавить офлайн',
+
     downloadingZip: 'Загрузка {{current}}/{{total}}: {{name}}',
+
     downloadZipDone: '{{count}} ZIP-архив(ов) загружено',
+
     downloadZipFailed: 'Не удалось скачать {{name}}',
+
     offlineQueuing: 'Добавление {{count}} альбом(ов) в офлайн…',
+
     offlineFailed: 'Не удалось добавить {{name}} офлайн',
+
   },
+
   artists: {
+
     title: 'Исполнители',
+
     search: 'Поиск…',
+
     all: 'Все',
+
     gridView: 'Сетка',
+
     listView: 'Список',
+
     imagesOn: 'Фото исполнителей — больше трафика и нагрузка на систему',
+
     imagesOff: 'Только инициалы — экономнее по трафику',
+
     loadMore: 'Ещё',
+
     notFound: 'Исполнители не найдены.',
+
     albumCount_one: '{{count}} альбом',
+
     albumCount_few: '{{count}} альбома',
+
     albumCount_many: '{{count}} альбомов',
+
     albumCount_other: '{{count}} альбомов',
+
     selectionCount: '{{count}} выбрано',
+
     select: 'Множественный выбор',
+
     startSelect: 'Включить множественный выбор',
+
     cancelSelect: 'Отмена',
+
     addToPlaylist: 'В плейлист',
+
   },
+
   login: {
+
     subtitle: 'Десктопный клиент для Navidrome',
+
     serverName: 'Название сервера (необязательно)',
+
     serverNamePlaceholder: 'Мой Navidrome',
+
     serverUrl: 'Адрес сервера',
+
     serverUrlPlaceholder: '192.168.1.100:4533 или https://music.example.com',
+
     username: 'Логин',
+
     usernamePlaceholder: 'admin',
+
     password: 'Пароль',
+
     showPassword: 'Показать пароль',
+
     hidePassword: 'Скрыть пароль',
+
     connect: 'Подключиться',
+
     connecting: 'Подключение…',
+
     connected: 'Готово!',
+
     error: 'Не удалось подключиться — проверьте данные.',
+
     urlRequired: 'Укажите адрес сервера.',
+
     savedServers: 'Сохранённые серверы',
+
     addNew: 'Или добавить новый сервер',
+
   },
+
   connection: {
+
     connected: 'Подключено',
+
     connectedTo: 'Сервер: {{server}}',
+
     disconnected: 'Нет связи',
+
     disconnectedFrom: 'Сервер {{server}} недоступен — нажмите для настроек',
+
     checking: 'Подключение…',
+
     extern: 'Внешний',
+
     offlineTitle: 'Нет связи с сервером',
+
     offlineSubtitle: 'Сервер {{server}} недоступен. Проверьте сеть и адрес.',
+
     offlineModeBanner: 'Офлайн — воспроизведение из локального кэша',
+
     offlineNoCacheBanner: 'Нет соединения с сервером — {{server}} недоступен',
+
     offlineLibraryTitle: 'Офлайн-библиотека',
+
     offlineLibraryEmpty:
+
       'Пока ничего не сохранено. Подключитесь к сети, откройте альбом и нажмите «Сохранить офлайн».',
+
     offlineAlbumCount_one: '{{n}} альбом',
+
     offlineAlbumCount_few: '{{n}} альбома',
+
     offlineAlbumCount_many: '{{n}} альбомов',
+
     offlineAlbumCount_other: '{{n}} альбомов',
+
     offlineFilterAll: 'Всё',
+
     offlineFilterAlbums: 'Альбомы',
+
     offlineFilterPlaylists: 'Плейлисты',
+
     offlineFilterArtists: 'Дискографии',
+
     retry: 'Повторить',
+
     serverSettings: 'Настройки сервера',
+
     switchServerTitle: 'Сменить сервер',
+
     switchServerHint: 'Нажмите, чтобы выбрать другой сохранённый сервер.',
+
     manageServers: 'Управление серверами…',
+
     switchFailed: 'Не удалось переключиться — сервер недоступен.',
+
     lastfmConnected: 'Last.fm: @{{user}}',
+
     lastfmSessionInvalid: 'Сессия недействительна — подключите снова',
+
   },
+
   common: {
+
     albums: 'Альбомы',
+
     album: 'Альбом',
+
     loading: 'Загрузка…',
+
     loadingMore: 'Загрузка…',
+
     loadingPlaylists: 'Загрузка плейлистов…',
+
     noAlbums: 'Альбомов нет.',
+
     downloading: 'Скачивание…',
+
     downloadZip: 'Скачать (ZIP)',
+
     back: 'Назад',
+
     cancel: 'Отмена',
+
     save: 'Сохранить',
+
     delete: 'Удалить',
+
     use: 'Использовать',
+
     add: 'Добавить',
+
     active: 'Активен',
+
     download: 'Скачать',
+
     chooseDownloadFolder: 'Выбрать папку',
+
     noFolderSelected: 'Папка не выбрана',
+
     rememberDownloadFolder: 'Запомнить папку',
+
     filterGenre: 'Фильтр по жанру',
+
     filterSearchGenres: 'Поиск жанров…',
+
     filterNoGenres: 'Нет совпадений',
+
     filterClear: 'Сбросить',
+
     play: 'Воспроизвести',
+
     bulkSelected: 'Выбрано: {{count}}',
+
     clearSelection: 'Сбросить выбор',
+
     bulkAddToPlaylist: 'В плейлист',
+
     bulkRemoveFromPlaylist: 'Убрать из плейлиста',
+
     bulkClear: 'Снять выделение',
+
     updaterAvailable: 'Доступно обновление',
+
     updaterVersion: 'Версия {{version}} доступна',
+
     updaterWebsite: 'Сайт',
+
     updaterModalTitle: 'Доступна новая версия',
+
     updaterChangelog: 'Что нового',
+
     updaterDownloadBtn: 'Скачать сейчас',
+
     updaterSkipBtn: 'Пропустить эту версию',
+
     updaterRemindBtn: 'Напомнить позже',
+
     updaterDone: 'Загрузка завершена',
+
     updaterShowFolder: 'Показать в папке',
+
     updaterInstallHint: 'Закройте Psysonic и запустите установщик вручную.',
+
     updaterAurHint: 'Установить обновление через AUR:',
+
     updaterErrorMsg: 'Ошибка загрузки',
+
     updaterRetryBtn: 'Повторить',
+
     durationHoursMinutes: '{{hours}}ч {{minutes}}мин',
+
     durationMinutesOnly: '{{minutes}}мин',
+
     updaterOpenGitHub: 'Открыть на GitHub',
+
     filters: 'Фильтры',
+
     more: 'еще',
+
     yearRange: 'Диапазон лет',
+
     clearAll: 'Очистить всё',
+
   },
+
   settings: {
+
     title: 'Настройки',
+
     language: 'Язык',
+
     languageEn: 'Английский',
+
     languageDe: 'Немецкий',
+
     languageFr: 'Французский',
+
     languageNl: 'Нидерландский',
+
     languageZh: 'Китайский',
+
     languageNb: 'Норвежский',
+
     languageRu: 'Русский',
+
     languageRu2: 'Русский 2',
+
     font: 'Шрифт',
+
     theme: 'Тема',
+
     appearance: 'Оформление',
+
     servers: 'Серверы',
+
     serverName: 'Название',
+
     serverUrl: 'Адрес',
+
     serverUrlPlaceholder: '192.168.1.100:4533 или https://music.example.com',
+
     serverUsername: 'Логин',
+
     serverPassword: 'Пароль',
+
     addServer: 'Добавить сервер',
+
     addServerTitle: 'Новый сервер',
+
     useServer: 'Выбрать',
+
     deleteServer: 'Удалить',
+
     noServers: 'Нет сохранённых серверов.',
+
     serverActive: 'Активен',
+
     confirmDeleteServer: 'Удалить сервер «{{name}}»?',
+
     serverConnecting: 'Подключение…',
+
     serverConnected: 'Подключено!',
+
     serverFailed: 'Ошибка подключения.',
+
     testBtn: 'Проверить',
+
     testingBtn: 'Проверка…',
+
     serverCompatible: 'Совместимость: Navidrome · Gonic · Airsonic · Subsonic',
+
     audiomuseTitle: 'AudioMuse-AI (Navidrome)',
+
     audiomuseDesc:
+
       'Включите, если на этом сервере настроен <pluginLink>плагин AudioMuse-AI для Navidrome</pluginLink>. Появится Instant Mix для треков, а на странице исполнителя похожие будут браться с сервера вместо Last.fm.',
+
     audiomuseIssueHint:
+
       'Недавно не удалось собрать Instant Mix — проверьте плагин Navidrome и API AudioMuse. Похожие исполнители подтянутся с Last.fm, если сервер ничего не вернёт.',
+
     connected: 'Подключено',
+
     failed: 'Ошибка',
+
     eqTitle: 'Эквалайзер',
+
     eqEnabled: 'Включить эквалайзер',
+
     eqPreset: 'Пресет',
+
     eqPresetCustom: 'Свой',
+
     eqPresetBuiltin: 'Встроенные',
+
     eqPresetCustomGroup: 'Мои пресеты',
+
     eqSavePreset: 'Сохранить как пресет',
+
     eqPresetName: 'Название пресета…',
+
     eqDeletePreset: 'Удалить пресет',
+
     eqResetBands: 'Сбросить полосы',
+
     eqPreGain: 'Предусиление',
+
     eqResetPreGain: 'Сбросить предусиление',
+
     eqAutoEqTitle: 'AutoEQ — поиск профиля наушников',
+
     eqAutoEqPlaceholder: 'Модель наушников или IEM…',
+
     eqAutoEqSearching: 'Поиск…',
+
     eqAutoEqNoResults: 'Ничего не найдено',
+
     eqAutoEqError: 'Ошибка поиска',
+
     eqAutoEqRateLimit: 'Лимит GitHub — попробуйте через минуту',
+
     eqAutoEqFetchError: 'Не удалось загрузить профиль EQ',
+
     lfmTitle: 'Last.fm',
+
     lfmConnect: 'Подключить Last.fm',
+
     lfmConnecting: 'Ожидание авторизации…',
+
     lfmConfirm: 'Я разрешил доступ',
+
     lfmConnected: 'Аккаунт',
+
     lfmDisconnect: 'Отключить',
+
     lfmConnectDesc:
+
       'Привяжите Last.fm для скробблинга и статуса «Сейчас слушаю» прямо из Psysonic — настраивать Navidrome не нужно.',
+
     lfmOpenBrowser: 'Откроется браузер. Разрешите доступ на Last.fm, затем нажмите кнопку ниже.',
+
     lfmScrobbles: 'Скробблов: {{n}}',
+
     lfmMemberSince: 'С {{year}} года',
+
     scrobbleEnabled: 'Скробблинг включён',
+
     scrobbleDesc: 'Отправлять прослушивания на Last.fm после 50% трека',
+
     behavior: 'Поведение',
+
     cacheTitle: 'Макс. размер кэша',
+
     cacheDesc:
+
       'Обложки и фото исполнителей. При переполнении старые записи удаляются. Офлайн-альбомы не трогаются автоматически, но сотрутся при полной очистке кэша.',
+
     cacheUsedImages: 'Изображения:',
+
     cacheUsedOffline: 'Офлайн-треки:',
+
     cacheUsedHot: 'На диске:',
+
     hotCacheTrackCount: 'Треков в кэше:',
+
     cacheMaxLabel: 'Лимит',
+
     cacheClearBtn: 'Очистить кэш',
+
     cacheClearWarning: 'Будут удалены и все офлайн-альбомы.',
+
     cacheClearConfirm: 'Очистить всё',
+
     cacheClearCancel: 'Отмена',
+
     offlineDirTitle: 'Офлайн-библиотека (в приложении)',
+
     offlineDirDesc: 'Папка для треков, сохранённых для офлайн-прослушивания.',
+
     offlineDirDefault: 'По умолчанию (данные приложения)',
+
     offlineDirChange: 'Сменить папку',
+
     offlineDirClear: 'Сбросить по умолчанию',
+
     offlineDirHint: 'Новые загрузки пойдут в выбранную папку. Старые останутся на прежнем месте.',
+
     hotCacheTitle: 'Горячий кэш воспроизведения',
+
     hotCacheAlphaBadge: 'Альфа',
+
     hotCacheDisclaimer: 'Заранее подгружает следующие треки из очереди и сохраняет предыдущие. При включении использует место на диске и сеть.',
+
     hotCacheDirDefault: 'По умолчанию (данные приложения)',
+
     hotCacheDirChange: 'Сменить папку',
+
     hotCacheDirClear: 'Сбросить по умолчанию',
+
     hotCacheDirHint: 'При смене папки сбрасывается список в приложении; уже скачанные файлы остаются на старом пути, пока вы их не удалите.',
+
     hotCacheEnabled: 'Включить горячий кэш воспроизведения',
+
     hotCacheMaxMb: 'Максимальный размер кэша',
+
     hotCacheDebounce: 'Задержка после изменения очереди',
+
     hotCacheDebounceImmediate: 'Сразу',
+
     hotCacheDebounceSeconds: '{{n}} с',
+
     hotCacheClearBtn: 'Очистить горячий кэш',
+
     audioOutputDevice: 'Устройство вывода звука',
+
     audioOutputDeviceDesc: 'Выберите аудиоустройство для воспроизведения. Изменения применяются немедленно и перезапускают текущий трек.',
+
     audioOutputDeviceDefault: 'Системное по умолчанию',
+
     audioOutputDeviceRefresh: 'Обновить список устройств',
+
     audioOutputDeviceOsDefaultNow: 'текущий системный вывод',
+
     audioOutputDeviceListError: 'Не удалось загрузить список аудиоустройств.',
+
     audioOutputDeviceNotInCurrentList: 'нет в текущем списке',
+
     hiResTitle: 'Нативное воспроизведение Hi-Res',
+
     hiResEnabled: 'Включить нативное Hi-Res воспроизведение',
+
     hiResDesc: "По умолчанию вывод ограничен до 44,1 кГц для максимальной стабильности. Включайте только если оборудование и сеть надёжно поддерживают высокие частоты (88,2 кГц+).",
+
     showArtistImages: 'Фото исполнителей',
+
     showArtistImagesDesc:
+
       'Показывать обложки в разделе «Исполнители». По умолчанию выключено — меньше нагрузки на диск и сеть.',
+
     showTrayIcon: 'Иконка в трее',
+
     showTrayIconDesc: 'Показывать Psysonic в области уведомлений / строке меню.',
+
     minimizeToTray: 'Сворачивать в трей',
+
     minimizeToTrayDesc: 'При закрытии окна не выходить из приложения, а оставаться в трее.',
+
     useCustomTitlebar: 'Своя строка заголовка',
+
     useCustomTitlebarDesc:
+
       'Заменить системную строку заголовка встроенной, в стиле темы приложения. Отключите, чтобы использовать родную строку GNOME/GTK и т.д.',
+
     discordRichPresence: 'Статус в Discord',
+
     discordRichPresenceDesc:
+
       'Показывать текущий трек в профиле и статусе Discord. Нужен запущенный клиент Discord.',
+
     discordAppleCovers: 'Загружать обложки через Apple Music для Discord',
+
     discordAppleCoversDesc: 'Отправляет имя исполнителя и альбома в Apple Music API для поиска обложки для профиля Discord. По умолчанию отключено из соображений конфиденциальности.',
+
+    discordTemplates: 'Пользовательские шаблоны текста',
+
+    discordTemplatesDesc: 'Настройте, какая информация отображается в вашем профиле Discord. Переменные: {title}, {artist}, {album}, {paused}',
+
+    discordTemplateDetails: 'Основная строка (details)',
+
+    discordTemplateState: 'Вторичная строка (state)',
+
+    discordTemplateLargeText: 'Подсказка альбома (largeText)',
+
     nowPlayingEnabled: 'Показывать в «Сейчас играет»',
+
     nowPlayingEnabledDesc:
+
       'Отправлять на сервер, что вы сейчас слушаете. Отключите, чтобы не делиться этим.',
+
     lyricsServerFirst: 'Предпочитать тексты с сервера',
+
     lyricsServerFirstDesc: 'Проверять тексты песен, предоставленные сервером (встроенные теги, sidecar-файлы) перед запросом LRCLIB. Отключите, чтобы сначала использовать LRCLIB.',
+
     enableNeteaselyrics: 'Тексты из Netease Cloud Music',
+
     enableNeteaselyricsDesc: 'Использовать Netease Cloud Music как последний источник текстов, когда остальные способы не находят ничего. Лучшее покрытие для азиатской и международной музыки.',
+
     lyricsSourcesTitle: 'Источники текстов',
+
     lyricsSourcesDesc: 'Выберите источники для поиска текстов и их порядок. Перетаскивайте для сортировки. Отключённые источники пропускаются.',
+
     lyricsSourceServer: 'Сервер',
+
     lyricsSourceLrclib: 'LRCLIB',
+
     lyricsSourceNetease: 'Netease Cloud Music',
+
     downloadsTitle: 'Экспорт ZIP и архивов',
+
     downloadsFolderDesc: 'Куда сохранять альбомы в ZIP архиве на диск.',
+
     downloadsDefault: 'Папка «Загрузки» по умолчанию',
+
     pickFolder: 'Выбрать',
+
     pickFolderTitle: 'Папка для загрузок',
+
     clearFolder: 'Сбросить папку',
+
     logout: 'Выйти',
+
     aboutTitle: 'О Psysonic',
+
     aboutDesc:
+
       'Современный десктопный плеер для серверов с протоколом Subsonic (Navidrome, Gonic и др.). На Tauri v2 и нативном аудиодвижке на Rust — лёгкий и быстрый: волновая шкала, синхронные тексты, Last.fm, 10-полосный EQ, кроссфейд, воспроизведение без пауз, Replay Gain, жанры и много тем оформления.',
+
     aboutLicense: 'Лицензия',
+
     aboutLicenseText: 'GNU GPL v3 — свободное использование и изменение на тех же условиях.',
+
     aboutRepo: 'Исходный код на GitHub',
+
     aboutVersion: 'Версия',
+
     aboutBuiltWith: 'Tauri · React · TypeScript · Rust/rodio',
+
     aboutAiCredit: 'При поддержке Claude Code (Anthropic)',
+
     aboutContributorsLabel: 'Участники',
+
     aboutSpecialThanksLabel: 'Особая благодарность',
+
     changelog: 'Список изменений',
+
     showChangelogOnUpdate: 'Показывать «Что нового» после обновления',
+
     showChangelogOnUpdateDesc: 'Автоматически при первом запуске новой версии.',
+
     randomMixTitle: 'Случайный микс',
+
     randomMixBlacklistTitle: 'Свои слова-фильтры',
+
     randomMixBlacklistDesc:
+
       'Треки скрываются, если слово встречается в жанре, названии, альбоме или исполнителе (когда включён фильтр выше).',
+
     randomMixBlacklistPlaceholder: 'Добавить слово…',
+
     randomMixBlacklistAdd: 'Добавить',
+
     randomMixBlacklistEmpty: 'Пока пусто.',
+
     randomMixHardcodedTitle: 'Встроенные слова (при включённом фильтре)',
+
     tabAudio: 'Звук',
+
     tabStorage: 'Хранилище и загрузки',
+
     tabAppearance: 'Внешний вид',
+
     homeCustomizerTitle: 'Главная',
+
     sidebarTitle: 'Боковая панель',
+
     sidebarReset: 'Сбросить порядок',
+
     sidebarDrag: 'Перетащите для порядка',
+
     sidebarFixed: 'Всегда показывать',
-    randomNavSplitTitle: 'Разделить навигацию микса',
-    randomNavSplitDesc: 'Показывать «Случайный микс» и «Случайные альбомы» как отдельные пункты боковой панели вместо хаба «Собрать микс».',
+
     tabInput: 'Ввод',
+
     tabServer: 'Сервер',
+
     tabSystem: 'Система',
+
     tabGeneral: 'Общие',
+
     ratingsSectionTitle: 'Рейтинги',
+
     ratingsSkipStarTitle: 'Скипнуть для 1 звезды',
+
     ratingsSkipStarDesc:
+
       'При N скипов подряд ставить 1★ треку. Только для не оцененных ранее.',
+
     ratingsSkipStarThresholdLabel: 'Скипов',
+
     ratingsMixFilterTitle: 'Фильтрация по рейтингу',
+
     ratingsMixFilterDesc:
+
       'Фильтровать с низким рейтингом в «{{mix}}» и «{{albums}}». Повторный клик по выбранной звезде отключает порог.',
+
     ratingsMixMinSong: 'Песни',
+
     ratingsMixMinAlbum: 'Альбомы',
+
     ratingsMixMinArtist: 'Исполнители',
+
     ratingsMixMinThresholdAria: 'Минимум звёзд: {{label}}',
+
     backupTitle: 'Резервная копия',
+
     backupExport: 'Экспорт настроек',
+
     backupExportDesc:
+
       'Сохраняет настройки, серверы, Last.fm, тему, EQ и горячие клавиши в файл .psybkp. Пароли в открытом виде — храните файл в безопасности.',
+
     backupImport: 'Импорт настроек',
+
     backupImportDesc: 'Восстановить из .psybkp. Приложение перезапустится.',
+
     backupImportConfirm: 'Текущие настройки будут заменены. Продолжить?',
+
     backupSuccess: 'Копия сохранена',
+
     backupImportSuccess: 'Настройки восстановлены — перезапуск…',
+
     backupImportError: 'Файл повреждён или не подходит.',
+
     shortcutsReset: 'Сбросить',
+
     shortcutListening: 'Нажмите клавишу…',
+
     shortcutUnbound: '—',
+
     globalShortcutsTitle: 'Глобальные сочетания',
+
     globalShortcutsNote:
+
       'Работают, когда окно не в фокусе. Нужен модификатор: Ctrl, Alt или Super.',
+
     shortcutClear: 'Сбросить',
+
     shortcutPlayPause: 'Пауза / воспроизведение',
+
     shortcutNext: 'Следующий трек',
+
     shortcutPrev: 'Предыдущий трек',
+
     shortcutVolumeUp: 'Громче',
+
     shortcutVolumeDown: 'Тише',
+
     shortcutSeekForward: 'Вперёд на 10 с',
+
     shortcutSeekBackward: 'Назад на 10 с',
+
     shortcutToggleQueue: 'Показать / скрыть очередь',
+
     shortcutOpenFolderBrowser: 'Открыть {{folderBrowser}}',
+
     shortcutFullscreenPlayer: 'Полноэкранный плеер',
+
     shortcutNativeFullscreen: 'Системный полный экран',
+
     playbackTitle: 'Воспроизведение',
+
     replayGain: 'Replay Gain',
+
     replayGainDesc: 'Выравнивание громкости по метаданным ReplayGain',
+
     replayGainMode: 'Режим',
+
     replayGainTrack: 'По треку',
+
     replayGainAlbum: 'По альбому',
+
     replayGainPreGain: 'Предусиление (файлы с тегами)',
+
     replayGainFallback: 'Резерв (без тегов / радио)',
+
     crossfade: 'Кроссфейд',
+
     crossfadeDesc: 'Плавный переход между треками',
+
     crossfadeSecs: '{{n}} с',
+
     notWithGapless: 'Недоступно при включённом режиме без пауз',
+
     notWithCrossfade: 'Недоступно при включённом кроссфейде',
+
     gapless: 'Без пауз между треками',
+
     gaplessDesc: 'Заранее подгружать следующий трек, чтобы не было тишины',
+
     preloadMode: 'Предзагрузка следующего трека',
+
     preloadModeDesc: 'Когда начинать буферизацию следующего в очереди',
+
     nextTrackBufferingTitle: 'Буферизация следующего трека',
+
     preloadHotCacheMutualExclusive: 'Предзагрузка и Hot Cache выполняют одну функцию — одновременно может быть активна только одна. Включение одной автоматически отключает другую.',
+
     preloadOff: 'Выкл.',
+
     preloadBalanced: 'Умеренно (за 30 с до конца)',
+
     preloadEarly: 'Рано (через 5 с после старта)',
+
     preloadCustom: 'Свой интервал',
+
     preloadCustomSeconds: 'Секунд до конца: {{n}}',
+
     infiniteQueue: 'Бесконечная очередь',
+
     infiniteQueueDesc: 'Подмешивать случайные треки, когда очередь закончится',
+
     experimental: 'Экспериментально',
+
     fsPlayerSection: 'Полноэкранный плеер',
+
     fsShowArtistPortrait: 'Отображать фото артиста',
+
     fsShowArtistPortraitDesc: 'Показывать фото артиста (или обложку альбома) в правой части полноэкранного плеера.',
+
     fsPortraitDim: 'Затемнение фото',
+
     seekbarStyle: 'Стиль прогресс-бара',
+
     seekbarStyleDesc: 'Выбор внешнего вида полосы воспроизведения',
+
     seekbarWaveform: 'Форма волны',
+
     seekbarLinedot: 'Линия и точка',
+
     seekbarBar: 'Полоса',
+
     seekbarThick: 'Толстая полоса',
+
     seekbarSegmented: 'Сегменты',
+
     seekbarNeon: 'Неон',
+
     seekbarPulsewave: 'Пульс-волна',
+
     seekbarParticletrail: 'Частицы',
+
     seekbarLiquidfill: 'Жидкость',
+
     seekbarRetrotape: 'Ретро-лента',
+
     themeSchedulerTitle: 'Расписание тем',
+
     themeSchedulerEnable: 'Включить расписание тем',
+
     themeSchedulerEnableSub: 'Автоматически переключается между двумя темами в зависимости от времени суток',
+
     themeSchedulerDayTheme: 'Дневная тема',
+
     themeSchedulerDayStart: 'День начинается в',
+
     themeSchedulerNightTheme: 'Ночная тема',
+
     themeSchedulerNightStart: 'Ночь начинается в',
+
     themeSchedulerActiveHint: 'Расписание тем активно - темы переключаются автоматически.',
+
     visualOptionsTitle: 'Визуальные Настройки',
+
     coverArtBackground: 'Фон Обложки',
+
     coverArtBackgroundSub: 'Показывать размытую обложку как фон в заголовках альбомов и плейлистов',
+
     playlistCoverPhoto: 'Обложка Плейлиста',
+
     playlistCoverPhotoSub: 'Показывать сетку обложек в детальном виде плейлиста',
+
     showBitrate: 'Показывать Битрейт',
+
     showBitrateSub: 'Отображать битрейт аудио в списках треков',
+
     uiScaleTitle: 'Масштаб интерфейса',
+
     uiScaleLabel: 'Масштаб',
+
   },
+
   changelog: {
+
     modalTitle: 'Что нового',
+
     dontShowAgain: 'Больше не показывать',
+
     close: 'Понятно',
+
   },
+
   help: {
+
     title: 'Справка',
+
     s1: 'С чего начать',
+
     q1: 'Какие серверы подходят?',
+
     a1:
+
       'Любой с API Subsonic: Navidrome, Gonic, Subsonic, Airsonic и др. Для новых проектов чаще всего рекомендуют Navidrome.',
+
     q2: 'Как подключиться?',
+
     a2:
+
       'Настройки → «Добавить сервер»: адрес (например 192.168.1.100:4533), логин и пароль. Соединение проверяется до сохранения — при ошибке профиль не записывается.',
+
     q3: 'Можно несколько серверов?',
+
     a3: 'Да. Добавляйте сколько нужно и переключайтесь. Активен всегда один.',
+
     s2: 'Воспроизведение',
+
     q4: 'Как включить музыку?',
+
     a4:
+
       'Двойной щелчок по треку. На странице альбома или исполнителя — «Воспроизвести всё». Треки можно перетащить в панель очереди.',
+
     q5: 'Какие есть горячие клавиши?',
+
     a5:
+
       'Пробел — пауза/воспроизведение, Esc — закрыть полноэкранный плеер. Медиаклавиши работают на всех платформах; на Linux иногда удобнее кнопки в панели плеера. Свои сочетания — в Настройках.',
+
     q6: 'Что такое очередь?',
+
     a6:
+
       'Список следующих треков. Открывается иконкой справа вверху. Можно перетаскивать порядок, перемешивать и сохранять как плейлист.',
+
     q7: 'Как открыть полноэкранный плеер?',
+
     a7: 'Миниатюра обложки внизу или кнопка разворота рядом. Esc — выход.',
+
     q8: 'Как работает повтор?',
+
     a8: 'Кнопка повтора в панели: выкл. → все → один трек.',
+
     s3: 'Медиатека',
+
     q9: 'Как скачать альбом?',
+
     a9:
+
       'Страница альбома → «Скачать (ZIP)». Сервер сначала собирает архив — для больших альбомов или FLAC это может занять время; прогресс появится, когда начнётся передача файла.',
+
     q10: 'Как добавить в избранное?',
+
     a10: 'Звёздочка у трека или в шапке альбома. Всё избранное — в разделе слева.',
+
     q11: 'Что за карусель на главной?',
+
     a11:
+
       'Случайные альбомы из библиотеки, смена примерно каждые 10 с. Точки — перейти к слайду, клик по баннеру — открыть альбом.',
+
     s4: 'Настройки',
+
     q12: 'Как сменить тему?',
+
     a12: 'Настройки → Тема. Много готовых наборов в нескольких категориях.',
+
     q13: 'Как сменить язык?',
+
     a13:
+
       'Настройки → Язык: английский, немецкий, французский, нидерландский, китайский, норвежский, русский и русский (альтернативный, Русский 2).',
+
     q15: 'Куда сохраняются ZIP?',
+
     a15:
+
       'Настройки → Поведение → папка загрузок. Без выбора используется стандартная папка загрузок браузера/системы.',
+
     s5: 'Скробблинг',
+
     q16: 'Как устроен скробблинг?',
+
     a16:
+
       'Psysonic шлёт прослушивания напрямую на Last.fm — в Navidrome ничего настраивать не нужно. Подключите аккаунт в настройках.',
+
     q17: 'Когда уходит скроббл?',
+
     a17: 'После прослушивания примерно половины трека.',
+
     q22: 'Что за волна внизу?',
+
     a22:
+
       'Волновая шкала вместо ползунка: клик — переход, перетаскивание — перемотка. Пройденный фрагмент подсвечен, дальше — буфер и остаток.',
+
     q24: 'Можно перемешать очередь?',
+
     a24: 'Да. В панели очереди — кнопка перемешивания. Текущий трек остаётся первым.',
+
     q25: 'Ссылки Last.fm и Wikipedia открываются в браузере?',
+
     a25: 'Да, в системном браузере по умолчанию. Кратко показывается подтверждение.',
+
     s7: 'Случайный микс',
+
     q26: 'Что такое случайный микс?',
+
     a26:
+
       'Случайный набор треков из всей библиотеки. Раздел в боковой панели → «Новый микс». Число треков можно задать заранее.',
+
     q27: 'Что за фильтр по словам?',
+
     a27:
+
       'Исключает треки, где в жанре, названии или альбоме есть заданные слова. Аудиокниги отсекаются автоматически. Свои слова — в настройках микса или кликом по тегу жанра в списке.',
+
     q28: 'Что за «супер-микс» по жанру?',
+
     a28:
+
       'Грубая группировка стилей (рок, метал, электроника и т. д.) и микс внутри выбранной группы. Результаты подгружаются по мере запросов.',
+
     s6: 'Если что-то не так',
+
     q18: 'Медленно грузятся обложки.',
+
     a18:
+
       'Первый раз картинки тянутся с сервера и кэшируются на ~30 дней. Медленный диск на сервере даёт задержку только при первом заходе.',
+
     q19: 'Тест соединения не проходит.',
+
     a19:
+
       'Проверьте адрес с портом (http://192.168.1.100:4533), файрвол, для локалки иногда нужен http вместо https. Логин и пароль должны совпадать с сервером.',
+
     q20: 'Нет звука в Linux.',
+
     a20:
+
       'Есть пакеты .deb, .rpm и AUR. Убедитесь, что запущены PipeWire или PulseAudio.',
+
     q21: 'Чёрный экран в Linux.',
+
     a21:
+
       'Часто драйвер GPU / WebKitGTK. Запуск с GDK_BACKEND=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1. В официальных пакетах это часто уже задано.',
+
     q29: 'Кроссфейд и воспроизведение без пауз?',
+
     a29:
+
       'Экспериментальные опции в Настройках → Звук. Режим без пауз заранее подгружает следующий трек. Кроссфейд плавно накладывает треки, длина 1–10 с.',
+
     q30: 'Есть тексты песен?',
+
     a30:
+
       'Да. Иконка микрофона в панели плеера — вкладка текстов в очереди. Источник LRCLIB; синхронные строки подсвечиваются по ходу трека.',
+
     q31: 'Можно переназначить клавиши?',
+
     a31: 'Да: Настройки → сочетания в приложении и глобальные (работают в фоне).',
+
     q32: 'Можно сменить шрифт?',
+
     a32: 'Да, в настройках шрифта — набор гарнитур на весь интерфейс.',
+
     s8: 'Офлайн',
+
     q34: 'Что такое офлайн-режим?',
+
     a34:
+
       'Кэш альбомов на устройстве для прослушивания без сервера. Воспроизведение идёт с диска.',
+
     q35: 'Как сохранить альбом офлайн?',
+
     a35:
+
       'Страница альбома → иконка загрузки в шапке. Прогресс на кнопке, после загрузки — индикатор готовности. Список — в офлайн-библиотеке.',
+
     q36: 'Сколько места занимает офлайн?',
+
     a36:
+
       'Лимит задаётся в настройках. При переполнении на странице альбома появится предупреждение; удалить можно из офлайн-библиотеки.',
+
     q37: 'Как ставить оценки трекам, альбомам и исполнителям?',
+
     a37: 'Psysonic поддерживает оценки от 1 до 5 звёзд через OpenSubsonic API (требует Navidrome ≥ 0.53). Треки оцениваются в списке треков альбома или плейлиста, в контекстном меню или прямо в панели плеера. Альбомы — на странице альбома, исполнители — на странице исполнителя.',
+
     q38: 'Можно ли удалить или изменить оценку?',
+
     a38: 'Да. Повторный клик по активной звезде полностью удаляет оценку — второй клик по той же звезде её стирает. Для изменения оценки просто нажмите другую звезду.',
+
     q39: 'Что такое Skip-to-1★ и фильтр по рейтингу?',
+
     a39: 'Skip-to-1★ автоматически присваивает оценку 1 звезда после заданного числа последовательных пропусков. Включается в Настройки → Рейтинги. Там же задаётся минимальный рейтинг для случайных миксов.',
+
     q40: 'Что такое браузер папок?',
+
     a40: 'Браузер папок (боковая панель) позволяет навигировать по музыкальному каталогу сервера в колонках Миллера. Клик по папке открывает содержимое; иконка воспроизведения запускает или добавляет в очередь.',
+
     q41: 'Что такое планировщик тем?',
+
     a41: 'Настройки → Внешний вид → Авто-смена темы: задайте дневную и ночную тему со временем начала. Psysonic переключается автоматически в указанное время.',
+
     q42: 'Можно ли масштабировать интерфейс?',
+
     a42: 'Да. Настройки → Внешний вид → Масштаб интерфейса позволяет масштабировать весь UI от 80 % до 125 %.',
+
     q43: 'Можно ли изменить стиль seekbar?',
+
     a43: 'Да. Настройки → Внешний вид → Стиль seekbar предлагает 10 стилей: Осциллограмма, Линия и точка, Полоса, Толстая полоса, Сегментированная, Неоновое свечение, Пульсовая волна, Частицы, Жидкое заполнение и Ретро кассета.',
+
     q44: 'Что такое AutoEQ?',
+
     a44: '10-полосный эквалайзер в Настройки → Аудио включает поиск AutoEQ. Введите модель наушников — Psysonic автоматически загрузит и применит профиль коррекции.',
+
     q45: 'Что такое Replay Gain?',
+
     a45: 'Replay Gain нормализует громкость, чтобы громкие и тихие альбомы воспроизводились на одинаковом уровне. Включается в Настройки → Аудио → Replay Gain; режим трека или альбома.',
+
     q46: 'Что такое горячий кэш?',
+
     a46: 'Горячий кэш (Alpha, Настройки → Библиотека) предзагружает следующие треки очереди на диск для мгновенного воспроизведения. Psysonic хранит текущий трек и следующие 5, вытесняя старые записи при достижении лимита.',
+
     q47: 'Можно ли кэшировать плейлист для офлайн?',
+
     a47: 'Да. Откройте детали плейлиста и нажмите иконку загрузки. После полного кэширования иконка сменяется на красную корзину; нажмите её, чтобы удалить плейлист из офлайн-кэша.',
-    q48: 'Что такое бесконечная очередь?',
-    a48: 'Когда очередь заканчивается и повтор отключён, Psysonic автоматически добавляет случайные треки, чтобы воспроизведение не прерывалось. Автодобавленные треки отображаются под разделителем «— Добавлено автоматически —».',
-    q49: 'Можно ли управлять Psysonic через командную строку?',
-    a49: 'Да. Примеры: psysonic --player play / pause / next / prev, --player volume 75, --player seek 15, --player mute, --player shuffle, --player repeat off|all|one. Также: переключение сервера, аудиоустройства, фильтрация библиотеки и поиск. Полная справка: psysonic --player --help.',
-    q50: 'Как управлять плейлистами?',
-    a50: 'Через «Плейлисты» на боковой панели. Создайте новый плейлист кнопкой «Новый плейлист». В детальном представлении перетаскивайте треки для сортировки, удаляйте кнопкой ×, добавляйте через поиск и используйте «Предложения» для умных рекомендаций.',
-    q51: 'Можно ли создать резервную копию настроек?',
-    a51: 'Да. Настройки → Резервная копия и восстановление экспортирует все настройки, профили серверов, темы и горячие клавиши в JSON-файл.',
-    q52: 'Как изменить устройство вывода звука?',
-    a52: 'Настройки → Аудио → Устройство вывода. Psysonic показывает все доступные выходы. Выбор вступает в силу немедленно.',
-    q53: 'Что такое синхронизация с устройством?',
-    a53: 'Device Sync копирует альбомы, плейлисты или исполнителей на USB-накопитель или SD-карту. Откройте через «Device Sync» на боковой панели, выберите папку назначения, источники и нажмите «Передать на устройство».',
-    q54: 'Что такое шаблон имени файла в Device Sync?',
-    a54: 'Шаблон определяет, как треки будут называться и организованы. Используйте предустановки или создайте свой шаблон из токенов: {artist}, {album}, {title}, {track_number}, {disc_number}, {year} и / как разделитель папок.',
-    q55: 'Работает ли Device Sync между разными платформами?',
-    a55: 'Да. Манифест на устройстве содержит использованный шаблон. На другой ОС Psysonic корректно распознаёт уже существующие файлы.',
-    s9: 'Device Sync',
-    q56: 'Что такое интернет-радио?',
-    a56: 'Страница интернет-радио позволяет воспроизводить прямые трансляции в Psysonic. Станции берутся с сервера Navidrome. Воспроизведение использует HTML5-аудио.',
-    q57: 'Какие форматы потоков поддерживает интернет-радио?',
-    a57: 'MP3, AAC, OGG Vorbis и большинство HLS-потоков. MP3 и AAC работают на всех платформах.',
-    s10: 'Интернет-радио',
-    q58: 'Откуда Psysonic берёт тексты песен?',
-    a58: 'Три настраиваемых источника в Настройках → Тексты: сервер Navidrome, LRCLIB и NetEase Cloud Music. Каждый источник можно включить/отключить и приоритизировать перетаскиванием.',
-    q59: 'Есть ли просмотр того, что слушают другие пользователи?',
-    a59: 'Да. Нажмите на иконку трансляции в правом верхнем углу, чтобы увидеть, что слушают другие пользователи на вашем сервере Navidrome, с обновлением каждые 10 секунд.',
+
   },
+
   queue: {
+
     title: 'Очередь',
+
     savePlaylist: 'Сохранить как плейлист',
+
     updatePlaylist: 'Обновить плейлист',
+
     filterPlaylists: 'Фильтр плейлистов…',
+
     playlistName: 'Название плейлиста',
+
     cancel: 'Отмена',
+
     save: 'Сохранить',
+
     loadPlaylist: 'Загрузить плейлист',
+
     loading: 'Загрузка…',
+
     noPlaylists: 'Плейлистов нет.',
+
     load: 'Заменить очередь и играть',
+
     appendToQueue: 'Добавить в очередь',
+
     delete: 'Удалить',
+
     deleteConfirm: 'Удалить плейлист «{{name}}»?',
+
     clear: 'Очистить',
+
     shuffle: 'Перемешать',
+
     gapless: 'Без пауз',
+
     crossfade: 'Кроссфейд',
+
     infiniteQueue: 'Бесконечная очередь',
+
     autoAdded: '— Добавлено автоматически —',
+
     radioAdded: '— Радио —',
+
     hide: 'Скрыть',
+
     close: 'Закрыть',
+
     nextTracks: 'Дальше',
+
     emptyQueue: 'Очередь пуста.',
+
     trackSingular: 'трек',
+
     trackPlural: 'треков',
+
     showRemaining: 'Осталось',
+
     showTotal: 'Всего',
+
   },
+
   statistics: {
+
     title: 'Статистика',
+
     recentlyPlayed: 'Недавно проиграно',
+
     mostPlayed: 'Самые проигранные альбомы',
+
     highestRated: 'С высоким рейтингом',
+
     genreDistribution: 'Жанры (топ-20)',
+
     loadMore: 'Ещё',
+
     statArtists: 'Исполнители',
+
     statArtistsTooltip: 'Только исполнители альбомов — артисты, присутствующие лишь в треках (фичеринг, гость и т. д.) без собственного альбома, не учитываются.',
+
     statAlbums: 'Альбомы',
+
     statSongs: 'Треки',
+
     statGenres: 'Жанры',
+
     statPlaytime: 'Время звучания',
+
     genreInsights: 'По жанрам',
+
     formatDistribution: 'Форматы',
+
     formatSample: 'Выборка {{n}} треков',
+
     computing: 'Считаем…',
+
     genreSongs_one: '{{count}} композиция',
+
     genreSongs_few: '{{count}} композиции',
+
     genreSongs_many: '{{count}} композиций',
+
     genreSongs_other: '{{count}} композиций',
+
     genreAlbums_one: '{{count}} альбом',
+
     genreAlbums_few: '{{count}} альбома',
+
     genreAlbums_many: '{{count}} альбомов',
+
     genreAlbums_other: '{{count}} альбомов',
+
     recentlyAdded: 'Недавно добавлено',
+
     decadeDistribution: 'Альбомы по десятилетиям',
+
     decadeAlbums_one: '{{count}} альбом',
+
     decadeAlbums_few: '{{count}} альбома',
+
     decadeAlbums_many: '{{count}} альбомов',
+
     decadeAlbums_other: '{{count}} альбомов',
+
     decadeUnknown: 'Неизвестно',
+
     lfmTitle: 'Статистика Last.fm',
+
     lfmTopArtists: 'Топ исполнителей',
+
     lfmTopAlbums: 'Топ альбомов',
+
     lfmTopTracks: 'Топ треков',
+
     lfmPlays_one: '{{count}} прослушивание',
+
     lfmPlays_few: '{{count}} прослушивания',
+
     lfmPlays_many: '{{count}} прослушиваний',
+
     lfmPlays_other: '{{count}} прослушиваний',
+
     lfmPeriodOverall: 'За всё время',
+
     lfmPeriod7day: '7 дней',
+
     lfmPeriod1month: 'Месяц',
+
     lfmPeriod3month: '3 месяца',
+
     lfmPeriod6month: '6 месяцев',
+
     lfmPeriod12month: 'Год',
+
     lfmNotConnected: 'Подключите Last.fm в настройках.',
+
     lfmRecentTracks: 'Последние скробблы',
+
     lfmNowPlaying: 'Сейчас играет',
+
     lfmJustNow: 'только что',
+
     lfmMinutesAgo: '{{n}} мин назад',
+
     lfmHoursAgo: '{{n}} ч назад',
+
     lfmDaysAgo: '{{n}} дн. назад',
+
     topRatedSongs: 'Лучшие по рейтингу треки',
+
     topRatedArtists: 'Лучшие по рейтингу исполнители',
+
     noRatedSongs: 'Нет оценённых треков. Ставьте оценки в альбомах или плейлистах.',
+
     noRatedArtists: 'Нет оценённых исполнителей.',
+
   },
+
   player: {
+
     regionLabel: 'Плеер',
+
     openFullscreen: 'Полноэкранный плеер',
+
     fullscreen: 'Полноэкранный режим',
+
     closeFullscreen: 'Выйти из полноэкранного',
+
     closeTooltip: 'Закрыть (Esc)',
+
     noTitle: 'Без названия',
+
     stop: 'Стоп',
+
     prev: 'Предыдущий трек',
+
     play: 'Играть',
+
     pause: 'Пауза',
+
     next: 'Следующий трек',
+
     repeat: 'Повтор',
+
     repeatOff: 'Выкл.',
+
     repeatAll: 'Все',
+
     repeatOne: 'Один',
+
     progress: 'Прогресс',
+
     volume: 'Громкость',
+
     toggleQueue: 'Очередь',
+
     lyrics: 'Текст',
+
     lyricsLoading: 'Загрузка текста…',
+
     lyricsNotFound: 'Текст не найден',
+
     lyricsSourceNetease: 'Источник: Netease',
+
   },
+
   songInfo: {
+
     title: 'О треке',
+
     songTitle: 'Название',
+
     artist: 'Исполнитель',
+
     album: 'Альбом',
+
     albumArtist: 'Альбомный исполнитель',
+
     year: 'Год',
+
     genre: 'Жанр',
+
     duration: 'Длительность',
+
     track: 'Номер',
+
     format: 'Формат',
+
     bitrate: 'Битрейт',
+
     sampleRate: 'Частота',
+
     bitDepth: 'Разрядность',
+
     channels: 'Каналы',
+
     fileSize: 'Размер файла',
+
     path: 'Путь',
+
     replayGainTrack: 'RG по треку',
+
     replayGainAlbum: 'RG по альбому',
+
     replayGainPeak: 'Пик RG',
+
     mono: 'Моно',
+
     stereo: 'Стерео',
+
   },
+
   playlists: {
+
     title: 'Плейлисты',
+
     newPlaylist: 'Новый плейлист',
+
     unnamed: 'Без названия',
+
     createName: 'Название…',
+
     create: 'Создать',
+
     cancel: 'Отмена',
+
     empty: 'Плейлистов пока нет.',
+
     emptyPlaylist: 'Плейлист пуст.',
+
     addFirstSong: 'Добавьте первый трек',
+
     notFound: 'Плейлист не найден.',
+
     songs: 'Треков: {{n}}',
+
     playAll: 'Воспроизвести всё',
+
     shuffle: 'Перемешать',
+
     addToQueue: 'В очередь',
+
     back: 'К списку плейлистов',
+
     deletePlaylist: 'Удалить',
+
     confirmDelete: 'Нажмите ещё раз для подтверждения',
+
     removeSong: 'Убрать из плейлиста',
+
     addSongs: 'Добавить треки',
+
     searchPlaceholder: 'Поиск по библиотеке…',
+
     noResults: 'Ничего не найдено.',
+
     suggestions: 'Рекомендации',
+
     noSuggestions: 'Пока нет рекомендаций.',
+
     titleBadge: 'Плейлист',
+
     refreshSuggestions: 'Обновить подборку',
+
     addSong: 'В плейлист',
+
     addSelected: 'Добавить выбранные',
+
     cacheOffline: 'Сохранить плейлист офлайн',
+
     offlineCached: 'Плейлист сохранён',
+
     removeOffline: 'Удалить из офлайн-кэша',
+
     offlineDownloading: 'Кэширование… ({{done}} из {{total}} альбомов)',
+
     publicLabel: 'Публичный',
+
     privateLabel: 'Личный',
+
     editMeta: 'Изменить плейлист',
+
     editNamePlaceholder: 'Название…',
+
     editCommentPlaceholder: 'Описание…',
+
     editPublic: 'Публичный плейлист',
+
     editSave: 'Сохранить',
+
     editCancel: 'Отмена',
+
     changeCover: 'Сменить обложку',
+
     changeCoverLabel: 'Сменить фото',
+
     removeCover: 'Убрать фото',
+
     coverUpdated: 'Обложка обновлена',
+
     metaSaved: 'Плейлист сохранён',
+
     downloadZip: 'Скачать (ZIP)',
+
     // Toast notifications for multi-select
+
     addSuccess: '{{count}} треков добавлено в {{playlist}}',
+
     addPartial: '{{added}} добавлено, {{skipped}} пропущено (дубликаты)',
+
     addAllSkipped: 'Все пропущены ({{count}} дубликатов)',
+
     addError: 'Ошибка при добавлении треков',
+
     createAndAddSuccess: 'Плейлист "{{playlist}}" создан с {{count}} треками',
+
     createError: 'Ошибка при создании плейлиста',
+
     deleteSuccess: '{{count}} плейлистов удалено',
+
     deleteFailed: 'Ошибка при удалении {{name}}',
+
     deleteSelected: 'Удалить выбранные',
+
     mergeSuccess: '{{count}} треков объединено в {{playlist}}',
+
     mergeNoNewSongs: 'Нет новых треков для добавления',
+
     mergeError: 'Ошибка при объединении плейлистов',
+
     mergeInto: 'Объединить в',
+
     selectionCount: '{{count}} выбрано',
+
     select: 'Выбрать',
+
     startSelect: 'Включить выбор',
+
     cancelSelect: 'Отмена',
+
     loadingAlbums: 'Загрузка {{count}} альбомов…',
+
     loadingArtists: 'Загрузка {{count}} исполнителей…',
+
     myPlaylists: 'Мои плейлисты',
+
     noOtherPlaylists: 'Нет других доступных плейлистов',
+
     addToPlaylistSuccess: '{{count}} треков добавлено в {{playlist}}',
+
     addToPlaylistNoNew: 'Нет новых треков для {{playlist}}',
+
     addToPlaylistError: 'Ошибка при добавлении в плейлист',
+
     removeSuccess: 'Трек убран из плейлиста',
+
     removeError: 'Ошибка при удалении из плейлиста',
+
     importCSV: 'Импорт CSV',
+
     importCSVTooltip: 'Импорт из CSV Spotify',
+
     csvImportReport: 'Отчёт об импорте CSV',
+
     csvImportTotal: 'Всего',
+
     csvImportAdded: 'Добавлено',
+
     csvImportDuplicates: 'Дубликаты',
+
     csvImportNotFound: 'Не найдено',
+
     csvImportNetworkErrors: 'Ошибки сети',
+
     csvImportDuplicatesTitle: 'Дубликаты (уже в плейлисте):',
+
     csvImportNotFoundTitle: 'Не найденные треки:',
+
     csvImportNetworkErrorsTitle: 'Ошибки сети (можно повторить импорт):',
+
     csvImportDownloadReport: 'Скачать отчёт',
+
     csvImportClose: 'Закрыть',
+
     csvImportNoValidTracks: 'В CSV-файле не найдено действительных треков',
+
     csvImportFailed: 'Не удалось импортировать CSV-файл',
+
     csvImportToast: '{{added}} добавлено, {{notFound}} не найдено, {{duplicates}} дубликатов',
+
   },
+
   mostPlayed: {
+
     title: 'Популярное',
+
     topArtists: 'Топ исполнителей',
+
     topAlbums: 'Топ альбомов',
+
     plays: '{{n}} прослушиваний',
+
     sortMost: 'Сначала популярные',
+
     sortLeast: 'Сначала малоизвестные',
+
     loadMore: 'Загрузить больше альбомов',
+
     noData: 'Пока нет данных о прослушивании. Начните слушать!',
+
     noArtists: 'Все исполнители отфильтрованы.',
+
     filterCompilations: 'Скрыть исполнителей сборников (Various Artists, Soundtracks и др.)',
+
     filterCompilationsShort: 'Скрыть сборники',
+
   },
+
   radio: {
+
     title: 'Онлайн-радио',
+
     empty: 'Радиостанции не настроены.',
+
     addStation: 'Добавить станцию',
+
     editStation: 'Изменить',
+
     deleteStation: 'Удалить станцию',
+
     confirmDelete: 'Нажмите ещё раз для подтверждения',
+
     stationName: 'Название станции…',
+
     streamUrl: 'URL потока…',
+
     homepageUrl: 'Сайт станции (необязательно)',
+
     save: 'Сохранить',
+
     cancel: 'Отмена',
+
     live: 'ЭФИР',
+
     liveStream: 'Онлайн-радио',
+
     openHomepage: 'Открыть сайт',
+
     changeCoverLabel: 'Сменить обложку',
+
     removeCover: 'Убрать обложку',
+
     browseDirectory: 'Каталог станций',
+
     directoryPlaceholder: 'Поиск станций…',
+
     noResults: 'Станции не найдены.',
+
     stationAdded: 'Станция добавлена',
+
     filterAll: 'Все',
+
     filterFavorites: 'Избранное',
+
     sortManual: 'Вручную',
+
     sortAZ: 'А → Я',
+
     sortZA: 'Я → А',
+
     sortNewest: 'Сначала новые',
+
     favorite: 'В избранное',
+
     unfavorite: 'Убрать из избранного',
+
     noFavorites: 'Избранных станций нет.',
+
     listenerCount_one: '{{count}} слушатель',
+
     listenerCount_other: '{{count}} слушателей',
+
     recentlyPlayed: 'Недавно сыгранное',
+
     upNext: 'Следующий',
+
   },
+
   folderBrowser: {
+
     empty: 'Папка пуста',
+
     error: 'Ошибка загрузки',
+
   },
+
   deviceSync: {
+
     title: 'Синхронизация устройства',
+
     targetFolder: 'Папка назначения',
+
     noFolderChosen: 'Папка не выбрана',
+
     selectDrive: 'Выберите диск…',
+
     refreshDrives: 'Обновить диски',
+
     noDrivesDetected: 'Съёмные диски не обнаружены',
+
     browseManual: 'Обзор вручную…',
+
     free: 'свободно',
+
     notMountedVolume: 'Цель не находится на смонтированном томе. Диск мог быть отключён.',
+
     chooseFolder: 'Выбрать…',
+
     filenameTemplate: 'Шаблон имени файла',
+
     targetDevice: 'Целевое устройство',
+
     templateHint: 'Переменные: {artist}, {album}, {title}, {track_number}, {disc_number}, {year}',
+
     cleanupButton: 'Удалить файлы вне выборки',
+
     cleanupNothingToDelete: 'Нечего удалять — устройство уже синхронизировано.',
+
     confirmCleanup: 'Удалить {{count}} файл(ов) с устройства, не входящих в текущую выборку. Продолжить?',
+
     cleanupComplete: '{{count}} файл(ов) удалено с устройства.',
+
     selectedSources: 'Выбранные источники',
+
     noSourcesSelected: 'Источники не выбраны. Нажмите на элементы в браузере, чтобы добавить их.',
+
     clearAll: 'Очистить всё',
+
     tabPlaylists: 'Плейлисты',
+
     tabAlbums: 'Альбомы',
+
     tabArtists: 'Исполнители',
+
     searchPlaceholder: 'Поиск…',
+
     syncButton: 'Синхронизировать на устройство',
+
     actionTransfer: 'Перенести на устройство',
+
     actionDelete: 'Удалить с устройства',
+
     actionApplyAll: 'Применить все изменения',
+
     templatePreview: 'Предпросмотр',
-    templatePresetStandard: 'Стандарт',
-    templatePresetMultiDisc: 'Мульти-диск',
-    templatePresetAltFolder: 'Альт. папка',
-    tokenSlashHint: '/ = разделитель папок',
+
     cancel: 'Отмена',
+
     noTargetDir: 'Сначала выберите папку назначения.',
+
     noSources: 'Выберите хотя бы один источник.',
+
     noTracks: 'В выбранных источниках не найдено треков.',
+
     fetchError: 'Ошибка загрузки треков с сервера.',
+
     syncComplete: 'Синхронизация завершена.',
+
     dismiss: 'Закрыть',
-    cancelSync: 'Отмена',
-    syncCancelled: 'Синхронизация отменена ({{done}} / {{total}} перенесено).',
+
     colName: 'Название',
+
     colType: 'Тип',
+
     colStatus: 'Статус',
+
     onDevice: 'Управление устройством',
+
     addSources: 'Добавить…',
+
     syncResult: '{{done}} перенесено, {{skipped}} уже актуально ({{total}} всего)',
+
     deleteFromDevice: 'Пометить для удаления ({{count}})',
+
     confirmDelete: 'Удалить {{count}} запись(ей) с устройства: {{names}}?',
+
     deleteComplete: '{{count}} запись(ей) удалено с устройства.',
-    manifestImported: 'Импортировано {{count}} источник(ов) из манифеста устройства.',
+
     statusSynced: 'Синхронизировано',
+
     statusPending: 'Ожидает',
+
     statusDeletion: 'Удаление',
+
     markForDeletion: 'Пометить для удаления',
+
     removeSource: 'Удалить',
+
     undoDeletion: 'Отменить удаление',
+
     syncInBackground: 'Синхронизация запущена в фоне — можно перейти в другой раздел.',
+
     syncInProgress: '{{done}} / {{total}} треков…',
+
     syncSummary: 'Сводка синхронизации',
+
     calculating: 'Вычисление необходимых данных…',
+
     filesToAdd: 'Файлы для добавления:',
+
     filesToDelete: 'Файлы для удаления:',
+
     netChange: 'Чистое изменение:',
+
     availableSpace: 'Доступное место на диске:',
+
     spaceWarning: 'Предупреждение: на целевом устройстве недостаточно сообщаемого места.',
+
     proceed: 'Продолжить синхронизацию',
+
     notEnoughSpace: 'Обнаружено недостаточно физического места на диске!',
+
     liveSearch: 'Live',
+
     randomAlbumsLabel: 'Случайные альбомы',
+
   },
+
 };
+

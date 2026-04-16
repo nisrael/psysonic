@@ -1,1163 +1,2264 @@
 export const nbTranslation = {
+
   sidebar: {
+
     library: 'Bibliotek',
+
     mainstage: 'Hovedscene',
+
     newReleases: 'Nye utgivelser',
+
     allAlbums: 'Alle album',
+
     randomAlbums: 'Tilfeldige album',
+
     randomPicker: 'Lag en miks',
+
     artists: 'Artister',
+
     randomMix: 'Tilfeldig miks',
+
     favorites: 'Favoritter',
+
     nowPlaying: 'Spilles nå',
+
     system: 'System',
+
     statistics: 'Statistikk',
+
     settings: 'Innstillinger',
+
     help: 'Hjelp',
+
     expand: 'Utvid sidefelt',
+
     collapse: 'Skjul sidefelt',
+
     downloadingTracks: 'Bufre {{n}} spor…',
+
     syncingTracks: 'Synkroniserer {{done}}/{{total}}…',
+
     cancelDownload: 'Avbryt nedlasting',
+
     offlineLibrary: 'Frakoblet bibliotek',
+
     genres: 'Sjangere',
+
     playlists: 'Spillelister',
+
     mostPlayed: 'Mest spilt',
+
     radio: 'Internettradio',
+
     folderBrowser: 'Mappeleser',
+
     deviceSync: 'Enhetssynk',
+
     libraryScope: 'Biblioteksomfang',
+
     allLibraries: 'Alle biblioteker',
+
     expandPlaylists: 'Utvid spillelister',
+
     collapsePlaylists: 'Skjul spillelister',
+
   },
+
   home: {
+
     hero: 'Utvalgt',
+
     starred: 'Personlige favoritter',
+
     recent: 'Nylig lagt til',
+
     mostPlayed: 'Mest spilt',
+
     recentlyPlayed: 'Nylig spilt',
+
     discover: 'Oppdag',
+
     loadMore: 'Last inn flere',
+
     discoverMore: 'Oppdag flere',
+
     discoverArtists: 'Oppdag artister',
+
     discoverArtistsMore: 'Alle artister'
+
   },
+
   hero: {
+
     eyebrow: 'Utvalgt album',
+
     playAlbum: 'Spill av album',
+
     enqueue: 'Legg til i kø',
+
     enqueueTooltip: 'Legg til hele albumet i køen',
+
   },
+
   search: {
+
     placeholder: 'Søk etter artist, album eller sang…',
+
     noResults: 'Ingen resultater funnet for "{{query}}"',
+
     artists: 'Artister',
+
     albums: 'Album',
+
     songs: 'Sanger',
+
     clearLabel: 'Fjern søk',
+
     title: 'Søk',
+
     resultsFor: 'Resultater for "{{query}}"',
+
     album: 'Album',
+
     advanced: 'Avansert søk',
+
     advancedSearchTerm: 'Søkeord',
+
     advancedSearchPlaceholder: 'Tittel, album, artist…',
+
     advancedGenre: 'Sjanger',
+
     advancedAllGenres: 'Alle sjangre',
+
     advancedYear: 'År',
+
     advancedYearFrom: 'fra',
+
     advancedYearTo: 'til',
+
     advancedAll: 'Alle',
+
     advancedSearch: 'Søk',
+
     advancedEmpty: 'Skriv inn et søkeord eller velg ett filter for å begynne.',
+
     advancedNoResults: 'Ingen resultater funnet.',
+
     advancedGenreNote: 'Sanger er tilfeldig valgt fra denne sjangeren.',
+
     recentSearches: 'Siste søk',
+
     browse: 'Utforsk',
+
     emptyHint: 'Hva vil du høre?',
+
     genres: 'Sjangre',
+
   },
+
   nowPlaying: {
+
     tooltip: 'Hvem lytter?',
+
     title: 'Hvem lytter?',
+
     loading: 'Laster…',
+
     nobody: 'Ingen lyttere for øyeblikket.',
+
     minutesAgo: '{{n}}m siden',
+
     nothingPlaying: 'Ingenting spiller akkurat å. Start et spor!',
+
     aboutArtist: 'Om artisten',
+
     fromAlbum: 'Fra dette albumet',
+
     viewAlbum: 'Se album',
+
     goToArtist: 'Gå til artist',
+
     readMore: 'Les mer',
+
     showLess: 'Vis mindre',
+
     genreInfo: 'Sjanger',
+
     trackInfo: 'Sporinfo',
+
   },
+
   contextMenu: {
+
     playNow: 'Spill nå',
+
     playNext: 'Spill neste',
+
     addToQueue: 'Legg til i kø',
+
     enqueueAlbum: 'Legg albumet i kø',
+
     startRadio: 'Start radio',
+
     instantMix: 'Instant Mix',
+
     instantMixFailed: 'Kunne ikke lage Instant Mix — server- eller pluginfeil.',
+
     cliMixNeedsTrack: 'Ingenting spilles — start avspilling først, og kjør mix-kommandoen på nytt.',
+
     lfmLove: 'Lik på Last.fm',
+
     lfmUnlove: 'Fjern fra likte på Last.fm',
+
     favorite: 'Favoritt',
+
     favoriteArtist: 'Favorittartist',
+
     favoriteAlbum: 'Favorittalbum',
+
     unfavorite: 'Fjern fra favoritter',
+
     unfavoriteArtist: 'Fjern artist fra favoritter',
+
     unfavoriteAlbum: 'Fjern album fra favoritter',
+
     removeFromQueue: 'Fjern fra kø',
+
     removeFromPlaylist: 'Fjern fra spilleliste',
+
     openAlbum: 'Åpne album',
+
     goToArtist: 'Gå til artist',
+
     download: 'Last ned (ZIP)',
+
     addToPlaylist: 'Legg til i spilleliste',
+
     selectedPlaylists: '{{count}} spillelister valgt',
+
     selectedAlbums: '{{count}} album valgt',
+
     selectedArtists: '{{count}} artister valgt',
+
     songInfo: 'Sanginfo',
+
   },
+
   albumDetail: {
+
     back: 'Tilbake',
+
     playAll: 'Spill alt',
+
     enqueue: 'Legg i kø',
+
     enqueueTooltip: 'Legg hele albumet i kø',
+
     artistBio: 'Artistbiografi',
+
     download: 'Last ned (ZIP)',
+
     downloading: 'Laster…',
+
     cacheOffline: 'Gjør tilgjengelig som frakoblet',
+
     offlineCached: 'Tilgjengelig frakoblet',
+
     offlineDownloading: 'Bufrer… ({{n}}/{{total}})',
+
     removeOffline: 'Fjern frakoblet hurtigbuffer',
+
     offlineStorageFull: 'Frakoblet lagring er full (lagringsgrense: {{mb}} MB). Frigjør plass, ved å slette et album fra ditt frakoblede bibliotek, eller øk lagringsgrensen i Innstillinger.',
+
     offlineStorageGoToLibrary: 'Frakoblet bibliotek',
+
     offlineStorageGoToSettings: 'Innstillinger',
+
     favoriteAdd: 'Legg til i favoritter',
+
     favoriteRemove: 'Fjern fra favoritter',
+
     favorite: 'Favoritt',
+
     noBio: 'Ingen biografi er tilgjengelig.',
+
     moreByArtist: 'Mer av {{artist}}',
+
     tracksCount: '{{n}} spor',
+
     goToArtist: 'Gå til {{artist}}',
+
     moreLabelAlbums: 'Flere album på {{label}}',
+
     trackTitle: 'Tittel',
+
     trackAlbum: 'Album',
+
     trackArtist: 'Artist',
+
     trackGenre: 'Sjanger',
+
     trackFormat: 'Format',
+
     trackFavorite: 'Favoritt',
+
     trackRating: 'Vurdering',
+
     trackDuration: 'Varighet',
+
     trackTotal: 'Totalt',
+
     columns: 'Kolonner',
-    resetColumns: 'Tilbakestill',
+
     notFound: 'Album ble ikke funnet.',
+
     bioModal: 'Artistbiografi',
+
     bioClose: 'Lukk',
+
     ratingLabel: 'Vurdering',
+
     enlargeCover: 'Forstørr',
+
     filterSongs: 'Filtrer sanger…',
+
     sortNatural: 'Naturlig',
+
     sortByTitle: 'A–Å (Tittel)',
+
     sortByArtist: 'A–Å (Artist)',
+
     sortByAlbum: 'A–Å (Album)',
+
   },
+
   entityRating: {
+
     albumShort: 'Albumvurdering',
+
     artistShort: 'Artistvurdering',
+
     albumAriaLabel: 'Albumvurdering',
+
     artistAriaLabel: 'Artistvurdering',
+
     saveFailed: 'Kunne ikke lagre vurderingen.',
+
   },
+
   artistDetail: {
+
     back: 'Tilbake',
+
     albums: 'Album',
+
     album: 'Album',
+
     playAll: 'Spill alt',
+
     shuffle: 'Tilfeldig rekkefølge',
+
     radio: 'Radio',
+
     loading: 'Laster…',
+
     noRadio: 'Ingen lignende spor funnet for denne artisten.',
+
     notFound: 'Artisten ble ikke funnet.',
+
     albumsBy: 'Album fra {{name}}',
+
     topTracks: 'Toppspor',
+
     noAlbums: 'Ingen album funnet.',
+
     trackTitle: 'Tittel',
+
     trackAlbum: 'Album',
+
     trackDuration: 'Varighet',
+
     favoriteAdd: 'Legg til i favoritter',
+
     favoriteRemove: 'Fjern fra favoritter',
+
     favorite: 'Favoritt',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} album',
+
     openedInBrowser: 'Åpnet i nettleser',
+
     featuredOn: 'Også en del av',
+
     similarArtists: 'Lignende artister',
+
     cacheOffline: 'Lagre diskografi som frakoblet',
+
     offlineCached: 'Diskografi bufret',
+
     offlineDownloading: 'Bufrer… ({{done}}/{{total}} album)',
+
     uploadImage: 'Last opp artistbilde',
+
     uploadImageError: 'Kunne ikke laste opp bildet',
+
   },
+
   favorites: {
+
     title: 'Favoritter',
+
     empty: "Du har ikke lagret noen favoritter ennå.",
+
     artists: 'Artister',
+
     albums: 'Album',
+
     songs: 'Sanger',
+
     enqueueAll: 'Legg alle i kø',
+
     playAll: 'Spill alle',
+
     removeSong: 'Fjern fra favoritter',
+
     stations: 'Radiostasjoner',
+
     showingFiltered: 'Viser {{filtered}} av {{total}} ({{artist}})',
+
     showingCount: 'Viser {{filtered}} av {{total}}',
+
     clearArtistFilter: 'Tøm artistfilter',
+
     noFilterResults: 'Ingen resultater med valgte filtre.',
+
     allArtists: 'Alle artister',
+
   },
+
   randomLanding: {
+
     title: 'Lag en miks',
+
     mixByTracks: 'Miks etter spor',
+
     mixByTracksDesc: 'Tilfeldig utvalg av spor fra hele biblioteket ditt',
+
     mixByAlbums: 'Miks etter album',
+
     mixByAlbumsDesc: 'Tilfeldige album for nye oppdagelser',
+
   },
+
   randomAlbums: {
+
     title: 'Tilfeldige album',
+
     refresh: 'Oppdater',
+
   },
+
   genres: {
+
     title: 'Sjangre',
+
     genreCount: 'Sjangre',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} album',
+
     loading: 'Laster sjangre…',
+
     empty: 'Ingen sjangre funnet.',
+
     albumsLoading: 'Laster album…',
+
     albumsEmpty: 'Ingen album funnet for denne sjangeren.',
+
     loadMore: 'Last mer',
+
     back: 'Tilbake',
+
   },
+
   randomMix: {
+
     title: 'Tilfeldig miks',
+
     remix: 'Remiks',
+
     remixTooltip: 'Last inn nye tilfeldige sanger',
+
     remixGenre: 'Remiks {{genre}}',
+
     remixTooltipGenre: 'Last inn nye {{genre}}-sanger',
+
     playAll: 'Spill alt',
+
     trackTitle: 'Tittel',
+
     trackArtist: 'Artist',
+
     trackAlbum: 'Album',
+
     trackFavorite: 'Favoritt',
+
     trackDuration: 'Varighet',
+
     favoriteAdd: 'Legg til i favoritter',
+
     favoriteRemove: 'Fjern fra favoritter',
+
     play: 'Spill',
+
     trackGenre: 'Sjanger',
+
     excludeAudiobooks: 'Ekskluder lydbøker og hørespill',
+
     excludeAudiobooksDesc: 'Samsvarer nøkkelord mot sjanger, tittel, album og artist - f.eks. Hørespill, Lydbok, Spoken Word, …',
+
     genreBlocked: 'Nøkkelord blokkert',
+
     genreAddedToBlacklist: 'Lagt til i filterliste',
+
     genreAlreadyBlocked: 'Allerede blokkert',
+
     artistBlocked: 'Artisten er blokkert',
+
     artistAddedToBlacklist: 'Artist er lagt til i filterliste',
+
     artistClickHint: 'Klikk for å blokkere denne artisten',
+
     blacklistToggle: 'Nøkkelordfilter',
+
     genreMixTitle: 'Sjangermiks',
+
     genreMixDesc: 'Topp 20 sjangre etter antall sanger - klikk for å laste en tilfeldig miks',
+
     genreMixAll: 'Alle sanger',
+
     genreMixLoadMore: 'Last 10 til',
+
     genreMixNoGenres: 'Ingen sjangre funnet på tjeneren.',
+
     shuffleGenres: 'Vis andre sjangre',
+
     filterPanelTitle: 'Filtre',
+
     filterPanelDesc: 'Klikk på en sjanger-tag eller på artistnavnet i sporlisten nedenfor, for å blokkere den fra fremtidige mikser.',
+
     genreClickHint: 'Klikk på en sjanger-tag for å legge den til\nsom et filternøkkelord.\nSamsvarer med sjanger, tittel, album og artist.',
+
   },
+
   albums: {
+
     title: 'Alle album',
+
     sortByName: 'A–Å (Album)',
+
     sortByArtist: 'A–Å (Artist)',
+
     sortNewest: 'Vis nyeste først',
+
     sortRandom: 'Tilfeldig',
+
 	yearFrom: 'Fra',
+
     yearTo: 'Til',
+
     yearFilterClear: 'Tøm år filteret',
+
     yearFilterLabel: 'År',
+
     select: 'Multivalg',
+
     startSelect: 'Aktiver multivalg',
+
     cancelSelect: 'Avbryt',
+
     selectionCount: '{{count}} valgt',
+
     downloadZips: 'Last ned ZIPs',
+
     addOffline: 'Legg til offline',
+
     downloadingZip: 'Laster ned {{current}}/{{total}}: {{name}}',
+
     downloadZipDone: '{{count}} ZIP(s) lastet ned',
+
     downloadZipFailed: 'Kunne ikke laste ned {{name}}',
+
     offlineQueuing: 'Legger {{count}} album i kø for offline…',
+
     offlineFailed: 'Kunne ikke legge til {{name}} offline',
+
   },
+
   artists: {
+
     title: 'Artister',
+
     search: 'Søk…',
+
     all: 'Alle',
+
     gridView: 'Rutenettvisning',
+
     listView: 'Listevisning',
+
     imagesOn: 'Artistbilder på - kan øke belastningen på nettverket og applikasjonen',
+
     imagesOff: 'Artistbilder av - viser kun initialer',
+
     loadMore: 'Last flere',
+
     notFound: 'Ingen artister funnet.',
+
     albumCount_one: '{{count}} album',
+
     albumCount_other: '{{count}} album',
+
     selectionCount: '{{count}} valgt',
+
     select: 'Multivalg',
+
     startSelect: 'Aktiver multivalg',
+
     cancelSelect: 'Avbryt',
+
     addToPlaylist: 'Legg til i spilleliste',
+
   },
+
   login: {
+
     subtitle: 'Din Navidrome-mediaspiller',
+
     serverName: 'Tjenernavn (valgfritt)',
+
     serverNamePlaceholder: 'Mitt mediabibliotek',
+
     serverUrl: 'Tjener-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 eller https://musikk.eksempel.com',
+
     username: 'Brukernavn',
+
     usernamePlaceholder: 'admin',
+
     password: 'Passord',
+
     showPassword: 'Vis passord',
+
     hidePassword: 'Skjul passord',
+
     connect: 'Koble til',
+
     connecting: 'Kobler til…',
+
     connected: 'Tilkoblet!',
+
     error: 'Tilkoblingen mislyktes – vennligst sjekk instillingene.',
+
     urlRequired: 'Vennligst skriv inn en tjeneer-URL.',
+
     savedServers: 'Lagrede servere',
+
     addNew: 'Eller legg til en ny tjener',
+
   },
+
   connection: {
+
     connected: 'Tilkoblet',
+
     connectedTo: 'Tilkoblet til {{server}}',
+
     disconnected: 'Frakoblet',
+
     disconnectedFrom: 'Kan ikke nå {{server}} - klikk for å sjekke innstillinger',
+
     checking: 'Kobler til…',
+
     extern: 'Ekstern',
+
     offlineTitle: 'Ingen tjenertilkobling',
+
     offlineSubtitle: 'Kan ikke nå {{server}}. Sjekk nettverket eller tjeneren din.',
+
     offlineModeBanner: 'Frakoblet modus - spiller fra lokal hurtigbuffer',
+
     offlineNoCacheBanner: 'Ingen servertilkobling — kan ikke nå {{server}}',
+
     offlineLibraryTitle: 'Frakoblet bibliotek',
+
     offlineLibraryEmpty: 'Ingen album bufret ennå. Kobl deg til nettverket, åpne et album og klikk "Gjør tilgjengelig frakoblet".',
+
     offlineAlbumCount: '{{n}} album',
+
     offlineAlbumCount_plural: '{{n}} album',
+
     offlineFilterAll: 'Alle',
+
     offlineFilterAlbums: 'Album',
+
     offlineFilterPlaylists: 'Spillelister',
+
     offlineFilterArtists: 'Diskografier',
+
     retry: 'Prøv igjen',
+
     serverSettings: 'Serverinnstillinger',
+
     switchServerTitle: 'Bytt server',
+
     switchServerHint: 'Klikk for å velge en annen lagret server.',
+
     manageServers: 'Administrer servere…',
+
     switchFailed: 'Klarte ikke å bytte — serveren er utilgjengelig.',
+
     lastfmConnected: 'Last.fm tilkoblet som bruker @{{user}}',
+
     lastfmSessionInvalid: 'Sesjonen er ugyldig - klikk her for å koble til på nytt',
+
   },
+
   common: {
+
     albums: 'Album',
+
     album: 'Album',
+
     loading: 'Laster…',
+
     loadingMore: 'Laster…',
+
     loadingPlaylists: 'Laster spillelister…',
+
     noAlbums: 'Ingen album funnet.',
+
     downloading: 'Laster ned…',
+
     downloadZip: 'Last ned (ZIP)',
+
     back: 'Tilbake',
+
     cancel: 'Avbryt',
+
     save: 'Lagre',
+
     delete: 'Slett',
+
     use: 'Bruk',
+
     add: 'Legg til',
+
     active: 'Aktiv',
+
     download: 'Last ned',
+
     chooseDownloadFolder: 'Velg nedlastingsmappe',
+
     noFolderSelected: 'Ingen mappe valgt',
+
     rememberDownloadFolder: 'Husk denne mappen',
+
     filterGenre: 'Sjangerfilter',
+
     filterSearchGenres: 'Søk i sjangre…',
+
     filterNoGenres: 'Ingen sjangre samsvarer',
+
     filterClear: 'Tøm',
+
     play: 'Spill',
+
     bulkSelected: '{{count}} valgt',
+
     clearSelection: 'Fjern utvalg',
+
     bulkAddToPlaylist: 'Legg til i spilleliste',
+
     bulkRemoveFromPlaylist: 'Fjern fra spilleliste',
+
     bulkClear: 'Tøm utvalg',
+
     updaterAvailable: 'Ny versjon er tilgjengelig',
+
     updaterVersion: 'v{{version}} er tilgjengelig',
+
     updaterWebsite: 'Nettsted',
+
     updaterModalTitle: 'Ny versjon tilgjengelig',
+
     updaterChangelog: 'Hva er nytt',
+
     updaterDownloadBtn: 'Last ned nå',
+
     updaterSkipBtn: 'Hopp over denne versjonen',
+
     updaterRemindBtn: 'Påminn meg senere',
+
     updaterDone: 'Nedlasting fullført',
+
     updaterShowFolder: 'Vis i mappe',
+
     updaterInstallHint: 'Lukk Psysonic og kjør installasjonsprogrammet manuelt.',
+
     updaterAurHint: 'Installer oppdateringen via AUR:',
+
     updaterErrorMsg: 'Nedlasting mislyktes',
+
     updaterRetryBtn: 'Prøv igjen',
+
     durationHoursMinutes: '{{hours}} t {{minutes}} min',
+
     durationMinutesOnly: '{{minutes}} min',
+
     updaterOpenGitHub: 'Åpne på GitHub',
+
     filters: 'Filter',
+
     more: 'mer',
+
     yearRange: 'Årsspenn',
+
     clearAll: 'Tøm alt',
+
   },
+
   settings: {
+
     title: 'Innstillinger',
+
     language: 'Språk',
+
     languageEn: 'Engelsk',
+
     languageDe: 'Tysk',
+
     languageFr: 'Fransk',
+
     languageNl: 'Nederlandsk',
+
     languageZh: 'Kinesisk',
+
     languageNb: 'Norsk',
+
     languageRu: 'Russisk',
+
     font: 'Skrifttype',
+
     theme: 'Tema',
+
     appearance: 'Utseende',
+
     servers: 'Tjenere',
+
     serverName: 'Tjenernavn',
+
     serverUrl: 'Tjener-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 eller https://musikk.eksempel.com',
+
     serverUsername: 'Brukernavn',
+
     serverPassword: 'Passord',
+
     addServer: 'Legg til tjener',
+
     addServerTitle: 'Legg til ny tjener',
+
     useServer: 'Bruk',
+
     deleteServer: 'Slett',
+
     noServers: 'Ingen tjenere lagret.',
+
     serverActive: 'Aktiv',
+
     confirmDeleteServer: 'Slett tjener "{{name}}"?',
+
     serverConnecting: 'Kobler til…',
+
     serverConnected: 'Tilkoblet!',
+
     serverFailed: 'Tilkobling mislyktes.',
+
     testBtn: 'Test tilkobling',
+
     testingBtn: 'Tester…',
+
     serverCompatible: 'Kompatibel med: Navidrome · Gonic · Airsonic · Subsonic',
+
     audiomuseTitle: 'AudioMuse-AI (Navidrome)',
+
     audiomuseDesc:
+
       'Slå på hvis denne serveren bruker <pluginLink>AudioMuse-AI Navidrome-plugin</pluginLink>. Aktiverer Instant Mix fra spor og henter lignende artister fra serveren i stedet for Last.fm på artistsider.',
+
     audiomuseIssueHint:
+
       'Instant Mix feilet nylig — sjekk Navidrome-plugin og AudioMuse API. Lignende artister hentes fra Last.fm hvis serveren ikke returnerer noe.',
+
     connected: 'Tilkoblet',
+
     failed: 'Mislyktes',
+
     eqTitle: 'Jevnstiller',
+
     eqEnabled: 'Aktiver jevnstiller',
+
     eqPreset: 'Forhåndsinnstilling',
+
     eqPresetCustom: 'Egendefinert',
+
     eqPresetBuiltin: 'Innebygde forhåndsinnstillinger',
+
     eqPresetCustomGroup: 'Mine forhåndsinnstillinger',
+
     eqSavePreset: 'Lagre som forhåndsinnstilling',
+
     eqPresetName: 'Navn på forhåndsinnstilling…',
+
     eqDeletePreset: 'Slett forhåndsinnstilling',
+
     eqResetBands: 'Tilbakestill til standard',
+
     eqPreGain: 'Forforsterkning',
+
     eqResetPreGain: 'Tilbakestill forforsterkning',
+
     eqAutoEqTitle: 'AutoEQ hodetelefonoppslag',
+
     eqAutoEqPlaceholder: 'Søk etter hodetelefon- / IEM-modell…',
+
     eqAutoEqSearching: 'Søker…',
+
     eqAutoEqNoResults: 'Ingen resultater funnet',
+
     eqAutoEqError: 'Søk mislyktes',
+
     eqAutoEqRateLimit: 'GitHub-hastighetsgrense nådd - prøv igjen om ett minutt',
+
     eqAutoEqFetchError: 'Kunne ikke hente EQ-profil',
+
     lfmTitle: 'Last.fm',
+
     lfmConnect: 'Koble til med Last.fm',
+
     lfmConnecting: 'Venter på autorisasjon…',
+
     lfmConfirm: 'Jeg har autorisert appen',
+
     lfmConnected: 'Tilkoblet som',
+
     lfmDisconnect: 'Koble fra',
+
     lfmConnectDesc: 'Koble til din Last.fm-konto for å aktivere scrobbling og få "Nå spiller"-oppdateringer direkte fra Psysonic - ingen Navidrome-konfigurasjon kreves.',
+
     lfmOpenBrowser: 'Et nettleservindu vil åpne seg. Autoriser Psysonic via Last.fm, og klikk deretter på knappen nedenfor.',
+
     lfmScrobbles: '{{n}} scrobbles',
+
     lfmMemberSince: 'Medlem siden {{year}}',
+
     scrobbleEnabled: 'Scrobbling er aktivert',
+
     scrobbleDesc: 'Send sanger til Last.fm etter 50 % avspilling',
+
     behavior: 'App-oppførsel',
+
     cacheTitle: 'Maks. lagringsstørrelse',
+
     cacheDesc: 'Plateomslag og artistbilder. Når den er full, fjernes de eldste oppføringene automatisk. Frakoblede album fjernes ikke automatisk, men slettes når hurtigbufferen tømmes manuelt.',
+
     cacheUsed: 'Brukt: {{images}} bilder · {{offline}} frakoblede spor',
+
 	cacheUsedImages: 'Bilder:',
+
     cacheUsedOffline: 'Frakoblede spor:',
+
     cacheUsedHot: 'Plass brukt:',
+
     hotCacheTrackCount: 'Spor i buffer:',
+
     cacheMaxLabel: 'Maks størrelse',															   
+
     cacheClearBtn: 'Tøm hurtigbuffer',
+
     cacheClearWarning: 'Dette vil også fjerne alle frakoblede album fra biblioteket.',
+
     cacheClearConfirm: 'Tøm alt',
+
     cacheClearCancel: 'Avbryt',
+
 	offlineDirTitle: 'Frakoblet bibliotek (In-App)',
+
 	offlineDirDesc: 'Lagringsplassering for spor som du gjør tilgjengelige som frakoblet i Psysonic.',
+
 	offlineDirDefault: 'Standard (App-data)',
+
 	offlineDirChange: 'Endre katalog',
+
 	offlineDirClear: 'Tilbakestill til standard',
+
 	offlineDirHint: 'Nye nedlastinger vil bruke denne plasseringen. Eksisterende nedlastinger forblir på sin opprinnelige lokasjon.',	
+
     hotCacheTitle: 'Varm avspillingsbuffer',
+
     hotCacheAlphaBadge: 'Alfa',
+
     hotCacheDisclaimer: 'Forhåndshenter neste spor i køen og beholder tidligere. Når aktivert: diskplass og nettverk.',
+
     hotCacheDirDefault: 'Standard (App-data)',
+
     hotCacheDirChange: 'Endre mappe',
+
     hotCacheDirClear: 'Tilbakestill til standard',
+
     hotCacheDirHint: 'Bytte mappe nullstiller indeksen i appen; gamle filer blir liggende til du sletter dem.',
+
     hotCacheEnabled: 'Aktiver varm avspillingsbuffer',
+
     hotCacheMaxMb: 'Maks bufferstørrelse',
+
     hotCacheDebounce: 'Utsettelse ved køendring',
+
     hotCacheDebounceImmediate: 'Umiddelbart',
+
     hotCacheDebounceSeconds: '{{n}} sek',
+
     hotCacheClearBtn: 'Tøm varm buffer',
+
     audioOutputDevice: 'Lydutgangsenhet',
+
     audioOutputDeviceDesc: 'Velg hvilken lydenhet Psysonic spiller gjennom. Endringer trer i kraft umiddelbart og starter gjeldende spor på nytt.',
+
     audioOutputDeviceDefault: 'Systemstandard',
+
     audioOutputDeviceRefresh: 'Oppdater enhetsliste',
+
     audioOutputDeviceOsDefaultNow: 'gjeldende systemutgang',
+
     audioOutputDeviceListError: 'Kunne ikke laste listen over lydenheter.',
+
     audioOutputDeviceNotInCurrentList: 'ikke i gjeldende liste',
+
     hiResTitle: 'Innebygd hi-res-avspilling',
+
     hiResEnabled: 'Aktiver innebygd hi-res-avspilling',
+
     hiResDesc: "Begrenser utdata til 44,1 kHz som standard for maksimal stabilitet. Aktiver kun hvis maskinvare og nettverk støtter høye samplingsrater (88,2 kHz+) pålitelig.",
+
     showArtistImages: 'Vis artistbilder',
+
     showArtistImagesDesc: 'Last inn og vis artistbilder i artistoversikten. Denne er deaktivert som standard, for å redusere disk-I/O og nettverksbelastningen på store biblioteker.',
+
     minimizeToTray: 'Minimer til oppgavelinjen',
+
     minimizeToTrayDesc: 'Når vinduet lukkes, vil Psysonic bli kjørende i oppgavelinjen fremfor å bli avsluttet.',
+
     discordRichPresence: 'Discord Rich Presence',
+
     discordRichPresenceDesc: 'Vis sporet som spilles i din Discord-profil. Krever at Discord kjører.',
+
     discordAppleCovers: 'Hent covere fra Apple Music til Discord',
+
     discordAppleCoversDesc: 'Sender artist- og albumnavn til Apples søke-API for å finne cover til Discord-profilen din. Deaktivert som standard av personvernhensyn.',
+
+    discordTemplates: 'Egendefinerte tekstmaler',
+
+    discordTemplatesDesc: 'Tilpass hvilken informasjon som vises på Discord-profilen din. Variabler: {title}, {artist}, {album}, {paused}',
+
+    discordTemplateDetails: 'Primærlinje (details)',
+
+    discordTemplateState: 'Sekundærlinje (state)',
+
+    discordTemplateLargeText: 'Album-tooltip (largeText)',
+
     nowPlayingEnabled: 'Vis i "Nå spiller"',
+
     nowPlayingEnabledDesc: 'Send sporet som spilles av til tjenerens live-lyttervisning. Deaktiver for å stoppe sending av avspillingsdata.',
+
     lyricsServerFirst: 'Foretrekk server-sangtekst',
+
     lyricsServerFirstDesc: 'Sjekk tjenerlevererte sangtekster (innebygde tagger, sidecar-filer) før LRCLIB. Deaktiver for å bruke LRCLIB først.',
+
     enableNeteaselyrics: 'Netease Cloud Music sangtekster',
+
     enableNeteaselyricsDesc: 'Bruk Netease Cloud Music som siste utvei når server og LRCLIB ikke finner noe. Best dekning for asiatisk og internasjonal musikk.',
+
     lyricsSourcesTitle: 'Sangtekstkilder',
+
     lyricsSourcesDesc: 'Velg hvilke kilder som skal brukes og i hvilken rekkefølge. Dra for å sortere. Deaktiverte kilder hoppes over.',
+
     lyricsSourceServer: 'Tjener',
+
     lyricsSourceLrclib: 'LRCLIB',
+
     lyricsSourceNetease: 'Netease Cloud Music',
+
     downloadsTitle: 'ZIP Eksport & Arkivering',
+
 	downloadsFolderDesc: 'Målmappe for album du laster ned som en ZIP-fil til datamaskinen din.',												  
+
     downloadsDefault: 'Standard nedlastingsmappe',
+
     pickFolder: 'Velg',
+
     pickFolderTitle: 'Velg nedlastingsmappe',
+
     clearFolder: 'Tøm nedlastingsmappe',
+
     logout: 'Logg ut',
+
     aboutTitle: 'Om Psysonic',
+
     aboutDesc: 'En moderne musikkspiller for Subsonic-kompatible tjenere (Navidrome, Gonic og andre). Bygget på Tauri v2 med en innebygd Rust-lydmotor - lett og rask, men fullpakket med funksjoner: bølgeform-søkelinje, synkroniserte sangtekster, Last.fm-integrasjon, 10-bånds jevnstiller, crossfade, gapless-avspilling, Replay Gain, sjangerlesing og et stort bibliotek med temaer.',
+
     aboutLicense: 'Lisens',
+
     aboutLicenseText: 'GNU GPL v3 - gratis å bruke, endre og distribuere under samme lisens.',
+
     aboutRepo: 'Kildekode på GitHub',
+
     aboutVersion: 'Versjon',
+
     aboutBuiltWith: 'Bygget med Tauri · React · TypeScript · Rust/rodio',
+
     aboutAiCredit: 'Utviklet med støtte fra Claude Code laget av Anthropic',
+
     aboutContributorsLabel: 'Bidragsytere',
+
     aboutSpecialThanksLabel: 'Spesiell takk',
+
     changelog: 'Endringslogg',
+
     showChangelogOnUpdate: "Vis 'Hva er nytt' ved oppdatering til ny versjon",
+
     showChangelogOnUpdateDesc: "Vis automatisk hva som er nytt når en ny versjon lanseres for første gang.",
+
     randomMixTitle: 'Tilfeldig miks',
+
     randomMixBlacklistTitle: 'Egendefinerte filternøkkelord',
+
     randomMixBlacklistDesc: 'Sanger ekskluderes når et nøkkelord samsvarer med sjanger, tittel, album eller artist (aktiv når avkrysningsboksen ovenfor er på).',
+
     randomMixBlacklistPlaceholder: 'Legg til nøkkelord…',
+
     randomMixBlacklistAdd: 'Legg til',
+
     randomMixBlacklistEmpty: 'Ingen egendefinerte nøkkelord lagt til ennå.',
+
     randomMixHardcodedTitle: 'Innebygde nøkkelord (aktiv når avkrysningsboksen er på)',
+
     tabPlayback: 'Avspilling',
+
     tabLibrary: 'Bibliotek',
+
     tabAppearance: 'Utseende',
+
     homeCustomizerTitle: 'Hjemmeside',
+
     sidebarTitle: 'Sidefelt',
+
     sidebarReset: 'Tilbakestill til standard',
+
     sidebarDrag: 'Dra for å endre rekkefølge',
+
     sidebarFixed: 'Alltid synlig',
-    randomNavSplitTitle: 'Del Mix-navigasjon',
-    randomNavSplitDesc: 'Vis "Tilfeldig miks" og "Tilfeldige album" som separate sidefeltsoppføringer i stedet for "Lag en miks"-huben.',
+
     tabShortcuts: 'Snarveier',
+
     tabServer: 'Tjener',
+
     tabSystem: 'System',
+
     tabGeneral: 'Generelt',
+
     ratingsSectionTitle: 'Vurderinger',
+
     ratingsSkipStarTitle: 'Hopp for 1 stjerne',
+
     ratingsSkipStarDesc:
+
       'Etter flere hopp på rad: sett sporet til 1 stjerne. Bare for spor som ikke var vurdert før.',
+
     ratingsSkipStarThresholdLabel: 'Hopp',
+
     ratingsMixFilterTitle: 'Filtrering etter vurdering',
+
     ratingsMixFilterDesc:
+
       'Filtrer innhold med lav vurdering i {{mix}} og {{albums}}. Klikk på den valgte stjerna igjen for å slå av terskelen.',
+
     ratingsMixMinSong: 'Spor',
+
     ratingsMixMinAlbum: 'Album',
+
     ratingsMixMinArtist: 'Artister',
+
     ratingsMixMinThresholdAria: 'Minimum stjerner: {{label}}',
+
     backupTitle: 'Sikkerhetskopiering og gjenoppretting',
+
     backupExport: 'Eksporter innstillinger',
+
     backupExportDesc: 'Lagrer alle innstillinger, tjenerprofiler, Last.fm-konfigurasjon, tema, jevnstiller og tastebindinger til en .psybkp-fil. Passordet lagres i klartekst – hold filen sikker.',
+
     backupImport: 'Importer innstillinger',
+
     backupImportDesc: 'Gjenoppretter innstillinger fra en .psybkp-fil. Applikasjonen starter på nytt etter import.',
+
     backupImportConfirm: 'Dette vil overskrive alle gjeldende innstillinger. Vil du fortsette?',
+
     backupSuccess: 'Sikkerhetskopiering lagret',
+
     backupImportSuccess: 'Innstillinger gjenopprettet – laster inn data på nytt…',
+
     backupImportError: 'Ugyldig eller ødelagt fil for sikkerhetskopi.',
+
     shortcutsReset: 'Tilbakestill til standardinnstillinger',
+
     shortcutListening: 'Trykk på en tast…',
+
     shortcutUnbound: '-',
+
     globalShortcutsTitle: 'Globale snarveier',
+
     globalShortcutsNote: 'Arbeid systemomfattende selv når Psysonic er i bakgrunnen. Krever Ctrl, Alt eller Super som modifikator.',
+
     shortcutClear: 'Fjern',
+
     shortcutPlayPause: 'Spill av / Pause',
+
     shortcutNext: 'Neste spor',
+
     shortcutPrev: 'Forrige spor',
+
     shortcutVolumeUp: 'Volum opp',
+
     shortcutVolumeDown: 'Volum ned',
+
     shortcutSeekForward: 'Søk fremover 10 sekunder',
+
     shortcutSeekBackward: 'Søk bakover 10 sekunder',
+
     shortcutToggleQueue: 'Veksle kø',
+
     shortcutOpenFolderBrowser: 'Åpne {{folderBrowser}}',
+
     shortcutFullscreenPlayer: 'Fullskjermsspiller',
+
     shortcutNativeFullscreen: 'Naturlig fullskjerm',
+
     playbackTitle: 'Avspilling',
+
     replayGain: 'Replay Gain',
+
     replayGainDesc: 'Normaliser sporvolumet ved hjelp av ReplayGain-metadata',
+
     replayGainMode: 'Modus',
+
     replayGainTrack: 'Spor',
+
     replayGainAlbum: 'Album',
+
     replayGainPreGain: 'Pre-Gain (taggede filer)',
+
     replayGainFallback: 'Reserveverdi (uten tagger / radio)',
+
     crossfade: 'Crossfade',
+
     crossfadeDesc: 'Tone mellom spor',
+
     crossfadeSecs: '{{n}}s',
+
     notWithGapless: 'Ikke tilgjengelig mens Gapless er aktiv',
+
     notWithCrossfade: 'Ikke tilgjengelig mens Crossfade er aktiv',
+
     gapless: 'Gapless avspilling',
+
     gaplessDesc: 'Forhåndsbuffer neste spor for å eliminere mellomrom mellom sanger',
+
     infiniteQueue: 'Uendelig kø',
+
     infiniteQueueDesc: 'Legg automatisk til tilfeldige spor når køen går tom',
+
     experimental: 'Eksperimentell',
+
     preloadMode: 'Forhåndslast neste spor',
+
     preloadModeDesc: 'Når buffering av neste spor i køen skal starte',
+
     nextTrackBufferingTitle: 'Neste spor – bufring',
+
     preloadHotCacheMutualExclusive: 'Forhåndslasting og Hot Cache tjener samme formål – bare én kan være aktiv om gangen. Å aktivere den ene deaktiverer automatisk den andre.',
+
     preloadOff: 'Av',
+
     preloadBalanced: 'Balansert (30 s før slutt)',
+
     preloadEarly: 'Tidlig (etter 5 s avspilling)',
+
     preloadCustom: 'Egendefinert',
+
     preloadCustomSeconds: 'Sekunder før slutt: {{n}}',
+
     fsPlayerSection: 'Fullskjermspiller',
+
     fsShowArtistPortrait: 'Vis artistbilde',
+
     fsShowArtistPortraitDesc: 'Vis artistbilde (eller albumomslag) på høyre side av fullskjermspilleren.',
+
     fsPortraitDim: 'Mørklegging av bilde',
+
     seekbarStyle: 'Søkefelt-stil',
+
     seekbarStyleDesc: 'Velg utseendet på avspillingssøkefeltet',
+
     seekbarWaveform: 'Bølgeform',
+
     seekbarLinedot: 'Linje & punkt',
+
     seekbarBar: 'Linje',
+
     seekbarThick: 'Tykk linje',
+
     seekbarSegmented: 'Segmentert',
+
     seekbarNeon: 'Neon',
+
     seekbarPulsewave: 'Pulsbølge',
+
     seekbarParticletrail: 'Partikkelspor',
+
     seekbarLiquidfill: 'Væskerør',
+
     seekbarRetrotape: 'Retrotape',
+
     themeSchedulerTitle: 'Tidsplanlagt tema',
+
     themeSchedulerEnable: 'Aktiver temaplanlegger',
+
     themeSchedulerEnableSub: 'Bytter automatisk mellom to temaer basert på tidspunkt',
+
     themeSchedulerDayTheme: 'Dagtema',
+
     themeSchedulerDayStart: 'Dag starter kl.',
+
     themeSchedulerNightTheme: 'Natttema',
+
     themeSchedulerNightStart: 'Natt starter kl.',
+
     themeSchedulerActiveHint: 'Temaplanlegger er aktiv - temaer byttes automatisk.',
+
     visualOptionsTitle: 'Visuelle Alternativer',
+
     coverArtBackground: 'Cover-bakgrunn',
+
     coverArtBackgroundSub: 'Vis uskarpt cover som bakgrunn i album/playlist-overskrifter',
+
     playlistCoverPhoto: 'Playlist-coverfoto',
+
     playlistCoverPhotoSub: 'Vis coverfoto-rutenett i playlist-detailedvisning',
+
     showBitrate: 'Vis Bitrate',
+
     showBitrateSub: 'Vis audio-bitrate i sporlister',
+
     uiScaleTitle: 'Grensesnittskala',
+
     uiScaleLabel: 'Zoom',
+
   },
+
   changelog: {
+
     modalTitle: "Nyheter",
+
     dontShowAgain: "Ikke vis igjen",
+
     close: 'Forstått',
+
   },
+
   help: {
+
     title: 'Hjelp',
+
     s1: 'Komme i gang',
+
     q1: 'Hvilke servere er kompatible?',
+
     a1: 'Psysonic fungerer med alle Subsonic-kompatible servere: Navidrome, Gonic, Subsonic, Airsonic og andre. Navidrome er det anbefalte valget.',
+
     q2: 'Hvordan kobler jeg til serveren min?',
+
     a2: 'Åpne Innstillinger og klikk på "Legg til server". Skriv inn server-URL-en (f.eks. 192.168.1.100:4533), brukernavn og passord. Psysonic tester tilkoblingen før den lagrer – ingenting lagres hvis tilkoblingen mislykkes.',
+
     q3: 'Kan jeg bruke flere servere?',
+
     a3: 'Ja. Du kan legge til så mange servere du vil i Innstillinger og bytte mellom dem når som helst. Bare én server er aktiv om gangen.',
+
     s2: 'Avspilling',
+
     q4: 'Hvordan spiller jeg musikk?',
+
     a4: 'Dobbeltklikk på et spor for å spille det av. På album- og artistsider bruker du "Spill av alle" for å starte hele albumet. Du kan også dra spor inn i køpanelet.',
+
     q5: 'Hvilke hurtigtaster er tilgjengelige?',
+
     a5: 'Mellomrom = Spill av / Pause · Escape = Lukk fullskjermsspiller. Medietaster (Spill av / Pause, Neste, Forrige) fungerer på alle plattformer. På Linux bruker du knappene i spillerlinjen for medietaster. Snarveier i appen og systemomfattende globale snarveier kan tilpasses i Innstillinger → Tastatursnarveier / Globale snarveier.',
+
     q6: 'Hva er køen?',
+
     a6: 'Køen viser alle kommende spor. Åpne den med panelikonet øverst til høyre (ved siden av Spilles nå-indikatoren). Du kan endre rekkefølgen på sporene ved å dra, spille av i tilfeldig rekkefølge med tilfeldig-knappen og lagre køen som en spilleliste.',
+
     q7: 'Hvordan åpner jeg fullskjermsspilleren?',
+
     a7: 'Klikk på miniatyrbildet av albumcoveret i spillerlinjen nederst, eller på utvid-ikonet ved siden av. Trykk på Escape for å lukke det igjen.',
+
     q8: 'Hvordan fungerer gjentakelse?',
+
     a8: 'Klikk på gjentakelsesknappen i spillerlinjen for å bla gjennom: Av → Gjenta alle → Gjenta én.',
+
     s3: 'Bibliotek',
+
     q9: 'Hvordan laster jeg ned et album?',
+
     a9: 'Åpne detaljsiden for et album og klikk på "Last ned (ZIP)". Serveren komprimerer albumet til en ZIP-fil først – for store album eller filer uten tap (FLAC/WAV) kan dette ta et øyeblikk før nedlastingen faktisk starter. Dette er normalt: fremdriftslinjen vises når serveren er ferdig med å zippe og overføringen starter.',
+
     q10: 'Hvordan stjernemerker/favoritterer jeg spor og album?',
+
     a10: 'Klikk på stjerneikonet på en hvilken som helst sporrad eller i albumoverskriften. Stjernemerkede elementer vises i Favoritter-delen i sidefeltet.',
+
     q11: 'Hva er hovedkarusellen på hjemmesiden?',
+
     a11: 'Banneret øverst på hjemmesiden velger tilfeldig album fra biblioteket ditt og roterer gjennom dem hvert 10. sekund. Klikk på prikkene for å hoppe til et bestemt album, eller klikk på banneret for å åpne albumet.',
+
     s4: 'Innstillinger',
+
     q12: 'Hvordan endrer jeg temaet?',
+
     a12: 'Innstillinger → Tema. Velg fra et stort utvalg av temaer på tvers av 8 grupper: Psysonic-temaer, mediaspiller, operativsystemer, spill, filmer, serier, sosiale medier og åpen kildekode-klassikere (Catppuccin, Nord, Gruvbox).',
+
     q13: 'Hvordan endrer jeg språket?',
+
     a13: 'Innstillinger → Språk. Engelsk, tysk, fransk, nederlandsk og kinesisk støttes.',
+
     q15: 'Hvordan angir jeg en nedlastingsmappe?',
+
     a15: 'Innstillinger → App-oppførsel → Nedlastingsmappe. Velg en hvilken som helst mappe – nedlastede album lagres der som ZIP-filer. Uten en tilpasset mappe brukes nettleserens standard nedlastingsplassering.',
+
     s5: 'Scrobbling',
+
     q16: 'Hvordan fungerer scrobbling?',
+
     a16: 'Psysonic scrobbler direkte til Last.fm - ingen Navidrome-konfigurasjon nødvendig. Koble til Last.fm-kontoen din i Innstillinger → Last.fm og aktiver scrobbling der.',
+
     q17: 'Når sendes en scrobble?',
+
     a17: 'En scrobble sendes etter at du har lyttet til 50 % av et spor.',
+
     q22: 'Hva er bølgeformen i avspillerlinjen?',
+
     a22: 'Bølgeformsøkelinjen erstatter den klassiske fremdriftsglidebryteren. Klikk hvor som helst på den for å hoppe til den posisjonen, eller dra for å skrubbe. Den avspilte delen lyser med en blå-til-lilla gradient, det bufrede området vises litt lysere, og den uavspilte delen er falmet.',
+
     q24: 'Kan jeg blande køen?',
+
     a24: 'Ja. Åpne køpanelet og klikk på blandeikonet i køoverskriften. Sporet som spilles av for øyeblikket forblir på posisjon 1 – alle gjenværende spor blir tilfeldig omorganisert.',
+
     q25: 'Åpnes Last.fm- og Wikipedia-lenker på artistsider i en nettleser?',
+
     a25: 'Ja – de åpnes i standardnettleseren din. Knappen viser kort en bekreftelsesetikett når du klikker på den.',
+
     s7: 'Tilfeldig miks',
+
     q26: 'Hva er tilfeldig miks?',
+
     a26: 'Tilfeldig miks bygger en spilleliste med tilfeldige spor fra hele biblioteket ditt. Åpne den via "Tilfeldig miks" i sidefeltet og klikk på "Ny miks". Du kan justere antall spor før generering.',
+
     q27: 'Hva er nøkkelordfilteret?',
+
     a27: 'Nøkkelordfilteret ekskluderer spor der sjanger, tittel eller albumnavn inneholder spesifikke ord. Lydbøker filtreres automatisk. Legg til egendefinerte nøkkelord i Innstillinger → Tilfeldig miks, eller klikk på en hvilken som helst sjangertagg i sporlisten for å legge den til umiddelbart.',
+
     q28: 'Hva er Super Genre Mix?',
+
     a28: 'Super Genre Mix grupperer biblioteket ditt i brede kategorier (rock, metal, elektronisk, jazz, klassisk osv.) og bygger en fokusert miks fra den stilen. Velg en kategoribrikke under sporlisten. Resultatene vises gradvis etter hvert som hver undersjanger hentes.',
+
     s6: 'Feilsøking',
+
     q18: 'Omslagsbilder og artistbilder lastes sakte.',
+
     a18: 'Bilder hentes fra serverens disk ved første innlasting og bufres deretter lokalt i 30 dager. Hvis serverens lagring er treg, kan det ta et øyeblikk før det første besøket på en side. Senere besøk vil være umiddelbare.',
+
     q19: 'Tilkoblingstesten mislykkes.',
+
     a19: 'Sjekk URL-en inkludert porten (f.eks. http://192.168.1.100:4533). Sørg for at ingen brannmur blokkerer tilkoblingen. Prøv http:// i stedet for https:// på et lokalt nettverk. Bekreft også at brukernavnet og passordet ditt er riktig.',
+
     q20: 'Ingen lyd på Linux.',
+
     a20: 'Psysonic er tilgjengelig som .deb (Ubuntu/Debian), .rpm (Fedora/RHEL), og via AUR på Arch/CachyOS (yay -S psysonic). Det finnes ingen AppImage. Hvis lyd mangler, sørg for at PipeWire eller PulseAudio kjører.',
+
     q21: 'Appen viser en svart skjerm på Linux.',
+
     a21: 'Dette er vanligvis et GPU/EGL-driverproblem i WebKitGTK. Start med GDK_BACKEND=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1. AUR-pakken og offisielle .deb/.rpm-installasjonsprogrammer setter disse automatisk.',
+
     q29: 'Hva er Crossfade og Gapless Playback?',
+
     a29: 'Begge er eksperimentelle lydfunksjoner i Innstillinger → Lyd. Gapless forhåndsbuffer neste spor for å eliminere stillhet mellom sanger. Crossfade fader ut gjeldende spor mens det fader inn det neste – juster varigheten (1–10 s) etter smak.',
+
     q30: 'Viser Psysonic sangtekst?',
+
     a30: 'Ja. Klikk på mikrofonikonet i spillerlinjen, for å åpne Sangtekst-fanen i køpanelet. Psysonic henter tekst automatisk fra LRCLIB. Hvis synkroniserte tekster er tilgjengelige, utheves den aktive linjen og ruller i sanntid mens sangen spilles av. Hvis bare ren tekst er tilgjengelig, vises fullteksten statisk.',
+
     q31: 'Kan jeg tilpasse hurtigtaster?',
+
     a31: 'Ja. Innstillinger → Tastatursnarveier lar deg tilordne handlinger i appen (Spill av/pause, Neste, Forrige, Volum opp/ned, Fullskjerm og mer) til en hvilken som helst tast. Innstillinger → Globale snarveier lar deg tilordne systemomfattende snarveier som utløses selv når Psysonic er i bakgrunnen.',
+
     q32: 'Kan jeg endre skrifttypen?',
+
     a32: 'Ja. Innstillinger → Skrifttype lar deg velge mellom 10 skrifttyper, inkludert IBM Plex Mono, Fira Code, JetBrains Mono, Courier Prime og andre. Den valgte skrifttypen gjelder for hele brukergrensesnittet.',
+
     s8: 'Frakoblet modus',
+
     q34: 'Hva er frakoblet modus?',
+
     a34: 'Frakoblet modus (beta) lar deg mellomlagre album til enheten din, slik at du kan lytte uten en aktiv servertilkobling. Bufrede spor lagres lokalt og spilles av direkte fra harddisken – ingen nettverksforespørsel gjøres under avspilling.',
+
     q35: 'Hvordan bufrer jeg et album for å bruke det offline?',
+
     a35: 'Åpne et hvilket som helst album og klikk på nedlastingsikonet i albumoverskriften. Psysonic laster ned alle spor i bakgrunnen. Fremdrift vises på knappen. Når bufren er lagret, blir ikonet grønt. Du kan vise og fjerne bufrede album på siden Offline bibliotek (sidefelt).',                                               
+
     q36: 'Hvor mye lagringsplass kan frakoblet mellomlagring bruke?',
+
     a36: 'Du kan angi en maksimal mellomlagringsstørrelse i Innstillinger → Bibliotek. Når grensen er nådd, vises et advarselsbanner på albumsiden. Du kan slette individuelle album fra frakoblet bibliotek for å frigjøre plass.',
+
     q37: 'Hvordan vurderer jeg sanger, album og artister?',
+
     a37: 'Psysonic støtter 1–5 stjernevurderinger via OpenSubsonic API (krever Navidrome ≥ 0.53). Vurder sanger i sporlistene, via høyreklikk-menyen eller i spillerlinjen. Album vurderes på detaljsiden, artister på artistsiden.',
+
     q38: 'Kan jeg fjerne eller endre en vurdering?',
+
     a38: 'Ja. Klikk på den aktive stjernen igjen for å slette vurderingen — et andre klikk på samme stjerne fjerner den. Klikk på en annen stjerne for å endre vurderingen.',
+
     q39: 'Hva er Skip-to-1★ og vurderingsfilter?',
+
     a39: 'Skip-to-1★ tildeler automatisk en 1-stjernevurdering etter et visst antall påfølgende manuelle hopp. Aktiver det i Innstillinger → Vurderinger. Der kan du også angi minimum stjerner for tilfeldige mikser.',
+
     q40: 'Hva er mappebrowseren?',
+
     a40: 'Mappebrowseren (sidepanel) lar deg navigere i serverens musikkmappe med Miller-kolonner. Klikk på en mappe for å utforske innholdet; bruk avspillingsikonen for å spille eller legge til i køen.',
+
     q41: 'Hva er temaplanleggeren?',
+
     a41: 'Innstillinger → Utseende → Bytt tema automatisk: angi et dagstema og et nattstema med starttider. Psysonic bytter automatisk på de angitte tidspunktene.',
+
     q42: 'Kan jeg skalere grensesnittet?',
+
     a42: 'Ja. Innstillinger → Utseende → Grensesnittskala lar deg skalere hele grensesnittet mellom 80 % og 125 %.',
+
     q43: 'Kan jeg endre søkelinjesstilen?',
+
     a43: 'Ja. Innstillinger → Utseende → Søkelinjestil tilbyr 10 stiler: Bølgeform, Linje & Punkt, Stolpe, Tykk stolpe, Segmentert, Neon Glow, Pulsbølge, Partikkelspor, Væskefylling og Retro Tape.',
+
     q44: 'Hva er AutoEQ?',
+
     a44: '10-bånds equalizer i Innstillinger → Lyd inkluderer AutoEQ-oppslag. Skriv inn hodetelefon-modellen for å laste inn en korreksjonsprofil automatisk.',
+
     q45: 'Hva er Replay Gain?',
+
     a45: 'Replay Gain normaliserer volumet slik at høye og stille album spilles av på et konsistent nivå. Aktiver det i Innstillinger → Lyd → Replay Gain; velg modus Spor eller Album.',
+
     q46: 'Hva er hurtigbufferen?',
+
     a46: 'Hurtigbuffer (Alpha, Innstillinger → Bibliotek) forhåndslaster de neste sporene i køen til disk for umiddelbar avspilling. Psysonic beholder gjeldende spor og de neste 5 og fjerner eldre innslag når grensen nås.',
+
     q47: 'Kan jeg mellomlagre en spilleliste frakoblet?',
+
     a47: 'Ja. Åpne spillelistedetaljene og klikk på nedlastingsikonen. Når alle spor er mellomlagret, endres ikonet til en rød søppelbøtte; klikk på den for å fjerne spillelisten fra frakoblet hurtigbuffer.',
-    q48: 'Hva er Infinite Queue?',
-    a48: 'Når køen tømmes og gjentakelse er deaktivert, legger Psysonic automatisk til tilfeldige spor så avspillingen aldri stopper. Automatisk tillagte spor vises under skillelinjen "— Lagt til automatisk —".',
-    q49: 'Kan jeg styre Psysonic fra kommandolinjen?',
-    a49: 'Ja. Eksempler: psysonic --player play / pause / next / prev, --player volume 75, --player seek 15, --player mute, --player shuffle, --player repeat off|all|one. Også: bytt server, lydenhet, filtrer bibliotek og søk. Full hjelp: psysonic --player --help.',
-    q50: 'Hvordan administrerer jeg spillelister?',
-    a50: 'Via "Spillelister" i sidefeltet. Opprett en med "Ny spilleliste". I detaljvisningen kan du dra spor for å sortere, fjerne dem med ×, legge til sanger via søk og bruke "Forslag" for smarte anbefalinger.',
-    q51: 'Kan jeg sikkerhetskopiere og gjenopprette innstillingene mine?',
-    a51: 'Ja. Innstillinger → Sikkerhetskopi og gjenoppretting eksporterer alle innstillinger, serverprofiler, temaer og snarveier til en JSON-fil.',
-    q52: 'Hvordan endrer jeg lydutgangsenheten?',
-    a52: 'Innstillinger → Lyd → Utgangsenhet. Psysonic viser alle tilgjengelige utganger. Valget trer i kraft umiddelbart.',
-    q53: 'Hva er Device Sync?',
-    a53: 'Device Sync kopierer album, spillelister eller artister til en USB-pinne eller SD-kort. Åpne via "Device Sync" i sidefeltet, velg en målmappe, velg kilder og klikk "Overfør til enhet".',
-    q54: 'Hva er filnavnmalen i Device Sync?',
-    a54: 'Malen styrer hvordan spor navngis og organiseres. Bruk forhåndsinnstillinger eller bygg din egen med klikkbare tokens: {artist}, {album}, {title}, {track_number}, {disc_number}, {year} og / som mappeskiller.',
-    q55: 'Fungerer Device Sync på tvers av plattformer?',
-    a55: 'Ja. Manifestet på enheten inneholder malen som ble brukt. På et annet OS gjenkjenner Psysonic eksisterende filer korrekt.',
-    s9: 'Device Sync',
-    q56: 'Hva er internettradio?',
-    a56: 'Internettradiosiden lar deg spille av direkte strømmer i Psysonic. Stasjoner hentes fra Navidrome-serveren din. Avspilling bruker HTML5-lyd.',
-    q57: 'Hvilke strømformater støtter internettradio?',
-    a57: 'MP3, AAC, OGG Vorbis og de fleste HLS-strømmer. MP3 og AAC fungerer på alle plattformer.',
-    s10: 'Internettradio',
-    q58: 'Hvor henter Psysonic sangtekster fra?',
-    a58: 'Tre konfigurerbare kilder i Innstillinger → Sangtekster: Navidrome-serveren din, LRCLIB og NetEase Cloud Music. Hver kilde kan aktiveres/deaktiveres og prioriteres ved dra-og-slipp.',
-    q59: 'Finnes det en visning av hva andre brukere hører på?',
-    a59: 'Ja. Klikk på kringkastingsikonet øverst til høyre for å se hva andre brukere på Navidrome-serveren din hører på, oppdatert hvert 10. sekund.',
+
   },
+
   queue: {
+
     title: 'Kø',
+
     savePlaylist: 'Lagre spilleliste',
+
     updatePlaylist: 'Oppdater spilleliste',
+
     filterPlaylists: 'Filtrer spillelister…',
+
     playlistName: 'Spillelistenavn',
+
     cancel: 'Avbryt',
+
     save: 'Lagre',
+
     loadPlaylist: 'Last inn spilleliste',
+
     loading: 'Laster…',
+
     noPlaylists: 'Ingen spillelister funnet.',
+
     load: 'Erstatt kø og spill av',
+
     appendToQueue: 'Legg til i kø',
+
     delete: 'Slett',
+
     deleteConfirm: 'Slett spillelisten "{{name}}"?',
+
     clear: 'Fjern',
+
     shuffle: 'Bland kø',
+
     gapless: 'Uten mellomrom',
+
     crossfade: 'Crossfade',
+
     infiniteQueue: 'Uendelig kø',
+
     autoAdded: '- Lagt til automatisk -',
+
     radioAdded: '- Radio -',
+
     hide: 'Skjul',
+
     close: 'Lukk',
+
     nextTracks: 'Neste spor',
+
     emptyQueue: 'Køen er tom.',
+
     trackSingular: 'spor',
+
     trackPlural: 'spor',
+
     showRemaining: 'Vis gjenværende tid',
+
     showTotal: 'Vis total tid',
+
   },
+
   statistics: {
+
     title: 'Statistikk',
+
     recentlyPlayed: 'Nylig spilt',
+
     mostPlayed: 'Mest spilte album',
+
     highestRated: 'Høyest rangerte album',
+
     genreDistribution: 'Sjangerfordeling (Topp 20)',
+
     loadMore: 'Last inn mer',
+
     statArtists: 'Artister',
+
     statArtistsTooltip: 'Kun albumartister — artister som bare opptrer som sporartist (featuring, gjest, osv.) uten eget album telles ikke med.',
+
     statAlbums: 'Album',
+
     statSongs: 'Sanger',
+
     statGenres: 'Sjangere',
+
     statPlaytime: 'Total spilletid',
+
     genreInsights: 'Sjangerinnsikt',
+
     formatDistribution: 'Formatdistribusjon',
+
     formatSample: 'Utvalg av {{n}} spor',
+
     computing: 'Utregner…',								   
+
     genreSongs: '{{count}} Sanger',
+
     genreAlbums: '{{count}} Album',
+
     recentlyAdded: 'Nylig lagt til',
+
     decadeDistribution: 'Album etter tiår',
+
     decadeAlbums_one: '{{count}} Album',
+
     decadeAlbums_other: '{{count}} Album',
+
     decadeUnknown: 'Ukjent',
+
     lfmTitle: 'Last.fm Statistikk',
+
     lfmTopArtists: 'Toppartister',
+
     lfmTopAlbums: 'Toppalbum',
+
     lfmTopTracks: 'Toppspor',
+
     lfmPlays: '{{count}} avspillinger',
+
     lfmPeriodOverall: 'Alltid',
+
     lfmPeriod7day: '7 dager',
+
     lfmPeriod1month: '1 måned',
+
     lfmPeriod3month: '3 måneder',
+
     lfmPeriod6month: '6 måneder',
+
     lfmPeriod12month: '12 måneder',
+
     lfmNotConnected: 'Koble til Last.fm i Innstillinger for å se statistikken din.',
+
     lfmRecentTracks: 'Siste Scrobble-innslag',
+
     lfmNowPlaying: 'Spilles nå',
+
     lfmJustNow: 'akkurat nå',
+
     lfmMinutesAgo: 'For {{n}}m siden',
+
     lfmHoursAgo: 'For {{n}}t siden',
+
     lfmDaysAgo: 'For {{n}}d siden',
+
     topRatedSongs: 'Høyest vurderte spor',
+
     topRatedArtists: 'Høyest vurderte artister',
+
     noRatedSongs: 'Ingen vurderte spor ennå. Vurder spor i album- eller spillelistevisning.',
+
     noRatedArtists: 'Ingen vurderte artister ennå.',
+
   },
+
   player: {
+
     regionLabel: 'Musikkspiller',
+
     openFullscreen: 'Åpne fullskjermsspiller',
+
     fullscreen: 'Fullskjermsspiller',
+
     closeFullscreen: 'Lukk fullskjerm',
+
     closeTooltip: 'Lukk (Esc)',
+
     noTitle: 'Ingen tittel',
+
     stop: 'Stopp',
+
     prev: 'Forrige spor',
+
     play: 'Spill av',
+
     pause: 'Pause',
+
     next: 'Neste spor',
+
     repeat: 'Gjenta',
+
     repeatOff: 'Av',
+
     repeatAll: 'Alle',
+
     repeatOne: 'Én',
+
     progress: 'Sangfremdrift',
+
     volume: 'Volum',
+
     toggleQueue: 'Veksle kø',
+
     lyrics: 'Sangtekst',
+
     fsLyricsToggle: 'Sangtekst i fullskjerm',
+
     lyricsLoading: 'Laster sangtekst…',
+
     lyricsNotFound: 'Ingen sangtekst funnet for dette sporet',
+
     lyricsSourceServer: 'Kilde: Server',
+
     lyricsSourceLrclib: 'Kilde: LRCLIB',
+
     lyricsSourceNetease: 'Kilde: Netease',
+
   },
+
   songInfo: {
+
     title: 'Sanginfo',
+
     songTitle: 'Tittel',
+
     artist: 'Artist',
+
     album: 'Album',
+
     albumArtist: 'Albumartist',
+
     year: 'År',
+
     genre: 'Sjanger',
+
     duration: 'Varighet',
+
     track: 'Spor',
+
     format: 'Format',
+
     bitrate: 'Bitrate',
+
     sampleRate: 'Samplingfrekvens',
+
     bitDepth: 'Bitdybde',
+
     channels: 'Kanaler',
+
     fileSize: 'Filstørrelse',
+
     path: 'Sti',
+
     replayGainTrack: 'RG-sporforsterkning',
+
     replayGainAlbum: 'RG-albumforsterkning',
+
     replayGainPeak: 'RG-sportopp',
+
     mono: 'Mono',
+
     stereo: 'Stereo',
+
   },
+
   playlists: {
+
     title: 'Spillelister',
+
     newPlaylist: 'Ny spilleliste',
+
     unnamed: 'Navnløs spilleliste',
+
     createName: 'Spillelistenavn…',
+
     create: 'Opprett',
+
     cancel: 'Avbryt',
+
     empty: 'Ingen spillelister ennå.',
+
     emptyPlaylist: 'Denne spillelisten er tom.',
+
     addFirstSong: 'Legg til din første sang',
+
     notFound: 'Spillelisten ble ikke funnet.',
+
     songs: '{{n}} sanger',
+
     playAll: 'Spill alle',
+
     shuffle: 'Bland',
+
     addToQueue: 'Legg til i kø',
+
     back: 'Tilbake til spillelister',
+
     deletePlaylist: 'Slett',
+
     confirmDelete: 'Klikk igjen for å bekrefte',
+
     removeSong: 'Fjern fra spilleliste',
+
     addSongs: 'Legg til sanger',
+
     searchPlaceholder: 'Søk i biblioteket ditt…',
+
     noResults: 'Ingen resultater.',
+
     suggestions: 'Foreslåtte sanger',
+
     noSuggestions: 'Ingen forslag tilgjengelig.',
+
     titleBadge: 'Spilleliste',
+
     refreshSuggestions: 'Nye forslag',
+
     addSong: 'Legg til i spilleliste',
+
     addSelected: 'Legg til valgte',
+
     cacheOffline: 'Bufre spilleliste offline',
+
     offlineCached: 'Spilleliste bufret',
+
     removeOffline: 'Fjern fra offline-buffer',
+
     offlineDownloading: 'Bufre… ({{done}}/{{total}} album)',
+
     publicLabel: 'Offentlig',
+
     privateLabel: 'Privat',
+
     editMeta: 'Rediger spilleliste',
+
     editNamePlaceholder: 'Spillelistenavn…',
+
     editCommentPlaceholder: 'Legg til en beskrivelse…',
+
     editPublic: 'Offentlig spilleliste',
+
     editSave: 'Lagre',
+
     editCancel: 'Avbryt',
+
     changeCover: 'Endre omslagsbilde',
+
     changeCoverLabel: 'Endre bilde',
+
     removeCover: 'Fjern bilde',
+
     coverUpdated: 'Omslag oppdatert',
+
     metaSaved: 'Spillelisten er oppdatert',
+
     downloadZip: 'Last ned (ZIP)',
+
     // Toast notifications for multi-select
+
     addSuccess: '{{count}} sanger lagt til i {{playlist}}',
+
     addPartial: '{{added}} lagt til, {{skipped}} hoppet over (duplikater)',
+
     addAllSkipped: 'Alle hoppet over ({{count}} duplikater)',
+
     addError: 'Feil ved å legge til sanger',
+
     createAndAddSuccess: 'Spilleliste "{{playlist}}" opprettet med {{count}} sanger',
+
     createError: 'Feil ved oppretting av spilleliste',
+
     deleteSuccess: '{{count}} spillelister slettet',
+
     deleteFailed: 'Feil ved sletting av {{name}}',
+
     deleteSelected: 'Slett valgte',
+
     mergeSuccess: '{{count}} sanger slått sammen i {{playlist}}',
+
     mergeNoNewSongs: 'Ingen nye sanger å legge til',
+
     mergeError: 'Feil ved sammenslåing av spillelister',
+
     mergeInto: 'Slå sammen i',
+
     selectionCount: '{{count}} valgt',
+
     select: 'Velg',
+
     startSelect: 'Aktiver valg',
+
     cancelSelect: 'Avbryt',
+
     loadingAlbums: 'Løser {{count}} album…',
+
     loadingArtists: 'Løser {{count}} artister…',
+
     myPlaylists: 'Mine spillelister',
+
     noOtherPlaylists: 'Ingen andre spillelister tilgjengelig',
+
     addToPlaylistSuccess: '{{count}} sanger lagt til i {{playlist}}',
+
     addToPlaylistNoNew: 'Ingen nye sanger for {{playlist}}',
+
     addToPlaylistError: 'Feil ved å legge til i spilleliste',
+
     removeSuccess: 'Sang fjernet fra spilleliste',
+
     removeError: 'Feil ved fjerning fra spilleliste',
+
     importCSV: 'Importer CSV',
+
     importCSVTooltip: 'Importer fra Spotify CSV',
+
     csvImportReport: 'CSV-importrapport',
+
     csvImportTotal: 'Totalt',
+
     csvImportAdded: 'Lagt til',
+
     csvImportDuplicates: 'Duplikater',
+
     csvImportNotFound: 'Ikke funnet',
+
     csvImportNetworkErrors: 'Nettverksfeil',
+
     csvImportDuplicatesTitle: 'Duplikater (allerede i spillelisten):',
+
     csvImportNotFoundTitle: 'Ikke funnet spor:',
+
     csvImportNetworkErrorsTitle: 'Nettverksfeil (kan prøve import på nytt):',
+
     csvImportDownloadReport: 'Last ned rapport',
+
     csvImportClose: 'Lukk',
+
     csvImportNoValidTracks: 'Ingen gyldige spor funnet i CSV-filen',
+
     csvImportFailed: 'Kunne ikke importere CSV-fil',
+
     csvImportToast: '{{added}} lagt til, {{notFound}} ikke funnet, {{duplicates}} duplikater',
+
   },
+
   mostPlayed: {
+
     title: 'Mest spilt',
+
     topArtists: 'Toppkunstnere',
+
     topAlbums: 'Toppalbum',
+
     plays: '{{n}} avspillinger',
+
     sortMost: 'Mest spilt først',
+
     sortLeast: 'Minst spilt først',
+
     loadMore: 'Last inn flere album',
+
     noData: 'Ingen avspillingsdata ennå. Begynn å høre!',
+
     noArtists: 'Alle artister filtrert bort.',
+
     filterCompilations: 'Skjul kompilasjonsartister (Various Artists, Soundtracks, etc.)',
+
     filterCompilationsShort: 'Skjul kompilasjoner',
+
   },
+
   radio: {
+
     title: 'Internettradio',
+
     empty: 'Ingen radiostasjoner konfigurert.',
+
     addStation: 'Legg til radio stasjon',
+
     editStation: 'Rediger',
+
     deleteStation: 'Slett stasjon',
+
     confirmDelete: 'Klikk igjen for å bekrefte',
+
     stationName: 'Stasjonsnavn…',
+
     streamUrl: 'Strøm-URL…',
+
     homepageUrl: 'Hjemmeside-URL (valgfritt)',
+
     save: 'Lagre',
+
     cancel: 'Avbryt',
+
     live: 'LIVE',
+
     liveStream: 'Internettradio',
+
     openHomepage: 'Åpne hjemmesiden',
+
     changeCoverLabel: 'Endre omslag',
+
     removeCover: 'Fjern omslag',
+
     browseDirectory: 'Søk i katalogen',
+
     directoryPlaceholder: 'Søk i stasjoner…',
+
     noResults: 'Ingen stasjoner funnet.',
+
     stationAdded: 'Stasjon lagt til',
+
     filterAll: 'Alle',
+
     filterFavorites: 'Favoritter',
+
     sortManual: 'Manuell',
+
     sortAZ: 'A → Å',
+
     sortZA: 'Å → A',
+
     sortNewest: 'Nyeste',
+
     favorite: 'Legg til i favoritter',
+
     unfavorite: 'Fjern fra favoritter',
+
     noFavorites: 'Ingen favorittstasjoner.',
+
     listenerCount_one: '{{count}} lytter',
+
     listenerCount_other: '{{count}} lyttere',
+
     recentlyPlayed: 'Nylig spilt',
+
     upNext: 'Neste ut',
+
   },
+
   folderBrowser: {
+
     empty: 'Tom mappe',
+
     error: 'Kunne ikke laste',
+
   },
+
   deviceSync: {
+
     title: 'Enhetssynk',
+
     targetFolder: 'Målmappe',
+
     noFolderChosen: 'Ingen mappe valgt',
+
     selectDrive: 'Velg en stasjon…',
+
     refreshDrives: 'Oppdater stasjoner',
+
     noDrivesDetected: 'Ingen flyttbare stasjoner oppdaget',
+
     browseManual: 'Bla manuelt…',
+
     free: 'ledig',
+
     notMountedVolume: 'Målet er ikke på en montert stasjon. Enheten kan ha blitt koblet fra.',
+
     chooseFolder: 'Velg…',
+
     filenameTemplate: 'Filnavnmal',
+
     targetDevice: 'Målenhet',
+
     templateHint: 'Variabler: {artist}, {album}, {title}, {track_number}, {disc_number}, {year}',
+
     cleanupButton: 'Fjern filer som ikke er i utvalget',
+
     cleanupNothingToDelete: 'Ingenting å fjerne — enheten er allerede synkronisert.',
+
     confirmCleanup: 'Slette {{count}} fil(er) fra enheten som ikke er i det gjeldende utvalget. Fortsette?',
+
     cleanupComplete: '{{count}} fil(er) fjernet fra enheten.',
+
     selectedSources: 'Valgte kilder',
+
     noSourcesSelected: 'Ingen kilder valgt. Klikk på elementer i nettleseren for å legge dem til.',
+
     clearAll: 'Fjern alle',
+
     tabPlaylists: 'Spillelister',
+
     tabAlbums: 'Album',
+
     tabArtists: 'Artister',
+
     searchPlaceholder: 'Søk…',
+
     syncButton: 'Synkroniser til enhet',
+
     actionTransfer: 'Overfør til enhet',
+
     actionDelete: 'Slett fra enhet',
+
     actionApplyAll: 'Bruk alle endringer',
+
     templatePreview: 'Forhåndsvisning',
-    templatePresetStandard: 'Standard',
-    templatePresetMultiDisc: 'Multi-Disc',
-    templatePresetAltFolder: 'Alt. mappe',
-    tokenSlashHint: '/ = mappeskiller',
+
     cancel: 'Avbryt',
+
     noTargetDir: 'Velg en målmappe først.',
+
     noSources: 'Velg minst én kilde.',
+
     noTracks: 'Ingen spor funnet i de valgte kildene.',
+
     fetchError: 'Kunne ikke hente spor fra serveren.',
+
     syncComplete: 'Synkronisering fullført.',
+
     dismiss: 'Lukk',
-    cancelSync: 'Avbryt',
-    syncCancelled: 'Synkronisering avbrutt ({{done}} / {{total}} overført).',
+
     colName: 'Navn',
+
     colType: 'Type',
+
     colStatus: 'Status',
+
     onDevice: 'Enhetsbehandling',
+
     addSources: 'Legg til…',
+
     syncResult: '{{done}} overført, {{skipped}} allerede oppdatert ({{total}} totalt)',
+
     deleteFromDevice: 'Merk for sletting ({{count}})',
+
     confirmDelete: 'Slette {{count}} element(er) fra enheten: {{names}}?',
+
     deleteComplete: '{{count}} element(er) fjernet fra enheten.',
-    manifestImported: '{{count}} kilde(r) importert fra enhetsmanifest.',
+
     statusSynced: 'Synkronisert',
+
     statusPending: 'Venter',
+
     statusDeletion: 'Sletting',
+
     markForDeletion: 'Merk for sletting',
+
     removeSource: 'Fjern',
+
     undoDeletion: 'Angre sletting',
+
     syncInBackground: 'Synkronisering startet i bakgrunnen — du kan navigere bort.',
+
     syncInProgress: '{{done}} / {{total}} spor…',
+
     syncSummary: 'Synkroniseringssammendrag',
+
     calculating: 'Beregner nødvendig nyttelast…',
+
     filesToAdd: 'Filer som skal legges til:',
+
     filesToDelete: 'Filer som skal slettes:',
+
     netChange: 'Nettoendring:',
+
     availableSpace: 'Tilgjengelig diskplass:',
+
     spaceWarning: 'Advarsel: Målenheten har ikke nok rapportert plass.',
+
     proceed: 'Fortsett med synkronisering',
+
     notEnoughSpace: 'Ikke nok fysisk diskplass oppdaget!',
+
     liveSearch: 'Live',
+
     randomAlbumsLabel: 'Tilfeldige album',
+
   },
+
 };
+

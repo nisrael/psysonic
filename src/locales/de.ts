@@ -1,1162 +1,2262 @@
 export const deTranslation = {
+
   sidebar: {
+
     library: 'Bibliothek',
+
     mainstage: 'Mainstage',
+
     newReleases: 'Neueste',
+
     allAlbums: 'Alle Alben',
+
     randomAlbums: 'Zufallsalben',
+
     randomPicker: 'Mix erstellen',
+
     artists: 'Künstler',
+
     randomMix: 'Zufallsmix',
+
     favorites: 'Favoriten',
+
     nowPlaying: 'Now Playing',
+
     system: 'System',
+
     statistics: 'Statistiken',
+
     settings: 'Einstellungen',
+
     help: 'Hilfe',
+
     expand: 'Sidebar einblenden',
+
     collapse: 'Sidebar ausblenden',
+
     downloadingTracks: '{{n}} Tracks werden gecacht…',
+
     syncingTracks: 'Synchronisiere {{done}}/{{total}}…',
+
     cancelDownload: 'Download abbrechen',
+
     offlineLibrary: 'Offline-Bibliothek',
+
     genres: 'Genres',
+
     playlists: 'Playlists',
+
     mostPlayed: 'Meistgehört',
+
     radio: 'Internetradio',
+
     folderBrowser: 'Ordner-Browser',
+
     deviceSync: 'Gerätesync',
+
     libraryScope: 'Bibliotheksumfang',
+
     allLibraries: 'Alle Bibliotheken',
+
     expandPlaylists: 'Playlists ausklappen',
+
     collapsePlaylists: 'Playlists einklappen',
+
   },
+
   home: {
+
     hero: 'Featured',
+
     starred: 'Persönliche Favoriten',
+
     recent: 'Zuletzt hinzugefügt',
+
     mostPlayed: 'Meistgehört',
+
     recentlyPlayed: 'Kürzlich gespielt',
+
     discover: 'Entdecken',
+
     loadMore: 'Mehr laden',
+
     discoverMore: 'Mehr entdecken',
+
     discoverArtists: 'Künstler entdecken',
+
     discoverArtistsMore: 'Alle Künstler'
+
   },
+
   hero: {
+
     eyebrow: 'Album des Augenblicks',
+
     playAlbum: 'Album abspielen',
+
     enqueue: 'Einreihen',
+
     enqueueTooltip: 'Ganzes Album zur Warteschlange hinzufügen',
+
   },
+
   search: {
+
     placeholder: 'Suchen nach Künstler, Album oder Song…',
+
     noResults: 'Keine Ergebnisse für „{{query}}"',
+
     artists: 'Künstler',
+
     albums: 'Alben',
+
     songs: 'Songs',
+
     clearLabel: 'Suche leeren',
+
     title: 'Suche',
+
     resultsFor: 'Ergebnisse für „{{query}}"',
+
     album: 'Album',
+
     advanced: 'Erweiterte Suche',
+
     advancedSearchTerm: 'Suchbegriff',
+
     advancedSearchPlaceholder: 'Titel, Album, Künstler…',
+
     advancedGenre: 'Genre',
+
     advancedAllGenres: 'Alle Genres',
+
     advancedYear: 'Jahr',
+
     advancedYearFrom: 'von',
+
     advancedYearTo: 'bis',
+
     advancedAll: 'Alle',
+
     advancedSearch: 'Suchen',
+
     advancedEmpty: 'Suchbegriff eingeben oder Filter wählen, um zu beginnen.',
+
     advancedNoResults: 'Keine Ergebnisse gefunden.',
+
     advancedGenreNote: 'Songs werden zufällig aus dem Genre gewählt.',
+
     recentSearches: 'Zuletzt gesucht',
+
     browse: 'Stöbern',
+
     emptyHint: 'Was möchtest du hören?',
+
     genres: 'Genres',
+
   },
+
   nowPlaying: {
+
     tooltip: 'Wer hört was?',
+
     title: 'Wer hört was?',
+
     loading: 'Lädt…',
+
     nobody: 'Gerade hört niemand Musik.',
+
     minutesAgo: 'vor {{n}}m',
+
     nothingPlaying: 'Noch nichts am Laufen. Leg einen Track auf!',
+
     aboutArtist: 'Über den Künstler',
+
     fromAlbum: 'Aus diesem Album',
+
     viewAlbum: 'Album öffnen',
+
     goToArtist: 'Zum Künstler',
+
     readMore: 'Mehr lesen',
+
     showLess: 'Weniger anzeigen',
+
     genreInfo: 'Genre',
+
     trackInfo: 'Track-Info',
+
   },
+
   contextMenu: {
+
     playNow: 'Direkt abspielen',
+
     playNext: 'Als Nächstes abspielen',
+
     addToQueue: 'Zur Warteschlange hinzufügen',
+
     enqueueAlbum: 'Ganzes Album einreihen',
+
     startRadio: 'Radio starten',
+
     instantMix: 'Instant Mix',
+
     instantMixFailed: 'Instant Mix konnte nicht erstellt werden — Server- oder Pluginfehler.',
+
     cliMixNeedsTrack: 'Es läuft nichts — starte zuerst die Wiedergabe und führe den Mix-Befehl erneut aus.',
+
     lfmLove: 'Auf Last.fm liken',
+
     lfmUnlove: 'Last.fm-Like entfernen',
+
     favorite: 'Favorisieren',
+
     favoriteArtist: 'Künstler favorisieren',
+
     favoriteAlbum: 'Album favorisieren',
+
     unfavorite: 'Aus Favoriten entfernen',
+
     unfavoriteArtist: 'Künstler aus Favoriten entfernen',
+
     unfavoriteAlbum: 'Album aus Favoriten entfernen',
+
     removeFromQueue: 'Diesen Song entfernen',
+
     removeFromPlaylist: 'Aus Playlist entfernen',
+
     openAlbum: 'Album öffnen',
+
     goToArtist: 'Zum Künstler',
+
     download: 'Herunterladen (ZIP)',
+
     addToPlaylist: 'Zur Playlist hinzufügen',
+
     selectedPlaylists: '{{count}} Playlists ausgewählt',
+
     selectedAlbums: '{{count}} Alben ausgewählt',
+
     selectedArtists: '{{count}} Künstler ausgewählt',
+
     songInfo: 'Song-Infos',
+
   },
+
   albumDetail: {
+
     back: 'Zurück',
+
     playAll: 'Alle abspielen',
+
     enqueue: 'Einreihen',
+
     enqueueTooltip: 'Ganzes Album zur Warteschlange hinzufügen',
+
     artistBio: 'Künstler-Bio',
+
     download: 'Download (ZIP)',
+
     downloading: 'Lade…',
+
     cacheOffline: 'Offline verfügbar machen',
+
     offlineCached: 'Offline verfügbar',
+
     offlineDownloading: 'Wird gecacht… ({{n}}/{{total}})',
+
     removeOffline: 'Offline-Cache löschen',
+
     offlineStorageFull: 'Offline-Speicher voll (Limit: {{mb}} MB). Lösche ein Album aus der Offline-Bibliothek oder erhöhe das Limit in den Einstellungen.',
+
     offlineStorageGoToSettings: 'Einstellungen',
+
     offlineStorageGoToLibrary: 'Offline-Bibliothek',
+
     favoriteAdd: 'Zu Favoriten hinzufügen',
+
     favoriteRemove: 'Aus Favoriten entfernen',
+
     favorite: 'Als Favorit',
+
     noBio: 'Keine Biografie verfügbar.',
+
     moreByArtist: 'Mehr von {{artist}}',
+
     tracksCount: '{{n}} Tracks',
+
     goToArtist: 'Zu {{artist}} wechseln',
+
     moreLabelAlbums: 'Weitere Alben von {{label}} anzeigen',
+
     trackTitle: 'Titel',
+
     trackAlbum: 'Album',
+
     trackArtist: 'Interpret',
+
     trackGenre: 'Genre',
+
     trackFormat: 'Format',
+
     trackFavorite: 'Favorit',
+
     trackRating: 'Bewertung',
+
     trackDuration: 'Dauer',
+
     trackTotal: 'Gesamt',
+
     columns: 'Spalten',
-    resetColumns: 'Zurücksetzen',
+
     notFound: 'Album nicht gefunden.',
+
     bioModal: 'Künstler-Biografie',
+
     bioClose: 'Schließen',
+
     ratingLabel: 'Bewertung',
+
     enlargeCover: 'Vergrößern',
+
     filterSongs: 'Titel filtern…',
+
     sortNatural: 'Reihenfolge',
+
     sortByTitle: 'A–Z (Titel)',
+
     sortByArtist: 'A–Z (Künstler)',
+
     sortByAlbum: 'A–Z (Album)',
+
   },
+
   entityRating: {
+
     albumShort: 'Albumbewertung',
+
     artistShort: 'Künstlerbewertung',
+
     albumAriaLabel: 'Albumbewertung',
+
     artistAriaLabel: 'Künstlerbewertung',
+
     saveFailed: 'Bewertung konnte nicht gespeichert werden.',
+
   },
+
   artistDetail: {
+
     back: 'Zurück',
+
     albums: 'Alben',
+
     album: 'Album',
+
     playAll: 'Alle abspielen',
+
     shuffle: 'Zufallswiedergabe',
+
     radio: 'Radio',
+
     loading: 'Lädt…',
+
     noRadio: 'Keine ähnlichen Titel für diesen Künstler gefunden.',
+
     notFound: 'Künstler nicht gefunden.',
+
     albumsBy: 'Alben von {{name}}',
+
     topTracks: 'Beliebteste Titel',
+
     noAlbums: 'Keine Alben gefunden.',
+
     trackTitle: 'Titel',
+
     trackAlbum: 'Album',
+
     trackDuration: 'Dauer',
+
     favoriteAdd: 'Zu Favoriten hinzufügen',
+
     favoriteRemove: 'Aus Favoriten entfernen',
+
     favorite: 'Als Favorit',
+
     albumCount_one: '{{count}} Album',
+
     albumCount_other: '{{count}} Alben',
+
     openedInBrowser: 'Im Browser geöffnet',
+
     featuredOn: 'Auch enthalten auf',
+
     similarArtists: 'Ähnliche Künstler',
+
     cacheOffline: 'Diskografie offline speichern',
+
     offlineCached: 'Diskografie gecacht',
+
     offlineDownloading: 'Wird gecacht… ({{done}}/{{total}} Alben)',
+
     uploadImage: 'Künstlerbild hochladen',
+
     uploadImageError: 'Bild konnte nicht hochgeladen werden',
+
   },
+
   favorites: {
+
     title: 'Favoriten',
+
     empty: 'Du hast noch keine Favoriten gespeichert.',
+
     artists: 'Künstler',
+
     albums: 'Alben',
+
     songs: 'Songs',
+
     enqueueAll: 'Alle in die Warteschlange',
+
     playAll: 'Alle abspielen',
+
     removeSong: 'Aus Favoriten entfernen',
+
     stations: 'Radiosender',
+
     showingFiltered: 'Zeige {{filtered}} von {{total}} ({{artist}})',
+
     showingCount: 'Zeige {{filtered}} von {{total}}',
+
     clearArtistFilter: 'Künstlerfilter zurücksetzen',
+
     noFilterResults: 'Keine Ergebnisse mit den ausgewählten Filtern.',
+
     allArtists: 'Alle Künstler',
+
   },
+
   randomLanding: {
+
     title: 'Mix erstellen',
+
     mixByTracks: 'Mix nach Titeln',
+
     mixByTracksDesc: 'Zufällige Auswahl aus deiner gesamten Mediathek',
+
     mixByAlbums: 'Mix nach Alben',
+
     mixByAlbumsDesc: 'Zufällige Alben für neue Entdeckungen',
+
   },
+
   randomAlbums: {
+
     title: 'Zufallsalben',
+
     refresh: 'Neu laden',
+
   },
+
   genres: {
+
     title: 'Genres',
+
     genreCount: 'Genres',
+
     albumCount_one: '{{count}} Album',
+
     albumCount_other: '{{count}} Alben',
+
     loading: 'Genres werden geladen…',
+
     empty: 'Keine Genres gefunden.',
+
     albumsLoading: 'Alben werden geladen…',
+
     albumsEmpty: 'Keine Alben in diesem Genre gefunden.',
+
     loadMore: 'Mehr laden',
+
     back: 'Zurück',
+
   },
+
   randomMix: {
+
     title: 'Zufallsmix',
+
     remix: 'Neu mixen',
+
     remixTooltip: 'Neue Songs laden',
+
     remixGenre: '{{genre}} neu mixen',
+
     remixTooltipGenre: 'Neue {{genre}}-Songs laden',
+
     playAll: 'Alle abspielen',
+
     trackTitle: 'Titel',
+
     trackArtist: 'Künstler',
+
     trackAlbum: 'Album',
+
     trackFavorite: 'Favorit',
+
     trackDuration: 'Dauer',
+
     favoriteAdd: 'Zu Favoriten hinzufügen',
+
     favoriteRemove: 'Aus Favoriten entfernen',
+
     play: 'Abspielen',
+
     trackGenre: 'Genre',
+
     excludeAudiobooks: 'Hörbücher & Hörspiele ausschließen',
+
     excludeAudiobooksDesc: 'Prüft Keywords gegen Genre, Titel, Album und Künstler — z. B. Hörbuch, Audiobook, Spoken Word, …',
+
     genreBlocked: 'Keyword gesperrt',
+
     genreAddedToBlacklist: 'Zur Filterliste hinzugefügt',
+
     genreAlreadyBlocked: 'Bereits gesperrt',
+
     artistBlocked: 'Künstler gesperrt',
+
     artistAddedToBlacklist: 'Künstler zur Filterliste hinzugefügt',
+
     artistClickHint: 'Klicken um diesen Künstler zu sperren',
+
     blacklistToggle: 'Keyword-Filter',
+
     genreMixTitle: 'Genre-Mix',
+
     genreMixDesc: 'Top 20 Genres nach Songanzahl — klicken für einen Zufallsmix',
+
     genreMixAll: 'Alle Songs',
+
     genreMixLoadMore: '10 weitere laden',
+
     genreMixNoGenres: 'Keine Genres auf dem Server gefunden.',
+
     shuffleGenres: 'Andere Genres anzeigen',
+
     filterPanelTitle: 'Filter',
+
     filterPanelDesc: 'Genre-Tag oder Künstlername in der Liste anklicken, um ihn aus zukünftigen Mixes auszuschließen.',
+
     genreClickHint: 'Genre-Tag anklicken,\num es als Filter-Keyword hinzuzufügen.\nPrüft Genre, Titel, Album & Künstler.',
+
   },
+
   albums: {
+
     title: 'Alle Alben',
+
     sortByName: 'A–Z (Album)',
+
     sortByArtist: 'A–Z (Künstler)',
+
     sortNewest: 'Neueste zuerst',
+
     sortRandom: 'Zufällig',
+
     yearFrom: 'Von',
+
     yearTo: 'Bis',
+
     yearFilterClear: 'Jahresfilter zurücksetzen',
+
     yearFilterLabel: 'Jahr',
+
     select: 'Mehrfachauswahl',
+
     startSelect: 'Mehrfachauswahl aktivieren',
+
     cancelSelect: 'Abbrechen',
+
     selectionCount: '{{count}} ausgewählt',
+
     downloadZips: 'ZIPs herunterladen',
+
     addOffline: 'Offline hinzufügen',
+
     downloadingZip: 'Lade {{current}}/{{total}} herunter: {{name}}',
+
     downloadZipDone: '{{count}} ZIP(s) heruntergeladen',
+
     downloadZipFailed: 'Download fehlgeschlagen: {{name}}',
+
     offlineQueuing: '{{count}} Album(s) für Offline einreihen…',
+
     offlineFailed: '{{name}} konnte nicht offline hinzugefügt werden',
+
   },
+
   artists: {
+
     title: 'Künstler',
+
     search: 'Suchen…',
+
     all: 'Alle',
+
     gridView: 'Gitteransicht',
+
     listView: 'Listenansicht',
+
     imagesOn: 'Künstlerbilder aktiv — kann Netzwerk- und Systemlast erhöhen',
+
     imagesOff: 'Künstlerbilder deaktiviert — zeigt nur Initialen',
+
     loadMore: 'Mehr laden',
+
     notFound: 'Keine Künstler gefunden.',
+
     albumCount_one: '{{count}} Album',
+
     albumCount_other: '{{count}} Alben',
+
     selectionCount: '{{count}} ausgewählt',
+
     select: 'Mehrfachauswahl',
+
     startSelect: 'Mehrfachauswahl aktivieren',
+
     cancelSelect: 'Abbrechen',
+
     addToPlaylist: 'Zur Playlist hinzufügen',
+
   },
+
   login: {
+
     subtitle: 'Dein Navidrome Desktop Player',
+
     serverName: 'Server-Name (optional)',
+
     serverNamePlaceholder: 'Mein Navidrome',
+
     serverUrl: 'Server-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 oder https://music.example.com',
+
     username: 'Benutzername',
+
     usernamePlaceholder: 'admin',
+
     password: 'Passwort',
+
     showPassword: 'Passwort anzeigen',
+
     hidePassword: 'Passwort verstecken',
+
     connect: 'Verbinden',
+
     connecting: 'Verbinde…',
+
     connected: 'Verbunden!',
+
     error: 'Verbindung fehlgeschlagen – bitte Daten prüfen.',
+
     urlRequired: 'Bitte Server-URL eingeben.',
+
     savedServers: 'Gespeicherte Server',
+
     addNew: 'Oder neuen Server hinzufügen',
+
   },
+
   connection: {
+
     connected: 'Verbunden',
+
     connectedTo: 'Verbunden mit {{server}}',
+
     disconnected: 'Getrennt',
+
     disconnectedFrom: '{{server}} nicht erreichbar — klicken für Einstellungen',
+
     checking: 'Verbinde…',
+
     extern: 'Extern',
+
     offlineTitle: 'Keine Serververbindung',
+
     offlineSubtitle: '{{server}} ist nicht erreichbar. Prüfe Netzwerk oder Server.',
+
     offlineModeBanner: 'Offline-Modus — Wiedergabe aus lokalem Cache',
+
     offlineNoCacheBanner: 'Keine Serververbindung — {{server}} nicht erreichbar',
+
     offlineLibraryTitle: 'Offline-Bibliothek',
+
     offlineLibraryEmpty: 'Noch keine Alben gecacht. Online gehen, Album öffnen und "Offline verfügbar machen" klicken.',
+
     offlineAlbumCount: '{{n}} Album',
+
     offlineAlbumCount_plural: '{{n}} Alben',
+
     offlineFilterAll: 'Alle',
+
     offlineFilterAlbums: 'Alben',
+
     offlineFilterPlaylists: 'Playlists',
+
     offlineFilterArtists: 'Diskografien',
+
     retry: 'Erneut versuchen',
+
     serverSettings: 'Server-Einstellungen',
+
     switchServerTitle: 'Server wechseln',
+
     switchServerHint: 'Klicken, um einen anderen gespeicherten Server zu wählen.',
+
     manageServers: 'Server verwalten…',
+
     switchFailed: 'Wechsel fehlgeschlagen — Server nicht erreichbar.',
+
     lastfmConnected: 'Last.fm verbunden als @{{user}}',
+
     lastfmSessionInvalid: 'Session ungültig — klicken zum Neu-Verbinden',
+
   },
+
   common: {
+
     albums: 'Alben',
+
     album: 'Album',
+
     loading: 'Lade…',
+
     loadingMore: 'Lade…',
+
     loadingPlaylists: 'Lade Playlists…',
+
     noAlbums: 'Keine Alben gefunden.',
+
     downloading: 'Lade…',
+
     downloadZip: 'Download (ZIP)',
+
     back: 'Zurück',
+
     cancel: 'Abbrechen',
+
     save: 'Speichern',
+
     delete: 'Löschen',
+
     use: 'Verwenden',
+
     add: 'Hinzufügen',
+
     active: 'Aktiv',
+
     download: 'Herunterladen',
+
     chooseDownloadFolder: 'Download-Ordner wählen',
+
     noFolderSelected: 'Kein Ordner ausgewählt',
+
     rememberDownloadFolder: 'Ordner merken',
+
     filterGenre: 'Genre-Filter',
+
     filterSearchGenres: 'Genres suchen…',
+
     filterNoGenres: 'Keine Genres gefunden',
+
     filterClear: 'Zurücksetzen',
+
     play: 'Abspielen',
+
     bulkSelected: '{{count}} ausgewählt',
+
     clearSelection: 'Auswahl aufheben',
+
     bulkAddToPlaylist: 'Zur Playlist hinzufügen',
+
     bulkRemoveFromPlaylist: 'Aus Playlist entfernen',
+
     bulkClear: 'Auswahl aufheben',
+
     updaterAvailable: 'Update verfügbar',
+
     updaterVersion: 'v{{version}} verfügbar',
+
     updaterWebsite: 'Website',
+
     updaterModalTitle: 'Neue Version verfügbar',
+
     updaterChangelog: 'Was ist neu',
+
     updaterDownloadBtn: 'Jetzt herunterladen',
+
     updaterSkipBtn: 'Version überspringen',
+
     updaterRemindBtn: 'Später erinnern',
+
     updaterDone: 'Download abgeschlossen',
+
     updaterShowFolder: 'Im Ordner anzeigen',
+
     updaterInstallHint: 'Psysonic schließen und das Installationsprogramm manuell ausführen.',
+
     updaterAurHint: 'Update über AUR installieren:',
+
     updaterErrorMsg: 'Download fehlgeschlagen',
+
     updaterRetryBtn: 'Erneut versuchen',
+
     durationHoursMinutes: '{{hours}} Std. {{minutes}} Min.',
+
     durationMinutesOnly: '{{minutes}} Min.',
+
     updaterOpenGitHub: 'Auf GitHub öffnen',
+
     filters: 'Filter',
+
     more: 'mehr',
+
     yearRange: 'Jahresbereich',
+
     clearAll: 'Alles zurücksetzen',
+
   },
+
   settings: {
+
     title: 'Einstellungen',
+
     language: 'Sprache',
+
     languageEn: 'Englisch',
+
     languageDe: 'Deutsch',
+
     languageFr: 'Französisch',
+
     languageNl: 'Niederländisch',
+
     languageZh: 'Chinesisch',
+
     languageNb: 'Norwegisch',
+
     languageRu: 'Russisch',
+
     font: 'Schriftart',
+
     theme: 'Design',
+
     appearance: 'Darstellung',
+
     servers: 'Server',
+
     serverName: 'Server-Name',
+
     serverUrl: 'Server-URL',
+
     serverUrlPlaceholder: '192.168.1.100:4533 oder https://music.example.com',
+
     serverUsername: 'Benutzername',
+
     serverPassword: 'Passwort',
+
     addServer: 'Server hinzufügen',
+
     addServerTitle: 'Neuen Server hinzufügen',
+
     useServer: 'Verwenden',
+
     deleteServer: 'Löschen',
+
     noServers: 'Keine Server gespeichert.',
+
     serverActive: 'Aktiv',
+
     confirmDeleteServer: 'Server „{{name}}" löschen?',
+
     serverConnecting: 'Verbinde…',
+
     serverConnected: 'Verbunden!',
+
     serverFailed: 'Verbindung fehlgeschlagen.',
+
     testBtn: 'Verbindung testen',
+
     testingBtn: 'Teste…',
+
     serverCompatible: 'Kompatibel mit: Navidrome · Gonic · Airsonic · Subsonic',
+
     audiomuseTitle: 'AudioMuse-AI (Navidrome)',
+
     audiomuseDesc:
+
       'Aktivieren, wenn dieser Server das <pluginLink>AudioMuse-AI-Navidrome-Plugin</pluginLink> nutzt. Schaltet Instant Mix pro Titel frei und nutzt ähnliche Künstler vom Server statt Last.fm auf Künstlerseiten.',
+
     audiomuseIssueHint:
+
       'Instant Mix ist kürzlich fehlgeschlagen — Navidrome-Plugin und AudioMuse-API prüfen. Ohne Server-Treffer werden ähnliche Künstler über Last.fm geladen.',
+
     connected: 'Verbunden',
+
     failed: 'Fehlgeschlagen',
+
     eqTitle: 'Equalizer',
+
     eqEnabled: 'Equalizer aktivieren',
+
     eqPreset: 'Preset',
+
     eqPresetCustom: 'Benutzerdefiniert',
+
     eqPresetBuiltin: 'Eingebaute Presets',
+
     eqPresetCustomGroup: 'Meine Presets',
+
     eqSavePreset: 'Als Preset speichern',
+
     eqPresetName: 'Preset-Name…',
+
     eqDeletePreset: 'Preset löschen',
+
     eqResetBands: 'Auf Flat zurücksetzen',
+
     eqPreGain: 'Vorverstärkung',
+
     eqResetPreGain: 'Vorverstärkung zurücksetzen',
+
     eqAutoEqTitle: 'AutoEQ Kopfhörer-Suche',
+
     eqAutoEqPlaceholder: 'Kopfhörer / IEM Modell suchen…',
+
     eqAutoEqSearching: 'Suche…',
+
     eqAutoEqNoResults: 'Keine Ergebnisse gefunden',
+
     eqAutoEqError: 'Suche fehlgeschlagen',
+
     eqAutoEqRateLimit: 'GitHub Rate-Limit erreicht — in einer Minute erneut versuchen',
+
     eqAutoEqFetchError: 'EQ-Profil konnte nicht geladen werden',
+
     lfmTitle: 'Last.fm',
+
     lfmConnect: 'Mit Last.fm verbinden',
+
     lfmConnecting: 'Warte auf Bestätigung…',
+
     lfmConfirm: 'Ich habe die App autorisiert',
+
     lfmConnected: 'Verbunden als',
+
     lfmDisconnect: 'Trennen',
+
     lfmConnectDesc: 'Verbinde deinen Last.fm Account, um Scrobbling und Now-Playing-Updates direkt aus Psysonic heraus zu aktivieren — keine Navidrome-Konfiguration erforderlich.',
+
     lfmOpenBrowser: 'Es öffnet sich ein Browserfenster. Autorisiere Psysonic auf Last.fm und klicke dann unten auf den Button.',
+
     lfmScrobbles: '{{n}} Scrobbles',
+
     lfmMemberSince: 'Dabei seit {{year}}',
+
     scrobbleEnabled: 'Scrobbling aktiviert',
+
     scrobbleDesc: 'Songs nach 50% Laufzeit an Last.fm senden',
+
     behavior: 'App-Verhalten',
+
     cacheTitle: 'Max. Speichergröße',
+
     cacheDesc: 'Cover und Künstlerbilder. Wenn voll, werden die ältesten Einträge automatisch entfernt. Offline-Alben werden nicht automatisch gelöscht, aber beim manuellen Cache leeren entfernt.',
+
     cacheUsedImages: 'Bilder:',
+
     cacheUsedOffline: 'Offline-Tracks:',
+
     cacheUsedHot: 'Belegter Speicher:',
+
     hotCacheTrackCount: 'Titel im Cache:',
+
     cacheMaxLabel: 'Max. Größe',
+
     cacheClearBtn: 'Cache leeren',
+
     cacheClearWarning: 'Alle Offline-Alben werden damit aus der Bibliothek entfernt.',
+
     cacheClearConfirm: 'Alles löschen',
+
     cacheClearCancel: 'Abbrechen',
+
     offlineDirTitle: 'Offline-Bibliothek (In-App)',
+
     offlineDirDesc: 'Speicherort für Titel, die du innerhalb von Psysonic offline verfügbar machst.',
+
     offlineDirDefault: 'Standard (App-Daten)',
+
     offlineDirChange: 'Verzeichnis ändern',
+
     offlineDirClear: 'Auf Standard zurücksetzen',
+
     offlineDirHint: 'Neue Downloads werden an diesem Ort gespeichert. Bestehende Downloads verbleiben am ursprünglichen Pfad.',
+
     hotCacheTitle: 'Hot-Playback-Cache',
+
     hotCacheAlphaBadge: 'Alpha',
+
     hotCacheDisclaimer: 'Lädt kommende Warteschlangen-Titel vor und behält zuletzt gespielte. Bei aktivierter Option: Speicherplatz und Netzwerk.',
+
     hotCacheDirDefault: 'Standard (App-Daten)',
+
     hotCacheDirChange: 'Ordner ändern',
+
     hotCacheDirClear: 'Auf Standard zurücksetzen',
+
     hotCacheDirHint: 'Beim Ordnerwechsel wird der App-Index zurückgesetzt; alte Dateien bleiben am alten Ort, bis Sie sie löschen.',
+
     hotCacheEnabled: 'Hot-Playback-Cache aktivieren',
+
     hotCacheMaxMb: 'Maximale Cache-Größe',
+
     hotCacheDebounce: 'Debounce bei Warteschlangen-Änderungen',
+
     hotCacheDebounceImmediate: 'Sofort',
+
     hotCacheDebounceSeconds: '{{n}} s',
+
     hotCacheClearBtn: 'Hot-Cache leeren',
+
     audioOutputDevice: 'Audio-Ausgabegerät',
+
     audioOutputDeviceDesc: 'Wähle das Audiogerät, über das Psysonic spielt. Änderungen werden sofort übernommen und starten den aktuellen Track neu.',
+
     audioOutputDeviceDefault: 'Systemstandard',
+
     audioOutputDeviceRefresh: 'Geräteliste aktualisieren',
+
     audioOutputDeviceOsDefaultNow: 'aktuelle Systemausgabe',
+
     audioOutputDeviceListError: 'Audiogeräteliste konnte nicht geladen werden.',
+
     audioOutputDeviceNotInCurrentList: 'nicht in der aktuellen Liste',
+
     hiResTitle: 'Native Hi-Res-Wiedergabe',
+
     hiResEnabled: 'Native Hi-Res-Wiedergabe aktivieren',
+
     hiResDesc: "Standardmäßig wird auf 44,1 kHz begrenzt (maximale Stabilität). Nur aktivieren, wenn Hardware und Netzwerk zuverlässig hohe Abtastraten (88,2 kHz+) unterstützen.",
+
     showArtistImages: 'Künstlerbilder anzeigen',
+
     showArtistImagesDesc: 'Lädt und zeigt Künstlerbilder in der Künstlerübersicht. Standardmäßig deaktiviert, um Server-I/O und Netzwerklast bei großen Bibliotheken zu reduzieren.',
+
     showTrayIcon: 'Tray-Icon anzeigen',
+
     showTrayIconDesc: 'Psysonic-Icon im System-Tray / in der Menüleiste anzeigen.',
+
     minimizeToTray: 'Im Tray minimieren',
+
     minimizeToTrayDesc: 'Beim Schließen des Fensters läuft Psysonic weiter im System-Tray statt zu beenden.',
+
     discordRichPresence: 'Discord Rich Presence',
+
     discordRichPresenceDesc: 'Zeigt den aktuell gespielten Titel im Discord-Profil an. Discord muss dafür geöffnet sein.',
+
     useCustomTitlebar: 'Eigene Titelleiste',
+
     useCustomTitlebarDesc: 'Ersetzt die System-Titelleiste durch eine eingebaute, die zum App-Theme passt. Deaktivieren, um die native GNOME/GTK-Titelleiste zu verwenden.',
+
     discordAppleCovers: 'Cover über Apple Music für Discord laden',
+
     discordAppleCoversDesc: 'Sendet Künstler- und Albumname an die Apple-Such-API, um Cover für dein Discord-Profil zu finden. Standardmäßig aus Datenschutzgründen deaktiviert.',
+
+    discordTemplates: 'Benutzerdefinierte Textvorlagen',
+
+    discordTemplatesDesc: 'Passe an, welche Informationen in deinem Discord-Profil angezeigt werden. Variablen: {title}, {artist}, {album}, {paused}',
+
+    discordTemplateDetails: 'Primäre Zeile (details)',
+
+    discordTemplateState: 'Sekundäre Zeile (state)',
+
+    discordTemplateLargeText: 'Album-Tooltip (largeText)',
+
     nowPlayingEnabled: 'Im Livefenster anzeigen',
+
     nowPlayingEnabledDesc: 'Überträgt den aktuell gespielten Titel an die Livehörer-Ansicht des Servers. Deaktivieren, um keine Wiedergabedaten zu senden.',
+
     lyricsServerFirst: 'Server-Lyrics bevorzugen',
+
     lyricsServerFirstDesc: 'Server-seitige Lyrics (eingebettete Tags, Sidecar-Dateien) vor LRCLIB abfragen. Deaktivieren, um LRCLIB zuerst zu verwenden.',
+
     enableNeteaselyrics: 'Netease Cloud Music Lyrics',
+
     enableNeteaselyricsDesc: 'Netease Cloud Music als letzte Lyrics-Quelle verwenden, wenn Server und LRCLIB nichts liefern. Besonders gut für asiatische und internationale Musik.',
+
     lyricsSourcesTitle: 'Lyrics-Quellen',
+
     lyricsSourcesDesc: 'Wähle, welche Quellen für Lyrics abgefragt werden und in welcher Reihenfolge. Ziehen zum Sortieren. Deaktivierte Quellen werden übersprungen.',
+
     lyricsSourceServer: 'Server',
+
     lyricsSourceLrclib: 'LRCLIB',
+
     lyricsSourceNetease: 'Netease Cloud Music',
+
     downloadsTitle: 'ZIP-Export & Archivierung',
+
     downloadsFolderDesc: 'Zielverzeichnis für Alben, die du als ZIP-Datei auf deinen Computer herunterlädst.',
+
     downloadsDefault: 'Standard-Downloads-Ordner',
+
     pickFolder: 'Auswählen',
+
     pickFolderTitle: 'Download-Ordner auswählen',
+
     clearFolder: 'Download-Ordner löschen',
+
     logout: 'Abmelden',
+
     aboutTitle: 'Über Psysonic',
+
     aboutDesc: 'Ein moderner Desktop-Musikplayer für Subsonic-kompatible Server (Navidrome, Gonic u. a.). Basiert auf Tauri v2 mit einer nativen Rust-Audio-Engine — schlank und schnell, aber vollgepackt mit Features: Wellenform-Seekbar, synchronisierte Lyrics, Last.fm-Integration, 10-Band-EQ, Crossfade, nahtlose Wiedergabe, Replay Gain, Genre-Browser und eine große Theme-Bibliothek.',
+
     aboutLicense: 'Lizenz',
+
     aboutLicenseText: 'GNU GPL v3 — kostenlos nutzbar, veränderbar und unter gleicher Lizenz weiterzugeben.',
+
     aboutRepo: 'Quellcode auf GitHub',
+
     aboutVersion: 'Version',
+
     aboutBuiltWith: 'Gebaut mit Tauri · React · TypeScript · Rust/rodio',
+
     aboutAiCredit: 'Mit freundlicher Unterstützung von Claude Code by Anthropic',
+
     aboutContributorsLabel: 'Mitwirkende',
+
     aboutSpecialThanksLabel: 'Besonderer Dank',
+
     changelog: 'Changelog',
+
     showChangelogOnUpdate: "'Was ist neu' bei Update anzeigen",
+
     showChangelogOnUpdateDesc: 'Zeigt automatisch die Neuerungen an, wenn eine neue Version zum ersten Mal gestartet wird.',
+
     randomMixTitle: 'Zufallsmix',
+
     randomMixBlacklistTitle: 'Eigene Filter-Keywords',
+
     randomMixBlacklistDesc: 'Songs werden ausgeschlossen, wenn ein Keyword auf Genre, Titel, Album oder Künstler zutrifft (aktiv wenn die Checkbox oben an ist).',
+
     randomMixBlacklistPlaceholder: 'Keyword hinzufügen…',
+
     randomMixBlacklistAdd: 'Hinzufügen',
+
     randomMixBlacklistEmpty: 'Noch keine eigenen Keywords hinzugefügt.',
+
     randomMixHardcodedTitle: 'Eingebaute Keywords (aktiv wenn Checkbox an)',
+
     tabAudio: 'Audio',
+
     tabStorage: 'Speicher & Downloads',
+
     tabAppearance: 'Darstellung',
+
     homeCustomizerTitle: 'Startseite',
+
     sidebarTitle: 'Seitenleiste',
+
     sidebarReset: 'Zurücksetzen',
+
     sidebarDrag: 'Ziehen zum Umsortieren',
+
     sidebarFixed: 'Immer sichtbar',
-    randomNavSplitTitle: 'Mix-Navigation aufteilen',
-    randomNavSplitDesc: '"Zufallsmix" und "Zufallsalben" als separate Sidebar-Einträge statt als "Mix erstellen"-Hub anzeigen.',
+
     tabInput: 'Eingabe',
+
     tabServer: 'Server',
+
     shortcutsReset: 'Auf Standard zurücksetzen',
+
     shortcutListening: 'Taste drücken…',
+
     shortcutUnbound: '—',
+
     shortcutClear: 'Löschen',
+
     globalShortcutsTitle: 'Globale Shortcuts',
+
     globalShortcutsNote: 'Funktionieren systemweit, auch wenn Psysonic im Hintergrund läuft. Mindestens Ctrl, Alt oder Super als Modifier erforderlich.',
+
     shortcutPlayPause: 'Wiedergabe / Pause',
+
     shortcutNext: 'Nächster Titel',
+
     shortcutPrev: 'Vorheriger Titel',
+
     shortcutVolumeUp: 'Lautstärke erhöhen',
+
     shortcutVolumeDown: 'Lautstärke verringern',
+
     shortcutSeekForward: '10s vorspulen',
+
     shortcutSeekBackward: '10s zurückspulen',
+
     shortcutToggleQueue: 'Warteschlange ein-/ausblenden',
+
     shortcutOpenFolderBrowser: '{{folderBrowser}} öffnen',
+
     shortcutFullscreenPlayer: 'Vollbild-Player',
+
     shortcutNativeFullscreen: 'Nativer Vollbildmodus',
+
     tabSystem: 'System',
+
     tabGeneral: 'Allgemein',
+
     ratingsSectionTitle: 'Bewertungen',
+
     ratingsSkipStarTitle: 'Skip → 1 Stern',
+
     ratingsSkipStarDesc:
+
       'Wird ein Titel mehrmals hintereinander übersprungen, bekommt er automatisch 1★. Nur für noch nicht bewertete Titel.',
+
     ratingsSkipStarThresholdLabel: 'Skips',
+
     ratingsMixFilterTitle: 'Nach Bewertung filtern',
+
     ratingsMixFilterDesc:
+
       'Gering bewertete Titel in {{mix}} und {{albums}} ausblenden. Nochmals auf den gewählten Stern klicken, um den Filter zu deaktivieren.',
+
     ratingsMixMinSong: 'Titel',
+
     ratingsMixMinAlbum: 'Alben',
+
     ratingsMixMinArtist: 'Interpreten',
+
     ratingsMixMinThresholdAria: 'Mindest-Sterne: {{label}}',
+
     backupTitle: 'Backup & Wiederherstellung',
+
     backupExport: 'Einstellungen exportieren',
+
     backupExportDesc: 'Speichert alle Einstellungen, Serverprofile, Last.fm-Konfiguration, Theme, EQ und Tastenkürzel in eine .psybkp-Datei. Passwörter werden im Klartext gespeichert — Datei sicher aufbewahren.',
+
     backupImport: 'Einstellungen importieren',
+
     backupImportDesc: 'Stellt Einstellungen aus einer .psybkp-Datei wieder her. Die App wird nach dem Import neu geladen.',
+
     backupImportConfirm: 'Alle aktuellen Einstellungen werden überschrieben. Fortfahren?',
+
     backupSuccess: 'Backup gespeichert',
+
     backupImportSuccess: 'Einstellungen wiederhergestellt — wird neu geladen…',
+
     backupImportError: 'Ungültige oder beschädigte Backup-Datei.',
+
     playbackTitle: 'Wiedergabe',
+
     replayGain: 'Replay Gain',
+
     replayGainDesc: 'Lautstärke mit ReplayGain-Metadaten normalisieren',
+
     replayGainMode: 'Modus',
+
     replayGainTrack: 'Track',
+
     replayGainAlbum: 'Album',
+
     replayGainPreGain: 'Pre-Gain (getaggte Dateien)',
+
     replayGainFallback: 'Fallback (ohne Tags / Radio)',
+
     crossfade: 'Crossfade',
+
     crossfadeDesc: 'Überblendung zwischen Tracks',
+
     crossfadeSecs: '{{n}} s',
+
     notWithGapless: 'Nicht verfügbar wenn Nahtlose Wiedergabe aktiv ist',
+
     notWithCrossfade: 'Nicht verfügbar wenn Crossfade aktiv ist',
+
     gapless: 'Nahtlose Wiedergabe',
+
     gaplessDesc: 'Nächsten Track vorpuffern um Lücken zwischen Songs zu vermeiden',
+
     preloadMode: 'Nächsten Track vorpuffern',
+
     preloadModeDesc: 'Wann mit dem Puffern des nächsten Tracks begonnen werden soll',
+
     nextTrackBufferingTitle: 'Nächster Track – Pufferung',
+
     preloadHotCacheMutualExclusive: 'Preload und Hot Cache erfüllen denselben Zweck – nur eine Methode kann gleichzeitig aktiv sein. Das Aktivieren einer deaktiviert die andere automatisch.',
+
     preloadOff: 'Aus',
+
     preloadBalanced: 'Ausgewogen (30 s vor Ende)',
+
     preloadEarly: 'Früh (nach 5 s Wiedergabe)',
+
     preloadCustom: 'Benutzerdefiniert',
+
     preloadCustomSeconds: 'Sekunden vor Ende: {{n}}',
+
     infiniteQueue: 'Endlose Warteschlange',
+
     infiniteQueueDesc: 'Automatisch Zufallstitel anhängen wenn die Warteschlange leer wird',
+
     experimental: 'Experimentell',
+
     fsPlayerSection: 'Vollbild-Player',
+
     fsShowArtistPortrait: 'Künstlerfoto anzeigen',
+
     fsShowArtistPortraitDesc: 'Künstlerfoto (oder Albumcover) auf der rechten Seite des Vollbild-Players anzeigen.',
+
     fsPortraitDim: 'Abdunkelung des Fotos',
+
     seekbarStyle: 'Seekbar-Stil',
+
     seekbarStyleDesc: 'Aussehen der Wiedergabe-Seekbar auswählen',
+
     seekbarWaveform: 'Wellenform',
+
     seekbarLinedot: 'Linie & Punkt',
+
     seekbarBar: 'Balken',
+
     seekbarThick: 'Dicker Balken',
+
     seekbarSegmented: 'Segmentiert',
+
     seekbarNeon: 'Neonröhre',
+
     seekbarPulsewave: 'Pulswelle',
+
     seekbarParticletrail: 'Partikel-Spur',
+
     seekbarLiquidfill: 'Flüssigkeit',
+
     seekbarRetrotape: 'Retro-Band',
+
     themeSchedulerTitle: 'Theme-Zeitplan',
+
     themeSchedulerEnable: 'Theme-Zeitplan aktivieren',
+
     themeSchedulerEnableSub: 'Wechselt automatisch zwischen zwei Themes basierend auf der Uhrzeit',
+
     themeSchedulerDayTheme: 'Tages-Theme',
+
     themeSchedulerDayStart: 'Tag beginnt um',
+
     themeSchedulerNightTheme: 'Nacht-Theme',
+
     themeSchedulerNightStart: 'Nacht beginnt um',
+
     themeSchedulerActiveHint: 'Theme-Zeitplan ist aktiv - Themes werden automatisch gewechselt.',
+
     visualOptionsTitle: 'Visuelle Optionen',
+
     coverArtBackground: 'Cover-Hintergrund',
+
     coverArtBackgroundSub: 'Zeigt verschwommenes Cover als Hintergrund in Album/Playlist-Kopfzeilen',
+
     playlistCoverPhoto: 'Playlist-Coverfoto',
+
     playlistCoverPhotoSub: 'Zeigt Coverfoto-Raster in der Playlist-Detailansicht',
+
     showBitrate: 'Bitrate anzeigen',
+
     showBitrateSub: 'Audio-Bitrate in Track-Listen anzeigen',
+
     uiScaleTitle: 'Interface-Skalierung',
+
     uiScaleLabel: 'Zoom',
+
   },
+
   changelog: {
+
     modalTitle: 'Was ist neu',
+
     dontShowAgain: 'Nicht mehr anzeigen',
+
     close: 'Verstanden',
+
   },
+
   help: {
+
     title: 'Hilfe',
+
     s1: 'Erste Schritte',
+
     q1: 'Welche Server sind kompatibel?',
+
     a1: 'Psysonic funktioniert mit jedem Subsonic-kompatiblen Server: Navidrome, Gonic, Subsonic, Airsonic und anderen. Navidrome ist die empfohlene Wahl.',
+
     q2: 'Wie verbinde ich mich mit meinem Server?',
+
     a2: 'Öffne die Einstellungen und klicke auf "Server hinzufügen". Gib die Server-URL (z. B. 192.168.1.100:4533), Benutzername und Passwort ein. Psysonic testet die Verbindung vor dem Speichern — bei Fehler wird nichts gespeichert.',
+
     q3: 'Kann ich mehrere Server verwenden?',
+
     a3: 'Ja. Du kannst beliebig viele Server in den Einstellungen hinzufügen und jederzeit zwischen ihnen wechseln. Immer ist nur ein Server aktiv.',
+
     s2: 'Wiedergabe',
+
     q4: 'Wie spiele ich Musik ab?',
+
     a4: 'Doppelklick auf einen Track startet die Wiedergabe. Auf Album- und Künstlerseiten gibt es "Alle abspielen". Tracks lassen sich auch per Drag & Drop in die Warteschlange ziehen.',
+
     q5: 'Welche Tastenkürzel gibt es?',
+
     a5: 'Leertaste = Play / Pause · Escape = Vollbild schließen. Medientasten (Play/Pause, Weiter, Zurück) funktionieren auf allen Plattformen. Unter Linux bitte die Buttons in der Playerleiste nutzen. In-App-Kürzel und systemweite globale Shortcuts können in Einstellungen → Tastenkürzel / Globale Shortcuts angepasst werden.',
+
     q6: 'Was ist die Warteschlange?',
+
     a6: 'Die Warteschlange zeigt alle kommenden Tracks. Öffnen mit dem Panel-Icon oben rechts im Header (neben dem Now-Playing-Indikator). Tracks per Drag & Drop umsortieren, mit dem Shuffle-Button mischen oder als Playlist speichern.',
+
     q7: 'Wie öffne ich den Vollbild-Player?',
+
     a7: 'Klick auf das Album-Cover unten in der Playerleiste oder auf das Expand-Icon daneben. Mit Escape wieder schließen.',
+
     q8: 'Wie funktioniert die Wiederholfunktion?',
+
     a8: 'Klick auf den Wiederhol-Button in der Playerleiste, um zwischen den Modi zu wechseln: Aus → Alles wiederholen → Einen wiederholen.',
+
     s3: 'Bibliothek',
+
     q9: 'Wie lade ich ein Album herunter?',
+
     a9: 'Auf der Album-Detailseite auf "Download (ZIP)" klicken. Der Server packt das Album zunächst in eine ZIP-Datei — bei großen Alben oder verlustfreien Dateien (FLAC / WAV) kann es einen Moment dauern, bevor der Download tatsächlich startet. Das ist normal: Der Fortschrittsbalken erscheint erst, wenn der Server fertig ist und die Übertragung beginnt.',
+
     q10: 'Wie markiere ich Tracks und Alben als Favoriten?',
+
     a10: 'Das Stern-Icon auf einem Track oder im Album-Header anklicken. Markierte Einträge erscheinen im Bereich "Favoriten" in der Seitenleiste.',
+
     q11: 'Was ist das Karussell auf der Startseite?',
+
     a11: 'Das Banner oben auf der Startseite wählt zufällige Alben aus der Bibliothek und rotiert alle 10 Sekunden weiter. Mit den Punkten kann man manuell springen, Klick auf das Banner öffnet das Album.',
+
     s4: 'Einstellungen',
+
     q12: 'Wie ändere ich das Theme?',
+
     a12: 'Einstellungen → Design. Eine große Auswahl an Themes in 8 Gruppen: Psysonic Themes, Mediaplayer, Betriebssysteme, Spiele, Filme, Serien, Social Media und Open-Source-Classics (Catppuccin, Nord, Gruvbox, Nightfox).',
+
     q13: 'Wie ändere ich die Sprache?',
+
     a13: 'Einstellungen → Sprache. Englisch, Deutsch, Französisch, Niederländisch und Chinesisch werden unterstützt.',
+
     q15: 'Wie lege ich einen Download-Ordner fest?',
+
     a15: 'Einstellungen → App-Verhalten → Download-Ordner. Beliebigen Ordner wählen — heruntergeladene Alben werden dort als ZIP gespeichert. Ohne eigenen Ordner landet alles im Standard-Downloads-Ordner.',
+
     s5: 'Scrobbling',
+
     q16: 'Wie funktioniert Scrobbling?',
+
     a16: 'Psysonic scrobbled direkt zu Last.fm — keine Navidrome-Konfiguration nötig. Last.fm-Konto in Einstellungen → Last.fm verbinden und Scrobbling dort aktivieren.',
+
     q17: 'Wann wird ein Scrobble gesendet?',
+
     a17: 'Ein Scrobble wird übermittelt, wenn 50 % eines Tracks gehört wurden.',
+
     q22: 'Was ist die Waveform in der Playerleiste?',
+
     a22: 'Die Waveform-Leiste ersetzt den klassischen Fortschrittsbalken. Klick auf eine beliebige Stelle zum Springen, ziehen zum Scrubben. Der gespielte Teil leuchtet in einem Blau-Mauve-Farbverlauf, der gepufferte Bereich erscheint etwas heller, der ungespielter Teil ist abgeblendet.',
+
     q24: 'Kann ich die Warteschlange mischen?',
+
     a24: 'Ja. Die Warteschlange öffnen und auf das Shuffle-Icon im Header klicken. Der aktuell laufende Track bleibt an Position 1 — alle restlichen Tracks werden zufällig neu geordnet.',
+
     q25: 'Öffnen Last.fm- und Wikipedia-Links auf Künstlerseiten im Browser?',
+
     a25: 'Ja — sie öffnen sich im Standard-Systembrowser. Der Button zeigt kurz eine Bestätigungsmeldung beim Klick.',
+
     s7: 'Zufallsmix',
+
     q26: 'Was ist der Zufallsmix?',
+
     a26: 'Der Zufallsmix erstellt eine Playlist aus zufälligen Tracks deiner gesamten Bibliothek. Über "Zufallsmix" in der Seitenleiste erreichbar, dann "Neuer Mix" klicken. Die Anzahl der Tracks ist vor der Generierung einstellbar.',
+
     q27: 'Was ist der Keyword-Filter?',
+
     a27: 'Der Keyword-Filter schließt Tracks aus, deren Genre, Titel oder Album bestimmte Wörter enthält. Hörbücher werden automatisch gefiltert. Eigene Keywords in Einstellungen → Zufallsmix hinzufügen oder per Klick auf ein Genre-Tag direkt in der Trackliste.',
+
     q28: 'Was ist der Super-Genre-Mix?',
+
     a28: 'Der Super-Genre-Mix fasst die Bibliothek in übergeordnete Kategorien zusammen (Rock, Metal, Electronic, Jazz, Klassik usw.) und erstellt daraus einen fokussierten Mix. Einen Kategorie-Chip unterhalb der Trackliste auswählen. Ergebnisse erscheinen schrittweise, während die einzelnen Sub-Genres geladen werden.',
+
     s6: 'Problemlösung',
+
     q18: 'Cover und Künstlerbilder laden langsam.',
+
     a18: 'Bilder werden beim ersten Aufruf vom Server geholt und dann 30 Tage lokal gecacht. Bei langsamen Server-Festplatten kann der erste Seitenaufruf einen Moment dauern. Danach geht alles sofort.',
+
     q19: 'Der Verbindungstest schlägt fehl.',
+
     a19: 'URL inklusive Port prüfen (z. B. http://192.168.1.100:4533). Sicherstellen, dass keine Firewall die Verbindung blockiert. Im lokalen Netzwerk http:// statt https:// versuchen. Benutzername und Passwort kontrollieren.',
+
     q20: 'Kein Ton unter Linux.',
+
     a20: 'Psysonic ist als .deb (Ubuntu/Debian), .rpm (Fedora/RHEL) und über AUR für Arch/CachyOS verfügbar (yay -S psysonic). Es gibt kein AppImage. Falls kein Ton kommt, sicherstellen, dass PipeWire oder PulseAudio läuft.',
+
     q21: 'Die App zeigt einen schwarzen Bildschirm unter Linux.',
+
     a21: 'Meist ein GPU/EGL-Treiberproblem in WebKitGTK. Mit GDK_BACKEND=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1 starten. Das AUR-Paket und die offiziellen .deb/.rpm-Pakete setzen diese Variablen automatisch.',
+
     q29: 'Was sind Crossfade und nahtlose Wiedergabe?',
+
     a29: 'Beides sind experimentelle Audiofunktionen in Einstellungen → Audio. Nahtlose Wiedergabe puffert den nächsten Track vor, um Stille zu eliminieren. Crossfade blendet den aktuellen Track aus, während der nächste eingeblendet wird — Dauer (1–10 s) einstellbar.',
+
     q30: 'Zeigt Psysonic Songtexte an?',
+
     a30: 'Ja. Klick auf das Mikrofon-Icon in der Playerleiste öffnet den Lyrics-Tab im Queue-Panel. Psysonic lädt Texte automatisch von LRCLIB. Sind synchronisierte Lyrics verfügbar, wird die aktuelle Zeile hervorgehoben und scrollt in Echtzeit mit. Bei reinen Texten wird der Volltext statisch angezeigt.',
+
     q31: 'Kann ich Tastenkürzel anpassen?',
+
     a31: 'Ja. Einstellungen → Tastenkürzel erlaubt das Neuzuordnen von In-App-Aktionen (Play/Pause, Weiter, Zurück, Lautstärke, Vollbild u. v. m.). Einstellungen → Globale Shortcuts ermöglicht systemweite Kürzel, die auch im Hintergrund ausgelöst werden.',
+
     q32: 'Kann ich die Schriftart ändern?',
+
     a32: 'Ja. Einstellungen → Schriftart bietet 10 Schriften zur Auswahl, darunter IBM Plex Mono, Fira Code, JetBrains Mono und Courier Prime. Die gewählte Schrift gilt für die gesamte Oberfläche.',
+
     s8: 'Offline-Modus',
+
     q34: 'Was ist der Offline-Modus?',
+
     a34: 'Der Offline-Modus (Beta) ermöglicht das Zwischenspeichern von Alben auf dem Gerät, sodass die Wiedergabe ohne aktive Serververbindung möglich ist. Gecachte Tracks werden lokal gespeichert und direkt von der Festplatte abgespielt — ohne Netzwerkzugriff.',
+
     q35: 'Wie speichere ich ein Album für die Offline-Nutzung?',
+
     a35: 'Album öffnen und auf das Download-Symbol im Album-Header klicken. Psysonic lädt alle Tracks im Hintergrund herunter. Der Fortschritt wird am Button angezeigt. Nach dem Download wird das Symbol grün. Gecachte Alben können in der Offline-Bibliothek (Seitenleiste) verwaltet und gelöscht werden.',
+
     q36: 'Wie viel Speicherplatz darf der Cache belegen?',
+
     a36: 'In Einstellungen → Bibliothek kann eine maximale Cache-Größe festgelegt werden. Wird das Limit erreicht, erscheint ein Warnbanner auf der Albumseite. Einzelne Alben können in der Offline-Bibliothek gelöscht werden, um Speicherplatz freizugeben.',
+
     q37: 'Wie bewerte ich Songs, Alben und Künstler?',
+
     a37: 'Psysonic unterstützt 1–5-Sterne-Bewertungen über die OpenSubsonic-API (erfordert Navidrome ≥ 0.53). Songs können in der Trackliste eines Albums oder einer Playlist (Spalte „Bewertung"), über das Rechtsklick-Kontextmenü oder direkt in der Playerleiste unterhalb des Künstlernamens bewertet werden. Alben werden auf der Albumdetailseite bewertet, Künstler auf der Künstlerseite. Bewertungen werden sofort an den Server übertragen.',
+
     q38: 'Kann ich eine Bewertung entfernen oder ändern?',
+
     a38: 'Ja. Ein erneuter Klick auf den bereits aktiven Stern entfernt die Bewertung vollständig – der zweite Klick auf denselben Stern löscht sie also. Um eine Bewertung zu ändern, einfach einen anderen Stern anklicken.',
+
     q39: 'Was ist Skip-to-1★ und der Bewertungsfilter?',
+
     a39: 'Skip-to-1★ vergibt automatisch eine 1-Stern-Bewertung, wenn ein Song mehrfach hintereinander manuell übersprungen wird. Aktivierung und Schwellenwert in Einstellungen → Bewertungen. Dort lässt sich auch eine Mindestbewertung für Zufalls-Mix und Zufallsalben festlegen – so werden nur Songs, Alben oder Künstler ab einer bestimmten Sternzahl in generierten Mixes berücksichtigt.',
+
     q40: 'Was ist der Ordner-Browser?',
+
     a40: 'Der Ordner-Browser (Sidebar) ermöglicht die Navigation im Musikverzeichnis des Servers über ein Miller-Column-Layout. Ein Klick auf einen Ordner öffnet dessen Inhalt; über das Play-Symbol lassen sich Ordner direkt abspielen oder zur Warteschlange hinzufügen.',
+
     q41: 'Was ist der Theme-Scheduler?',
+
     a41: 'Einstellungen → Darstellung → Theme automatisch wechseln: Tagesthema und Nachtthema mit Startzeiten konfigurieren. Psysonic wechselt automatisch zur eingestellten Uhrzeit. Ist der Scheduler aktiv, erscheint im Theme-Picker ein Hinweis, warum manuelle Änderungen keine sofortige Wirkung haben.',
+
     q42: 'Kann ich die Benutzeroberfläche vergrößern oder verkleinern?',
+
     a42: 'Ja. Einstellungen → Darstellung → Anzeigeskalierung ermöglicht eine Skalierung der gesamten Oberfläche zwischen 80 % und 125 %, unabhängig von der Systemschriftgröße.',
+
     q43: 'Kann ich den Stil der Seekbar ändern?',
+
     a43: 'Ja. Einstellungen → Darstellung → Seekbar-Stil bietet 10 Stile: Wellenform, Linie & Punkt, Balken, Dicker Balken, Segmentiert, Neon-Glow, Pulswelle, Partikelspur, Flüssigfüllung und Retro-Tape.',
+
     q44: 'Was ist AutoEQ?',
+
     a44: 'Der 10-Band-EQ in Einstellungen → Audio enthält eine AutoEQ-Suche. Kopfhörermodell eingeben – Psysonic lädt das Korrekturprofil aus der AutoEQ-Datenbank und überträgt es automatisch auf die EQ-Bänder.',
+
     q45: 'Was ist Replay Gain?',
+
     a45: 'Replay Gain normalisiert die Lautstärke, sodass laute und leise Alben auf einem gleichmäßigen Pegel wiedergegeben werden. Aktivierung in Einstellungen → Audio → Replay Gain; Modus Track (pro Song) oder Album (behält die relative Dynamik innerhalb eines Albums).',
+
     q46: 'Was ist der Hot Cache?',
+
     a46: 'Der Hot Cache (Alpha, Einstellungen → Bibliothek) lädt die nächsten Songs der Warteschlange vorab auf die Festplatte, damit die Wiedergabe ohne Pufferverzögerung startet – besonders nützlich bei langsamen oder entfernten Servern. Psysonic hält den aktuellen Track und die nächsten 5 im Cache und verdrängt ältere Einträge, wenn das Größenlimit erreicht wird. Cache-Größe und Debounce-Verzögerung sind konfigurierbar.',
+
     q47: 'Kann ich eine Playlist offline cachen?',
+
     a47: 'Ja. In den Playlist-Details auf das Download-Symbol klicken – alle Tracks werden im Hintergrund heruntergeladen. Ist die Playlist vollständig gecacht, wechselt das Symbol zu einem roten Papierkorb; ein erneuter Klick entfernt die Playlist aus dem Offline-Cache.',
-    q48: 'Was ist die Infinite Queue?',
-    a48: 'Wenn die Warteschlange leer läuft und Wiederholen deaktiviert ist, fügt Psysonic automatisch zufällige Tracks aus deiner Bibliothek hinzu, damit die Wiedergabe nie stoppt. Automatisch hinzugefügte Tracks erscheinen unterhalb des Trenners „— Automatisch hinzugefügt —". Umschalten über das Unendlichkeitssymbol im Warteschlangen-Header. In Einstellungen → Warteschlange kann der automatische Nachschub auf ein bestimmtes Genre beschränkt werden.',
-    q49: 'Kann ich Psysonic über die Kommandozeile bedienen?',
-    a49: 'Ja – das Psysonic-Binary kann die laufende App fernsteuern. Beispiele: psysonic --player play / pause / next / prev, --player volume 75, --player seek 15, --player mute, --player shuffle, --player repeat off|all|one, --player star / unstar, --player rating 1–5. Außerdem: Server wechseln (--player server list / set), Ausgabegerät wählen (--player audio-device list / set), Bibliotheks-Ordner filtern (--player library list / set), Instant Mix starten (--player mix new / append) und Suche (--player search track|album|artist <Suchbegriff>). Vollständige Hilfe: psysonic --player --help. Shell-Completions für bash und zsh sind über psysonic completions verfügbar.',
-    q50: 'Wie verwalte ich Playlists?',
-    a50: 'Über „Playlists" in der Seitenleiste. Mit „Neue Playlist" eine Playlist erstellen. In der Playlist-Detailansicht können Tracks per Drag & Drop umsortiert, mit dem ×-Button entfernt und über die Songsuche neue hinzugefügt werden. Die „Vorschläge"-Sektion macht Empfehlungen basierend auf dem Inhalt der Playlist. Rechtsklick auf einen Track für weitere Optionen.',
-    q51: 'Kann ich meine Einstellungen sichern und wiederherstellen?',
-    a51: 'Ja. Einstellungen → Backup & Restore ermöglicht den Export aller Einstellungen, Serverprofile, Themes und Tastenkürzel in eine JSON-Datei. Auf einem anderen Gerät oder nach einer Neuinstallation importieren, um alles auf einmal wiederherzustellen. Passwörter sind in der Sicherung enthalten – die Datei sicher aufbewahren.',
-    q52: 'Wie ändere ich das Audioausgabegerät?',
-    a52: 'Einstellungen → Audio → Ausgabegerät. Psysonic listet alle verfügbaren Ausgaben auf. Auswahl wechselt die Wiedergabe sofort. Den Aktualisierungsbutton daneben nutzen, wenn ein Gerät nach dem App-Start angeschlossen wurde. Unter Linux werden ALSA-Gerätenamen bereinigt angezeigt.',
-    q53: 'Was ist Device Sync?',
-    a53: 'Device Sync überträgt Alben, Playlists oder ganze Künstler auf einen USB-Stick oder eine SD-Karte. Über „Device Sync" in der Seitenleiste öffnen, einen Zielordner auf dem Laufwerk wählen, Quellen in den Browser-Tabs auswählen und auf „Auf Gerät übertragen" klicken. Psysonic lädt die Tracks vom Server und legt sie in der durch die Dateinamen-Vorlage definierten Ordnerstruktur ab.',
-    q54: 'Was ist die Dateinamen-Vorlage in Device Sync?',
-    a54: 'Die Dateinamen-Vorlage steuert, wie Tracks auf dem Gerät benannt und organisiert werden. Vorgaben (Standard, Multi-Disc, Alt. Ordner) auswählen oder selbst aus den klickbaren Token-Chips zusammenbauen: {artist}, {album}, {title}, {track_number}, {disc_number}, {year} und / als Ordner-Trennzeichen. Eine Live-Vorschau zeigt, wie ein Beispiel-Track benannt würde.',
-    q55: 'Funktioniert Device Sync plattformübergreifend?',
-    a55: 'Ja. Das auf dem Gerät gespeicherte Manifest (psysonic-sync.json) enthält die beim Sync verwendete Dateinamen-Vorlage. Wird Device Sync auf einem anderen Betriebssystem mit anderer Vorlage geöffnet, erkennt Psysonic die bereits vorhandenen Dateien korrekt – Alben werden nicht fälschlich als ausstehend angezeigt.',
-    s9: 'Device Sync',
-    q56: 'Was ist Internet Radio?',
-    a56: 'Die Internetradio-Seite (Seitenleiste) ermöglicht die Wiedergabe beliebiger Livestreams direkt in Psysonic. Sender werden vom Navidrome-Server bezogen – dort über das Admin-Panel hinzufügen oder eine .pls- / .m3u-Datei importieren. Die Wiedergabe erfolgt über HTML5-Audio, nicht den Rust-Audio-Engine – einige EQ- und Replay-Gain-Einstellungen gelten daher nicht für Radio.',
-    q57: 'Welche Stream-Formate unterstützt Internet Radio?',
-    a57: 'Psysonic unterstützt alle Formate, die der Audio-Stack des Systems dekodieren kann: MP3, AAC, OGG Vorbis und die meisten HLS-Streams. Da HTML5-Audio verwendet wird, hängt die Codec-Unterstützung von der Plattform ab – MP3 und AAC funktionieren überall.',
-    s10: 'Internet Radio',
-    q58: 'Woher bezieht Psysonic Songtexte?',
-    a58: 'Psysonic unterstützt drei Lyrics-Quellen, alle konfigurierbar in Einstellungen → Lyrics: Navidrome-Server (eingebettete/OpenSubsonic-Lyrics), LRCLIB (community-gepflegte synchronisierte Texte) und NetEase Cloud Music (umfangreicher internationaler Katalog). Jede Quelle kann aktiviert/deaktiviert und per Drag & Drop priorisiert werden. Synchronisierte Lyrics scrollen automatisch und unterstützen Klick-zum-Springen.',
-    q59: 'Gibt es eine Ansicht, was andere Nutzer gerade hören?',
-    a59: 'Ja. Das Broadcast-Symbol oben rechts im Header öffnet das „Now Playing"-Dropdown. Es zeigt, was andere Nutzer auf dem Navidrome-Server gerade hören – aktualisiert alle 10 Sekunden. Der eigene Eintrag verschwindet beim Pausieren.',
+
   },
+
   queue: {
+
     title: 'Warteschlange',
+
     savePlaylist: 'Playlist speichern',
+
     updatePlaylist: 'Playlist aktualisieren',
+
     filterPlaylists: 'Playlists filtern…',
+
     playlistName: 'Name der Playlist',
+
     cancel: 'Abbrechen',
+
     save: 'Speichern',
+
     loadPlaylist: 'Playlist laden',
+
     loading: 'Lade…',
+
     noPlaylists: 'Keine Playlists gefunden.',
+
     load: 'Warteschlange ersetzen & abspielen',
+
     appendToQueue: 'An Warteschlange anhängen',
+
     delete: 'Löschen',
+
     deleteConfirm: 'Playlist "{{name}}" löschen?',
+
     clear: 'Leeren',
+
     shuffle: 'Warteschlange mischen',
+
     gapless: 'Nahtlos',
+
     crossfade: 'Crossfade',
+
     infiniteQueue: 'Endlose Warteschlange',
+
     autoAdded: '— Automatisch hinzugefügt —',
+
     radioAdded: '— Radio —',
+
     hide: 'Verbergen',
+
     close: 'Schließen',
+
     nextTracks: 'Nächste Titel',
+
     emptyQueue: 'Die Warteschlange ist leer.',
+
     trackSingular: 'Titel',
+
     trackPlural: 'Titel',
+
     showRemaining: 'Restzeit anzeigen',
+
     showTotal: 'Gesamtzeit anzeigen',
+
   },
+
   statistics: {
+
     title: 'Statistiken',
+
     recentlyPlayed: 'Zuletzt gehört',
+
     mostPlayed: 'Meistgespielte Alben',
+
     highestRated: 'Höchstbewertete Alben',
+
     genreDistribution: 'Genre-Verteilung (Top 20)',
+
     loadMore: 'Mehr laden',
+
     statArtists: 'Künstler',
+
     statArtistsTooltip: 'Nur Album-Künstler — Künstler, die ausschließlich als Track-Künstler vorkommen (Featured, Gast usw.) und kein eigenes Album haben, werden nicht gezählt.',
+
     statAlbums: 'Alben',
+
     statSongs: 'Songs',
+
     statGenres: 'Genres',
+
     statPlaytime: 'Gesamtspielzeit',
+
     genreInsights: 'Genre-Einblicke',
+
     formatDistribution: 'Format-Verteilung',
+
     formatSample: 'Stichprobe von {{n}} Titeln',
+
     computing: 'Wird berechnet…',
+
     genreSongs: '{{count}} Songs',
+
     genreAlbums: '{{count}} Alben',
+
     recentlyAdded: 'Neu hinzugefügt',
+
     decadeDistribution: 'Alben nach Jahrzehnt',
+
     decadeAlbums_one: '{{count}} Album',
+
     decadeAlbums_other: '{{count}} Alben',
+
     decadeUnknown: 'Unbekannt',
+
     lfmTitle: 'Last.fm Statistiken',
+
     lfmTopArtists: 'Top-Künstler',
+
     lfmTopAlbums: 'Top-Alben',
+
     lfmTopTracks: 'Top-Titel',
+
     lfmPlays: '{{count}} Plays',
+
     lfmPeriodOverall: 'Gesamt',
+
     lfmPeriod7day: '7 Tage',
+
     lfmPeriod1month: '1 Monat',
+
     lfmPeriod3month: '3 Monate',
+
     lfmPeriod6month: '6 Monate',
+
     lfmPeriod12month: '12 Monate',
+
     lfmNotConnected: 'Verbinde Last.fm in den Einstellungen, um deine Statistiken zu sehen.',
+
     lfmRecentTracks: 'Zuletzt gescrobbelt',
+
     lfmNowPlaying: 'Läuft gerade',
+
     lfmJustNow: 'gerade eben',
+
     lfmMinutesAgo: 'vor {{n}} Min.',
+
     lfmHoursAgo: 'vor {{n}} Std.',
+
     lfmDaysAgo: 'vor {{n}} Tagen',
+
     topRatedSongs: 'Bestbewertete Songs',
+
     topRatedArtists: 'Bestbewertete Künstler',
+
     noRatedSongs: 'Noch keine bewerteten Songs. Songs in Album- oder Playlist-Ansicht bewerten.',
+
     noRatedArtists: 'Noch keine bewerteten Künstler.',
+
   },
+
   player: {
+
     regionLabel: 'Musikplayer',
+
     openFullscreen: 'Vollbild-Player öffnen',
+
     fullscreen: 'Vollbild-Player',
+
     closeFullscreen: 'Vollbild schließen',
+
     closeTooltip: 'Schließen (Esc)',
+
     noTitle: 'Kein Titel',
+
     stop: 'Stop',
+
     prev: 'Vorheriger Titel',
+
     play: 'Play',
+
     pause: 'Pause',
+
     next: 'Nächster Titel',
+
     repeat: 'Wiederholen',
+
     repeatOff: 'Aus',
+
     repeatAll: 'Alle',
+
     repeatOne: 'Einen',
+
     progress: 'Songfortschritt',
+
     volume: 'Lautstärke',
+
     toggleQueue: 'Warteschlange umschalten',
+
     lyrics: 'Lyrics',
+
     fsLyricsToggle: 'Lyrics im Vollbild',
+
     lyricsLoading: 'Lyrics werden geladen…',
+
     lyricsNotFound: 'Keine Lyrics für diesen Titel gefunden',
+
     lyricsSourceServer: 'Quelle: Server',
+
     lyricsSourceLrclib: 'Quelle: LRCLIB',
+
     lyricsSourceNetease: 'Quelle: Netease',
+
   },
+
   songInfo: {
+
     title: 'Song-Infos',
+
     songTitle: 'Titel',
+
     artist: 'Künstler',
+
     album: 'Album',
+
     albumArtist: 'Album-Künstler',
+
     year: 'Jahr',
+
     genre: 'Genre',
+
     duration: 'Länge',
+
     track: 'Track',
+
     format: 'Format',
+
     bitrate: 'Bitrate',
+
     sampleRate: 'Abtastrate',
+
     bitDepth: 'Bittiefe',
+
     channels: 'Kanäle',
+
     fileSize: 'Dateigröße',
+
     path: 'Speicherort',
+
     replayGainTrack: 'RG Track Gain',
+
     replayGainAlbum: 'RG Album Gain',
+
     replayGainPeak: 'RG Track Peak',
+
     mono: 'Mono',
+
     stereo: 'Stereo',
+
   },
+
   playlists: {
+
     title: 'Playlists',
+
     newPlaylist: 'Neue Playlist',
+
     unnamed: 'Unbenannte Playlist',
+
     createName: 'Playlist-Name…',
+
     create: 'Erstellen',
+
     cancel: 'Abbrechen',
+
     empty: 'Noch keine Playlists.',
+
     emptyPlaylist: 'Diese Playlist ist leer.',
+
     addFirstSong: 'Ersten Song hinzufügen',
+
     notFound: 'Playlist nicht gefunden.',
+
     songs: '{{n}} Songs',
+
     playAll: 'Alle abspielen',
+
     shuffle: 'Zufallswiedergabe',
+
     addToQueue: 'Zur Warteschlange',
+
     back: 'Zurück zu Playlists',
+
     deletePlaylist: 'Löschen',
+
     confirmDelete: 'Nochmals klicken zum Bestätigen',
+
     removeSong: 'Aus Playlist entfernen',
+
     addSongs: 'Songs hinzufügen',
+
     searchPlaceholder: 'Bibliothek durchsuchen…',
+
     noResults: 'Keine Ergebnisse.',
+
     suggestions: 'Vorgeschlagene Songs',
+
     noSuggestions: 'Keine Vorschläge verfügbar.',
+
     titleBadge: 'Playlist',
+
     refreshSuggestions: 'Neue Vorschläge',
+
     addSong: 'Zur Playlist hinzufügen',
+
     addSelected: 'Ausgewählte hinzufügen',
+
     cacheOffline: 'Playlist offline speichern',
+
     offlineCached: 'Playlist gecacht',
+
     removeOffline: 'Aus Offline-Cache entfernen',
+
     offlineDownloading: 'Wird gecacht… ({{done}}/{{total}} Alben)',
+
     publicLabel: 'Öffentlich',
+
     privateLabel: 'Privat',
+
     editMeta: 'Playlist bearbeiten',
+
     editNamePlaceholder: 'Playlist-Name…',
+
     editCommentPlaceholder: 'Beschreibung hinzufügen…',
+
     editPublic: 'Öffentliche Playlist',
+
     editSave: 'Speichern',
+
     editCancel: 'Abbrechen',
+
     changeCover: 'Coverbild ändern',
+
     changeCoverLabel: 'Foto ändern',
+
     removeCover: 'Foto entfernen',
+
     coverUpdated: 'Cover aktualisiert',
+
     metaSaved: 'Playlist aktualisiert',
+
     downloadZip: 'Herunterladen (ZIP)',
+
     // Toast notifications for multi-select
+
     addSuccess: '{{count}} Songs zu {{playlist}} hinzugefügt',
+
     addPartial: '{{added}} hinzugefügt, {{skipped}} übersprungen (Duplikate)',
+
     addAllSkipped: 'Alle übersprungen ({{count}} Duplikate)',
+
     addError: 'Fehler beim Hinzufügen von Songs',
+
     createAndAddSuccess: 'Playlist "{{playlist}}" mit {{count}} Songs erstellt',
+
     createError: 'Fehler beim Erstellen der Playlist',
+
     deleteSuccess: '{{count}} Playlists gelöscht',
+
     deleteFailed: 'Fehler beim Löschen von {{name}}',
+
     deleteSelected: 'Ausgewählte löschen',
+
     mergeSuccess: '{{count}} Songs in {{playlist}} zusammengeführt',
+
     mergeNoNewSongs: 'Keine neuen Songs zum Hinzufügen',
+
     mergeError: 'Fehler beim Zusammenführen von Playlists',
+
     mergeInto: 'Zusammenführen in',
+
     selectionCount: '{{count}} ausgewählt',
+
     select: 'Auswählen',
+
     startSelect: 'Auswahl aktivieren',
+
     cancelSelect: 'Abbrechen',
+
     loadingAlbums: '{{count}} Alben werden aufgelöst…',
+
     loadingArtists: '{{count}} Künstler werden aufgelöst…',
+
     myPlaylists: 'Meine Playlists',
+
     noOtherPlaylists: 'Keine anderen Playlists verfügbar',
+
     addToPlaylistSuccess: '{{count}} Songs zu {{playlist}} hinzugefügt',
+
     addToPlaylistNoNew: 'Keine neuen Songs für {{playlist}}',
+
     addToPlaylistError: 'Fehler beim Hinzufügen zur Playlist',
+
     removeSuccess: 'Song aus Playlist entfernt',
+
     removeError: 'Fehler beim Entfernen aus der Playlist',
+
     importCSV: 'CSV importieren',
+
     importCSVTooltip: 'Aus Spotify-CSV importieren',
+
     csvImportReport: 'CSV-Importbericht',
+
     csvImportTotal: 'Gesamt',
+
     csvImportAdded: 'Hinzugefügt',
+
     csvImportDuplicates: 'Duplikate',
+
     csvImportNotFound: 'Nicht gefunden',
+
     csvImportNetworkErrors: 'Netzwerkfehler',
+
     csvImportDuplicatesTitle: 'Doppelte Titel (bereits in Playlist):',
+
     csvImportNotFoundTitle: 'Nicht gefundene Titel:',
+
     csvImportNetworkErrorsTitle: 'Netzwerkfehler (Import kann wiederholt werden):',
+
     csvImportDownloadReport: 'Bericht herunterladen',
+
     csvImportClose: 'Schließen',
+
     csvImportNoValidTracks: 'Keine gültigen Titel in CSV-Datei gefunden',
+
     csvImportFailed: 'CSV-Import fehlgeschlagen',
+
     csvImportToast: '{{added}} hinzugefügt, {{notFound}} nicht gefunden, {{duplicates}} Duplikate',
+
   },
+
   mostPlayed: {
+
     title: 'Meistgehört',
+
     topArtists: 'Top-Künstler',
+
     topAlbums: 'Top-Alben',
+
     plays: '{{n}}× gespielt',
+
     sortMost: 'Meiste Plays zuerst',
+
     sortLeast: 'Wenigste Plays zuerst',
+
     loadMore: 'Mehr Alben laden',
+
     noData: 'Noch keine Wiedergabedaten. Fang an zu hören!',
+
     noArtists: 'Alle Künstler herausgefiltert.',
+
     filterCompilations: 'Sampler-Künstler ausblenden (Various Artists, Soundtracks usw.)',
+
     filterCompilationsShort: 'Sampler ausblenden',
+
   },
+
   radio: {
+
     title: 'Internetradio',
+
     empty: 'Keine Radiosender konfiguriert.',
+
     addStation: 'Sender hinzufügen',
+
     editStation: 'Bearbeiten',
+
     deleteStation: 'Sender löschen',
+
     confirmDelete: 'Zum Bestätigen erneut klicken',
+
     stationName: 'Sendername…',
+
     streamUrl: 'Stream-URL…',
+
     homepageUrl: 'Homepage-URL (optional)',
+
     save: 'Speichern',
+
     cancel: 'Abbrechen',
+
     live: 'LIVE',
+
     liveStream: 'Internetradio',
+
     openHomepage: 'Homepage öffnen',
+
     changeCoverLabel: 'Cover ändern',
+
     removeCover: 'Cover entfernen',
+
     browseDirectory: 'Verzeichnis durchsuchen',
+
     directoryPlaceholder: 'Sender suchen…',
+
     noResults: 'Keine Sender gefunden.',
+
     stationAdded: 'Sender hinzugefügt',
+
     filterAll: 'Alle',
+
     filterFavorites: 'Favoriten',
+
     sortManual: 'Manuell',
+
     sortAZ: 'A → Z',
+
     sortZA: 'Z → A',
+
     sortNewest: 'Neueste',
+
     favorite: 'Zu Favoriten hinzufügen',
+
     unfavorite: 'Aus Favoriten entfernen',
+
     noFavorites: 'Keine Lieblingssender.',
+
     listenerCount_one: '{{count}} Hörer',
+
     listenerCount_other: '{{count}} Hörer',
+
     recentlyPlayed: 'Zuletzt gespielt',
+
     upNext: 'Als Nächstes',
+
   },
+
   folderBrowser: {
+
     empty: 'Leerer Ordner',
+
     error: 'Laden fehlgeschlagen',
+
   },
+
   deviceSync: {
+
     title: 'Gerätesync',
+
     targetFolder: 'Zielordner',
+
     noFolderChosen: 'Kein Ordner gewählt',
+
     selectDrive: 'Laufwerk auswählen…',
+
     refreshDrives: 'Laufwerke aktualisieren',
+
     noDrivesDetected: 'Keine Wechseldatenträger erkannt',
+
     browseManual: 'Manuell durchsuchen…',
+
     free: 'frei',
+
     notMountedVolume: 'Ziel befindet sich nicht auf einem eingehängten Laufwerk. Das Gerät wurde möglicherweise getrennt.',
+
     chooseFolder: 'Auswählen…',
+
     filenameTemplate: 'Dateinamen-Vorlage',
+
     targetDevice: 'Zielgerät',
+
     templateHint: 'Variablen: {artist}, {album}, {title}, {track_number}, {disc_number}, {year}',
+
     onDevice: 'Auf dem Gerät',
+
     addSources: 'Hinzufügen…',
+
     colName: 'Name',
+
     colType: 'Typ',
+
     syncResult: '{{done}} übertragen, {{skipped}} bereits aktuell ({{total}} gesamt)',
+
     deleteFromDevice: 'Vom Gerät löschen ({{count}})',
+
     confirmDelete: '{{count}} Eintrag/Einträge vom Gerät löschen: {{names}}?',
+
     deleteComplete: '{{count}} Eintrag/Einträge vom Gerät entfernt.',
-    manifestImported: '{{count}} Quelle(n) aus Geräte-Manifest importiert.',
+
     selectedSources: 'Ausgewählte Quellen',
+
     noSourcesSelected: 'Keine Quellen ausgewählt. Klicke auf Einträge im Browser um sie hinzuzufügen.',
+
     clearAll: 'Alle entfernen',
+
     tabPlaylists: 'Wiedergabelisten',
+
     tabAlbums: 'Alben',
+
     tabArtists: 'Künstler',
+
     searchPlaceholder: 'Suche…',
+
     syncButton: 'Auf Gerät übertragen',
+
     actionTransfer: 'Auf Gerät übertragen',
+
     actionDelete: 'Vom Gerät löschen',
+
     actionApplyAll: 'Änderungen synchronisieren',
+
     templatePreview: 'Vorschau',
-    templatePresetStandard: 'Standard',
-    templatePresetMultiDisc: 'Multi-Disc',
-    templatePresetAltFolder: 'Alt. Ordner',
-    tokenSlashHint: '/ = Ordner-Trennzeichen',
+
     cancel: 'Abbrechen',
+
     noTargetDir: 'Bitte zuerst einen Zielordner auswählen.',
+
     noSources: 'Bitte mindestens eine Quelle auswählen.',
+
     noTracks: 'Keine Tracks in den ausgewählten Quellen gefunden.',
+
     fetchError: 'Fehler beim Laden der Tracks vom Server.',
+
     syncComplete: 'Übertragung abgeschlossen.',
+
     dismiss: 'Schließen',
-    cancelSync: 'Abbrechen',
-    syncCancelled: 'Sync abgebrochen ({{done}} / {{total}} übertragen).',
+
     colStatus: 'Status',
+
     statusSynced: 'Synchronisiert',
+
     statusPending: 'Ausstehend',
+
     statusDeletion: 'Löschung',
+
     markForDeletion: 'Zur Löschung markieren',
+
     removeSource: 'Entfernen',
+
     undoDeletion: 'Löschung rückgängig',
+
     syncInBackground: 'Sync gestartet — du kannst die Seite verlassen.',
+
     syncInProgress: '{{done}} / {{total}} Tracks…',
+
     syncSummary: 'Sync-Zusammenfassung',
+
     calculating: 'Payload wird berechnet…',
+
     filesToAdd: 'Hinzuzufügende Dateien:',
+
     filesToDelete: 'Zu löschende Dateien:',
+
     netChange: 'Nettoänderung:',
+
     availableSpace: 'Verfügbarer Speicher:',
+
     spaceWarning: 'Warnung: Das Zielgerät hat nicht genug gemeldeten Speicherplatz.',
+
     proceed: 'Sync durchführen',
+
     notEnoughSpace: 'Nicht genug physischer Speicherplatz erkannt!',
+
     liveSearch: 'Live',
+
     randomAlbumsLabel: 'Zufallsalben',
+
   },
+
 };
+

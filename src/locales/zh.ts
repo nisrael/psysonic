@@ -1,1157 +1,2252 @@
 export const zhTranslation = {
+
   sidebar: {
+
     library: '音乐库',
+
     mainstage: '主舞台',
+
     newReleases: '新发布',
+
     allAlbums: '全部专辑',
+
     randomAlbums: '随机专辑',
+
     randomPicker: '创建混音',
+
     artists: '艺术家',
+
     randomMix: '随机混音',
+
     favorites: '收藏夹',
+
     nowPlaying: '正在播放',
+
     system: '系统',
+
     statistics: '统计',
+
     settings: '设置',
+
     help: '帮助',
+
     expand: '展开侧边栏',
+
     collapse: '收起侧边栏',
+
     downloadingTracks: '正在缓存 {{n}} 首歌曲…',
+
     syncingTracks: '同步中 {{done}}/{{total}}…',
+
     cancelDownload: '取消下载',
+
     offlineLibrary: '离线音乐库',
+
     genres: '流派',
+
     playlists: '播放列表',
+
     mostPlayed: '最常播放',
+
     radio: '网络电台',
+
     folderBrowser: '文件夹浏览器',
+
     deviceSync: '设备同步',
+
     libraryScope: '资料库范围',
+
     allLibraries: '所有资料库',
+
     expandPlaylists: '展开播放列表',
+
     collapsePlaylists: '收起播放列表',
+
   },
+
   home: {
+
     hero: '精选',
+
     starred: '个人收藏',
+
     recent: '最近添加',
+
     mostPlayed: '最常播放',
+
     recentlyPlayed: '最近播放',
+
     discover: '发现',
+
     loadMore: '加载更多',
+
     discoverMore: '发现更多',
+
     discoverArtists: '发现艺术家',
+
     discoverArtistsMore: '全部艺术家'
+
   },
+
   hero: {
+
     eyebrow: '精选专辑',
+
     playAlbum: '播放专辑',
+
     enqueue: '加入队列',
+
     enqueueTooltip: '将整张专辑添加到播放队列',
+
   },
+
   search: {
+
     placeholder: '搜索艺术家、专辑或歌曲…',
+
     noResults: '未找到 "{{query}}" 的相关结果',
+
     artists: '艺术家',
+
     albums: '专辑',
+
     songs: '歌曲',
+
     clearLabel: '清除搜索',
+
     title: '搜索',
+
     resultsFor: '"{{query}}" 的搜索结果',
+
     album: '专辑',
+
     advanced: '高级搜索',
+
     advancedSearchTerm: '搜索词',
+
     advancedSearchPlaceholder: '标题、专辑、艺术家…',
+
     advancedGenre: '流派',
+
     advancedAllGenres: '所有流派',
+
     advancedYear: '年份',
+
     advancedYearFrom: '从',
+
     advancedYearTo: '至',
+
     advancedAll: '全部',
+
     advancedSearch: '搜索',
+
     advancedEmpty: '请输入搜索词或选择过滤器。',
+
     advancedNoResults: '未找到结果。',
+
     advancedGenreNote: '歌曲从该流派中随机选取。',
+
     recentSearches: '最近搜索',
+
     browse: '浏览',
+
     emptyHint: '你想听什么？',
+
     genres: '流派',
+
   },
+
   nowPlaying: {
+
     tooltip: '谁正在收听？',
+
     title: '谁正在收听？',
+
     loading: '加载中…',
+
     nobody: '当前无人收听。',
+
     minutesAgo: '{{n}} 分钟前',
+
     nothingPlaying: '尚未开始播放。开始播放一首歌曲吧！',
+
     aboutArtist: '关于艺术家',
+
     fromAlbum: '来自此专辑',
+
     viewAlbum: '查看专辑',
+
     goToArtist: '前往艺术家',
+
     readMore: '阅读更多',
+
     showLess: '收起',
+
     genreInfo: '流派',
+
     trackInfo: '曲目信息',
+
   },
+
   contextMenu: {
+
     playNow: '立即播放',
+
     playNext: '下一首播放',
+
     addToQueue: '添加到队列',
+
     enqueueAlbum: '专辑加入队列',
+
     startRadio: '开始电台',
+
     instantMix: '即时混音',
+
     instantMixFailed: '无法生成即时混音 — 服务器或插件出错。',
+
     cliMixNeedsTrack: '当前没有正在播放的内容 — 请先开始播放，然后再执行混音命令。',
+
     lfmLove: '在 Last.fm 上标记喜欢',
+
     lfmUnlove: '取消 Last.fm 喜欢标记',
+
     favorite: '收藏',
+
     favoriteArtist: '收藏艺术家',
+
     favoriteAlbum: '收藏专辑',
+
     unfavorite: '取消收藏',
+
     unfavoriteArtist: '取消收藏艺术家',
+
     unfavoriteAlbum: '取消收藏专辑',
+
     removeFromQueue: '从队列中移除',
+
     openAlbum: '打开专辑',
+
     goToArtist: '前往艺术家',
+
     download: '下载 (ZIP)',
+
     addToPlaylist: '添加到播放列表',
+
     selectedPlaylists: '已选择 {{count}} 个播放列表',
+
     selectedAlbums: '已选择 {{count}} 个专辑',
+
     selectedArtists: '已选择 {{count}} 个艺术家',
+
     songInfo: '歌曲信息',
+
   },
+
   albumDetail: {
+
     back: '返回',
+
     playAll: '全部播放',
+
     enqueue: '加入队列',
+
     enqueueTooltip: '将整张专辑添加到播放队列',
+
     artistBio: '艺术家简介',
+
     download: '下载 (ZIP)',
+
     downloading: '加载中…',
+
     cacheOffline: '设为离线可用',
+
     offlineCached: '已离线缓存',
+
     offlineDownloading: '正在缓存… ({{n}}/{{total}})',
+
     removeOffline: '移除离线缓存',
+
     offlineStorageFull: '离线存储空间已满（限制：{{mb}} MB）。请从离线音乐库中删除专辑以释放空间，或在设置中增加限制。',
+
     offlineStorageGoToLibrary: '离线音乐库',
+
     offlineStorageGoToSettings: '设置',
+
     favoriteAdd: '添加到收藏',
+
     favoriteRemove: '从收藏中移除',
+
     favorite: '收藏',
+
     noBio: '暂无简介。',
+
     moreByArtist: '{{artist}} 的更多作品',
+
     tracksCount: '{{n}} 首曲目',
+
     goToArtist: '前往 {{artist}}',
+
     moreLabelAlbums: '{{label}} 的更多专辑',
+
     trackTitle: '标题',
+
     trackAlbum: '专辑',
+
     trackArtist: '艺术家',
+
     trackGenre: '流派',
+
     trackFormat: '格式',
+
     trackFavorite: '收藏',
+
     trackRating: '评分',
+
     trackDuration: '时长',
+
     trackTotal: '总计',
+
     columns: '列',
-    resetColumns: '重置为默认',
+
     notFound: '未找到专辑。',
+
     bioModal: '艺术家简介',
+
     bioClose: '关闭',
+
     ratingLabel: '评分',
+
     enlargeCover: '放大',
+
     filterSongs: '筛选歌曲…',
+
     sortNatural: '默认顺序',
+
     sortByTitle: 'A–Z（标题）',
+
     sortByArtist: 'A–Z（艺术家）',
+
     sortByAlbum: 'A–Z（专辑）',
+
   },
+
   entityRating: {
+
     albumShort: '专辑评分',
+
     artistShort: '艺人评分',
+
     albumAriaLabel: '专辑评分',
+
     artistAriaLabel: '艺人评分',
+
     saveFailed: '无法保存评分。',
+
   },
+
   artistDetail: {
+
     back: '返回',
+
     albums: '专辑',
+
     album: '专辑',
+
     playAll: '全部播放',
+
     shuffle: '随机播放',
+
     radio: '电台',
+
     loading: '加载中…',
+
     noRadio: '未找到该艺术家的相似曲目。',
+
     notFound: '未找到艺术家。',
+
     albumsBy: '{{name}} 的专辑',
+
     topTracks: '热门曲目',
+
     noAlbums: '未找到专辑。',
+
     trackTitle: '标题',
+
     trackAlbum: '专辑',
+
     trackDuration: '时长',
+
     favoriteAdd: '添加到收藏',
+
     favoriteRemove: '从收藏中移除',
+
     favorite: '收藏',
+
     albumCount_one: '{{count}} 张专辑',
+
     albumCount_other: '{{count}} 张专辑',
+
     openedInBrowser: '已在浏览器中打开',
+
     featuredOn: '还出现在',
+
     similarArtists: '相似艺术家',
+
     cacheOffline: '离线保存全部专辑',
+
     offlineCached: '全部专辑已缓存',
+
     offlineDownloading: '正在缓存… ({{done}}/{{total}} 张专辑)',
+
     uploadImage: '上传艺术家图片',
+
     uploadImageError: '图片上传失败',
+
   },
+
   favorites: {
+
     title: '收藏夹',
+
     empty: '您还没有保存任何收藏。',
+
     artists: '艺术家',
+
     albums: '专辑',
+
     songs: '歌曲',
+
     enqueueAll: '全部加入队列',
+
     playAll: '全部播放',
+
     removeSong: '从收藏中移除',
+
     stations: '广播电台',
+
     showingFiltered: '显示 {{filtered}} / {{total}} ({{artist}})',
+
     showingCount: '显示 {{filtered}} / {{total}}',
+
     clearArtistFilter: '清除艺术家筛选',
+
     noFilterResults: '所选筛选条件下无结果。',
+
     allArtists: '全部艺术家',
+
   },
+
   randomLanding: {
+
     title: '创建混音',
+
     mixByTracks: '按曲目混音',
+
     mixByTracksDesc: '从整个媒体库随机选取曲目',
+
     mixByAlbums: '按专辑混音',
+
     mixByAlbumsDesc: '随机选取专辑，探索新音乐',
+
   },
+
   randomAlbums: {
+
     title: '随机专辑',
+
     refresh: '刷新',
+
   },
+
   genres: {
+
     title: '流派',
+
     genreCount: '个流派',
+
     albumCount_one: '{{count}} 张专辑',
+
     albumCount_other: '{{count}} 张专辑',
+
     loading: '正在加载流派…',
+
     empty: '未找到流派。',
+
     albumsLoading: '正在加载专辑…',
+
     albumsEmpty: '未找到该流派的专辑。',
+
     loadMore: '加载更多',
+
     back: '返回',
+
   },
+
   randomMix: {
+
     title: '随机混音',
+
     remix: '重新混音',
+
     remixTooltip: '加载新的随机歌曲',
+
     remixGenre: '重混 {{genre}}',
+
     remixTooltipGenre: '加载新的{{genre}}歌曲',
+
     playAll: '全部播放',
+
     trackTitle: '标题',
+
     trackArtist: '艺术家',
+
     trackAlbum: '专辑',
+
     trackFavorite: '收藏',
+
     trackDuration: '时长',
+
     favoriteAdd: '添加到收藏',
+
     favoriteRemove: '从收藏中移除',
+
     play: '播放',
+
     trackGenre: '流派',
+
     excludeAudiobooks: '排除有声读物和广播剧',
+
     excludeAudiobooksDesc: '根据流派、标题、专辑和艺术家匹配关键词 — 例如 Hörbuch、Audiobook、Spoken Word 等',
+
     genreBlocked: '关键词已屏蔽',
+
     genreAddedToBlacklist: '已添加到过滤列表',
+
     genreAlreadyBlocked: '已屏蔽',
+
     artistBlocked: '艺术家已屏蔽',
+
     artistAddedToBlacklist: '艺术家已添加到过滤列表',
+
     artistClickHint: '点击屏蔽此艺术家',
+
     blacklistToggle: '关键词过滤',
+
     genreMixTitle: '流派混音',
+
     genreMixDesc: '按歌曲数量排列的前 20 个流派 — 点击获取随机混音',
+
     genreMixAll: '所有歌曲',
+
     genreMixLoadMore: '加载 10 首更多',
+
     genreMixNoGenres: '服务器上未找到流派。',
+
     shuffleGenres: '显示其他流派',
+
     filterPanelTitle: '过滤器',
+
     filterPanelDesc: '点击下方列表中的流派标签或艺术家名称，将其从未来的混音中排除。',
+
     genreClickHint: '点击流派标签将其添加为过滤关键词。\\n匹配流派、标题、专辑和艺术家。',
+
   },
+
   albums: {
+
     title: '全部专辑',
+
     sortByName: '按名称排序 (A-Z)',
+
     sortByArtist: '按艺术家排序 (A-Z)',
+
     sortNewest: '最新优先',
+
     sortRandom: '随机排序',
+
     yearFrom: '从',
+
     yearTo: '到',
+
     yearFilterClear: '清除年份筛选',
+
     yearFilterLabel: '年份',
+
     select: '多选',
+
     startSelect: '启用多选',
+
     cancelSelect: '取消',
+
     selectionCount: '{{count}} 已选择',
+
     downloadZips: '下载 ZIP',
+
     addOffline: '添加离线',
+
     downloadingZip: '正在下载 {{current}}/{{total}}: {{name}}',
+
     downloadZipDone: '已下载 {{count}} 个 ZIP',
+
     downloadZipFailed: '下载 {{name}} 失败',
+
     offlineQueuing: '正在将 {{count}} 张专辑加入离线队列…',
+
     offlineFailed: '添加 {{name}} 离线失败',
+
   },
+
   artists: {
+
     title: '艺术家',
+
     search: '搜索…',
+
     all: '全部',
+
     gridView: '网格视图',
+
     listView: '列表视图',
+
     imagesOn: '艺术家图片已开启 — 可能增加网络和系统负载',
+
     imagesOff: '艺术家图片已关闭 — 仅显示首字母',
+
     loadMore: '加载更多',
+
     notFound: '未找到艺术家。',
+
     albumCount_one: '{{count}} 张专辑',
+
     albumCount_other: '{{count}} 张专辑',
+
     selectionCount: '{{count}} 已选择',
+
     select: '多选',
+
     startSelect: '启用多选',
+
     cancelSelect: '取消',
+
     addToPlaylist: '添加到播放列表',
+
   },
+
   login: {
+
     subtitle: '您的 Navidrome 桌面播放器',
+
     serverName: '服务器名称（可选）',
+
     serverNamePlaceholder: '我的 Navidrome',
+
     serverUrl: '服务器地址',
+
     serverUrlPlaceholder: '192.168.1.100:4533 或 https://music.example.com',
+
     username: '用户名',
+
     usernamePlaceholder: 'admin',
+
     password: '密码',
+
     showPassword: '显示密码',
+
     hidePassword: '隐藏密码',
+
     connect: '连接',
+
     connecting: '正在连接…',
+
     connected: '已连接！',
+
     error: '连接失败 — 请检查您的信息。',
+
     urlRequired: '请输入服务器地址。',
+
     savedServers: '已保存的服务器',
+
     addNew: '或添加新服务器',
+
   },
+
   connection: {
+
     connected: '已连接',
+
     connectedTo: '已连接到 {{server}}',
+
     disconnected: '已断开连接',
+
     disconnectedFrom: '无法连接到 {{server}} — 点击检查设置',
+
     checking: '正在连接…',
+
     extern: '外部',
+
     offlineTitle: '无服务器连接',
+
     offlineSubtitle: '无法连接到 {{server}}。请检查您的网络或服务器。',
+
     offlineModeBanner: '离线模式 — 正在从本地缓存播放',
+
     offlineNoCacheBanner: '无服务器连接 — 无法访问 {{server}}',
+
     offlineLibraryTitle: '离线音乐库',
+
     offlineLibraryEmpty: '尚未缓存任何专辑。请联网，打开专辑并点击"设为离线可用"。',
+
     offlineAlbumCount_one: '{{n}} 张专辑',
+
     offlineAlbumCount_plural: '{{n}} 张专辑',
+
     retry: '重试',
+
     serverSettings: '服务器设置',
+
     switchServerTitle: '切换服务器',
+
     switchServerHint: '点击选择其他已保存的服务器。',
+
     manageServers: '管理服务器…',
+
     switchFailed: '无法切换 — 无法连接服务器。',
+
     lastfmConnected: 'Last.fm 已连接为 @{{user}}',
+
     lastfmSessionInvalid: '会话无效 — 点击重新连接',
+
   },
+
   common: {
+
     albums: '专辑',
+
     album: '专辑',
+
     loading: '加载中…',
+
     loadingMore: '加载中…',
+
     loadingPlaylists: '正在加载播放列表…',
+
     noAlbums: '未找到专辑。',
+
     downloading: '正在下载…',
+
     downloadZip: '下载 (ZIP)',
+
     back: '返回',
+
     cancel: '取消',
+
     save: '保存',
+
     delete: '删除',
+
     use: '使用',
+
     add: '添加',
+
     active: '当前使用',
+
     download: '下载',
+
     chooseDownloadFolder: '选择下载文件夹',
+
     noFolderSelected: '未选择文件夹',
+
     rememberDownloadFolder: '记住此文件夹',
+
     filterGenre: '流派筛选',
+
     filterSearchGenres: '搜索流派…',
+
     filterNoGenres: '未找到匹配流派',
+
     filterClear: '清除',
+
     play: '播放',
+
     bulkSelected: '已选 {{count}} 首',
+
     clearSelection: '清除选择',
+
     bulkAddToPlaylist: '添加到播放列表',
+
     bulkRemoveFromPlaylist: '从播放列表移除',
+
     bulkClear: '取消选择',
+
     updaterAvailable: '有可用更新',
+
     updaterVersion: 'v{{version}} 已发布',
+
     updaterWebsite: '官网',
+
     updaterModalTitle: '有新版本可用',
+
     updaterChangelog: '更新内容',
+
     updaterDownloadBtn: '立即下载',
+
     updaterSkipBtn: '跳过此版本',
+
     updaterRemindBtn: '稍后提醒',
+
     updaterDone: '下载完成',
+
     updaterShowFolder: '在文件夹中显示',
+
     updaterInstallHint: '请关闭 Psysonic 并手动运行安装程序。',
+
     updaterAurHint: '通过 AUR 安装更新：',
+
     updaterErrorMsg: '下载失败',
+
     updaterRetryBtn: '重试',
+
     durationHoursMinutes: '{{hours}}小时{{minutes}}分钟',
+
     durationMinutesOnly: '{{minutes}}分钟',
+
     updaterOpenGitHub: '在 GitHub 上打开',
+
     filters: '筛选器',
+
     more: '更多',
+
     yearRange: '年份范围',
+
     clearAll: '清除全部',
+
   },
+
   settings: {
+
     title: '设置',
+
     language: '语言',
+
     languageEn: '英语',
+
     languageDe: '德语',
+
     languageFr: '法语',
+
     languageNl: '荷兰语',
+
     languageZh: '中文',
+
     languageNb: '挪威',
+
     languageRu: '俄语',
+
     font: '字体',
+
     theme: '主题',
+
     appearance: '外观',
+
     servers: '服务器',
+
     serverName: '服务器名称',
+
     serverUrl: '服务器地址',
+
     serverUrlPlaceholder: '192.168.1.100:4533 或 https://music.example.com',
+
     serverUsername: '用户名',
+
     serverPassword: '密码',
+
     addServer: '添加服务器',
+
     addServerTitle: '添加新服务器',
+
     useServer: '使用',
+
     deleteServer: '删除',
+
     noServers: '未保存任何服务器。',
+
     serverActive: '当前使用',
+
     confirmDeleteServer: '删除服务器 "{{name}}"？',
+
     serverConnecting: '正在连接…',
+
     serverConnected: '已连接！',
+
     serverFailed: '连接失败。',
+
     testBtn: '测试连接',
+
     testingBtn: '正在测试…',
+
     serverCompatible: '兼容：Navidrome · Gonic · Airsonic · Subsonic',
+
     audiomuseTitle: 'AudioMuse-AI（Navidrome）',
+
     audiomuseDesc:
+
       '若此服务器已配置 <pluginLink>AudioMuse-AI Navidrome 插件</pluginLink>请开启。可从曲目启动即时混音，并在艺人页使用服务器返回的相似艺人，而非 Last.fm。',
+
     audiomuseIssueHint:
+
       '近期即时混音失败 — 请检查 Navidrome 插件与 AudioMuse API。若服务器无结果，将回退使用 Last.fm 的相似艺人。',
+
     connected: '已连接',
+
     failed: '失败',
+
     eqTitle: '均衡器',
+
     eqEnabled: '启用均衡器',
+
     eqPreset: '预设',
+
     eqPresetCustom: '自定义',
+
     eqPresetBuiltin: '内置预设',
+
     eqPresetCustomGroup: '我的预设',
+
     eqSavePreset: '保存为预设',
+
     eqPresetName: '预设名称…',
+
     eqDeletePreset: '删除预设',
+
     eqResetBands: '重置为平直',
+
     eqPreGain: '预增益',
+
     eqResetPreGain: '重置预增益',
+
     eqAutoEqTitle: 'AutoEQ 耳机查询',
+
     eqAutoEqPlaceholder: '搜索耳机/入耳式型号…',
+
     eqAutoEqSearching: '搜索中…',
+
     eqAutoEqNoResults: '未找到结果',
+
     eqAutoEqError: '搜索失败',
+
     eqAutoEqRateLimit: 'GitHub 请求限制 — 请一分钟后重试',
+
     eqAutoEqFetchError: '无法获取 EQ 配置',
+
     lfmTitle: 'Last.fm',
+
     lfmConnect: '连接 Last.fm',
+
     lfmConnecting: '等待授权…',
+
     lfmConfirm: '我已完成授权',
+
     lfmConnected: '已连接为',
+
     lfmDisconnect: '断开连接',
+
     lfmConnectDesc: '连接您的 Last.fm 账户以启用歌曲记录和正在播放更新，直接从 Psysonic 发送 — 无需配置 Navidrome。',
+
     lfmOpenBrowser: '将打开浏览器窗口。在 Last.fm 上授权 Psysonic，然后点击下方按钮。',
+
     lfmScrobbles: '{{n}} 次记录',
+
     lfmMemberSince: '{{year}} 年加入',
+
     scrobbleEnabled: '启用歌曲记录',
+
     scrobbleDesc: '播放 50% 后发送歌曲到 Last.fm',
+
     behavior: '应用行为',
+
     cacheTitle: '最大存储大小',
+
     cacheDesc: '封面和艺术家图片。存满时，最旧的条目将自动移除。离线专辑不会自动移除，但手动清除缓存时会被删除。',
+
     cacheUsedImages: '图片：',
+
     cacheUsedOffline: '离线曲目：',
+
     cacheUsedHot: '占用空间：',
+
     hotCacheTrackCount: '缓存曲目数：',
+
     cacheMaxLabel: '最大容量',
+
     cacheClearBtn: '清除缓存',
+
     cacheClearWarning: '这将同时移除音乐库中的所有离线专辑。',
+
     cacheClearConfirm: '全部清除',
+
     cacheClearCancel: '取消',
+
     offlineDirTitle: '离线音乐库（应用内）',
+
     offlineDirDesc: '用于在 Psysonic 中离线可用的曲目存储位置。',
+
     offlineDirDefault: '默认（应用数据）',
+
     offlineDirChange: '更改目录',
+
     offlineDirClear: '重置为默认',
+
     offlineDirHint: '新下载将保存到此位置，现有下载保留在原始路径。',
+
     hotCacheTitle: '热播放缓存',
+
     hotCacheAlphaBadge: '预览',
+
     hotCacheDisclaimer: '预加载队列中即将播放的曲目并保留近期已播放的。开启后占用磁盘与网络。',
+
     hotCacheDirDefault: '默认（应用数据）',
+
     hotCacheDirChange: '更改目录',
+
     hotCacheDirClear: '重置为默认',
+
     hotCacheDirHint: '更换目录会重置应用内索引；已下载的文件仍留在原路径，需自行删除。',
+
     hotCacheEnabled: '启用热播放缓存',
+
     hotCacheMaxMb: '最大缓存大小',
+
     hotCacheDebounce: '队列变更去抖',
+
     hotCacheDebounceImmediate: '立即',
+
     hotCacheDebounceSeconds: '{{n}} 秒',
+
     hotCacheClearBtn: '清空热缓存',
+
     audioOutputDevice: '音频输出设备',
+
     audioOutputDeviceDesc: '选择 Psysonic 播放音频的设备。更改立即生效并重新开始当前曲目。',
+
     audioOutputDeviceDefault: '系统默认',
+
     audioOutputDeviceRefresh: '刷新设备列表',
+
     audioOutputDeviceOsDefaultNow: '当前系统输出',
+
     audioOutputDeviceListError: '无法加载音频设备列表。',
+
     audioOutputDeviceNotInCurrentList: '不在当前列表中',
+
     hiResTitle: '原生高清晰度播放',
+
     hiResEnabled: '启用原生高清晰度播放',
+
     hiResDesc: "默认强制 44.1 kHz 输出以获得最大稳定性。仅在硬件和网络可靠支持高采样率（88.2 kHz+）时启用。",
+
     showArtistImages: '显示艺术家图片',
+
     showArtistImagesDesc: '在艺术家概览中加载并显示艺术家图片。默认关闭以减少大型音乐库的服务器磁盘I/O和网络负载。',
+
     showTrayIcon: '显示托盘图标',
+
     showTrayIconDesc: '在系统通知区域 / 菜单栏显示 Psysonic 图标。',
+
     minimizeToTray: '最小化到托盘',
+
     minimizeToTrayDesc: '关闭窗口时，Psysonic 将继续在系统托盘中运行，而不是退出。',
+
     discordRichPresence: 'Discord Rich Presence',
+
     discordRichPresenceDesc: '在 Discord 个人资料上显示当前播放的曲目。需要 Discord 处于运行状态。',
+
     discordAppleCovers: '通过 Apple Music 为 Discord 获取封面',
+
     discordAppleCoversDesc: '将艺术家和专辑名称发送至 Apple 搜索 API，以为 Discord 个人资料查找封面图片。出于隐私考虑，默认禁用。',
+
+    discordTemplates: '自定义文本模板',
+
+    discordTemplatesDesc: '自定义在 Discord 个人资料上显示的信息。变量：{title}, {artist}, {album}, {paused}',
+
+    discordTemplateDetails: '主行 (details)',
+
+    discordTemplateState: '副行 (state)',
+
+    discordTemplateLargeText: '专辑提示 (largeText)',
+
     nowPlayingEnabled: '在实时窗口中显示',
+
     nowPlayingEnabledDesc: '将当前播放的曲目广播到服务器的实时听众视图。禁用以停止发送播放数据。',
+
     lyricsServerFirst: '优先使用服务器歌词',
+
     lyricsServerFirstDesc: '先查询服务器提供的歌词（内嵌标签、sidecar 文件），再查询 LRCLIB。禁用则优先使用 LRCLIB。',
+
     enableNeteaselyrics: '网易云音乐歌词',
+
     enableNeteaselyricsDesc: '当服务器和 LRCLIB 均无结果时，使用网易云音乐作为最终歌词来源。对亚洲及国际音乐覆盖最佳。',
+
     lyricsSourcesTitle: '歌词来源',
+
     lyricsSourcesDesc: '选择要查询的歌词来源及其顺序。拖动以排序。已禁用的来源将被跳过。',
+
     lyricsSourceServer: '服务器',
+
     lyricsSourceLrclib: 'LRCLIB',
+
     lyricsSourceNetease: '网易云音乐',
+
     downloadsTitle: 'ZIP 导出与归档',
+
     downloadsFolderDesc: '将专辑以 ZIP 文件下载到电脑时的目标文件夹。',
+
     downloadsDefault: '默认下载文件夹',
+
     pickFolder: '选择',
+
     pickFolderTitle: '选择下载文件夹',
+
     clearFolder: '清除下载文件夹',
+
     logout: '退出登录',
+
     aboutTitle: '关于 Psysonic',
+
     aboutDesc: '适用于 Subsonic 兼容服务器（Navidrome、Gonic 等）的现代桌面音乐播放器。基于 Tauri v2 和原生 Rust 音频引擎构建——轻量快速，功能丰富：波形进度条、同步歌词、Last.fm 集成、10 段均衡器、交叉淡入淡出、无缝播放、响度增益、流派浏览以及大量精美主题。',
+
     aboutLicense: '许可证',
+
     aboutLicenseText: 'GNU GPL v3 — 在相同许可证下可自由使用、修改和分发。',
+
     aboutRepo: 'GitHub 上的源代码',
+
     aboutVersion: '版本',
+
     aboutBuiltWith: '使用 Tauri · React · TypeScript · Rust/rodio 构建',
+
     aboutAiCredit: '在 Anthropic 的 Claude Code 支持下开发',
+
     aboutContributorsLabel: '贡献者',
+
     aboutSpecialThanksLabel: '特别感谢',
+
     changelog: '更新日志',
+
     showChangelogOnUpdate: '更新时显示"新功能"',
+
     showChangelogOnUpdateDesc: '新版本首次启动时自动显示更新内容。',
+
     randomMixTitle: '随机混音',
+
     randomMixBlacklistTitle: '自定义过滤关键词',
+
     randomMixBlacklistDesc: '当任何关键词匹配流派、标题、专辑或艺术家时，歌曲将被排除（当上方复选框开启时生效）。',
+
     randomMixBlacklistPlaceholder: '添加关键词…',
+
     randomMixBlacklistAdd: '添加',
+
     randomMixBlacklistEmpty: '尚未添加自定义关键词。',
+
     randomMixHardcodedTitle: '内置关键词（复选框开启时生效）',
+
     tabAudio: '音频',
+
     tabStorage: '存储与下载',
+
     tabAppearance: '外观',
+
     homeCustomizerTitle: '首页',
+
     sidebarTitle: '侧边栏',
+
     sidebarReset: '重置为默认',
+
     sidebarDrag: '拖动以重新排序',
+
     sidebarFixed: '始终显示',
-    randomNavSplitTitle: '拆分混音导航',
-    randomNavSplitDesc: '在侧边栏中将"随机混音"和"随机专辑"显示为独立条目，而非"创建混音"合并入口。',
+
     tabInput: '输入',
+
     tabServer: '服务器',
+
     tabSystem: '系统',
+
     tabGeneral: '通用',
+
     ratingsSectionTitle: '评分',
+
     ratingsSkipStarTitle: '跳过以评 1 星',
+
     ratingsSkipStarDesc:
+
       '连续多次跳过后将曲目设为 1 星。仅适用于此前未评分的曲目。',
+
     ratingsSkipStarThresholdLabel: '跳过次数',
+
     ratingsMixFilterTitle: '按评分筛选',
+
     ratingsMixFilterDesc:
+
       '在{{mix}}与{{albums}}中筛选低评分内容。再次点击所选星标可关闭阈值。',
+
     ratingsMixMinSong: '歌曲',
+
     ratingsMixMinAlbum: '专辑',
+
     ratingsMixMinArtist: '艺人',
+
     ratingsMixMinThresholdAria: '最低星数：{{label}}',
+
     backupTitle: '备份与恢复',
+
     backupExport: '导出设置',
+
     backupExportDesc: '将所有设置、服务器配置、Last.fm 配置、主题、均衡器和快捷键保存到 .psybkp 文件。密码以明文存储——请妥善保管该文件。',
+
     backupImport: '导入设置',
+
     backupImportDesc: '从 .psybkp 文件恢复设置。导入后应用将重新加载。',
+
     backupImportConfirm: '所有当前设置将被覆盖。是否继续？',
+
     backupSuccess: '备份已保存',
+
     backupImportSuccess: '设置已恢复——正在重新加载…',
+
     backupImportError: '备份文件无效或已损坏。',
+
     shortcutsReset: '恢复默认',
+
     shortcutListening: '请按下按键…',
+
     shortcutUnbound: '—',
+
     globalShortcutsTitle: '全局快捷键',
+
     globalShortcutsNote: '即使 Psysonic 在后台也能在系统范围内工作。需要 Ctrl、Alt 或 Super 作为修饰键。',
+
     shortcutClear: '清除',
+
     shortcutPlayPause: '播放 / 暂停',
+
     shortcutNext: '下一首',
+
     shortcutPrev: '上一首',
+
     shortcutVolumeUp: '音量增大',
+
     shortcutVolumeDown: '音量减小',
+
     shortcutSeekForward: '快进 10 秒',
+
     shortcutSeekBackward: '快退 10 秒',
+
     shortcutToggleQueue: '切换队列',
+
     shortcutOpenFolderBrowser: '打开{{folderBrowser}}',
+
     shortcutFullscreenPlayer: '全屏播放器',
+
     shortcutNativeFullscreen: '原生全屏',
+
     playbackTitle: '播放',
+
     replayGain: '回放增益',
+
     replayGainDesc: '使用 ReplayGain 元数据标准化曲目音量',
+
     replayGainMode: '模式',
+
     replayGainTrack: '曲目',
+
     replayGainAlbum: '专辑',
+
     replayGainPreGain: '预增益（有标签文件）',
+
     replayGainFallback: '回退增益（无标签 / 收音机）',
+
     crossfade: '交叉淡入淡出',
+
     crossfadeDesc: '曲目间淡入淡出',
+
     crossfadeSecs: '{{n}} 秒',
+
     notWithGapless: '无缝播放开启时不可用',
+
     notWithCrossfade: '交叉淡入淡出开启时不可用',
+
     gapless: '无缝播放',
+
     gaplessDesc: '预缓冲下一首曲目以消除歌曲间的间隙',
+
     preloadMode: '预加载下一曲目',
+
     preloadModeDesc: '何时开始缓冲队列中的下一曲目',
+
     nextTrackBufferingTitle: '下一曲目缓冲',
+
     preloadHotCacheMutualExclusive: '预加载与热缓存用途相同——两者不能同时启用。启用其中一个会自动禁用另一个。',
+
     preloadOff: '关闭',
+
     preloadBalanced: '均衡（结束前30秒）',
+
     preloadEarly: '提前（播放5秒后）',
+
     preloadCustom: '自定义',
+
     preloadCustomSeconds: '结束前秒数：{{n}}',
+
     infiniteQueue: '无限队列',
+
     infiniteQueueDesc: '队列播完时自动追加随机曲目',
+
     experimental: '实验性',
+
     fsPlayerSection: '全屏播放器',
+
     fsShowArtistPortrait: '显示艺术家照片',
+
     fsShowArtistPortraitDesc: '在全屏播放器右侧显示艺术家照片（或专辑封面）。',
+
     fsPortraitDim: '照片暗化',
+
     seekbarStyle: '进度条样式',
+
     seekbarStyleDesc: '选择播放进度条的外观',
+
     seekbarWaveform: '波形',
+
     seekbarLinedot: '线条与点',
+
     seekbarBar: '条形',
+
     seekbarThick: '粗条形',
+
     seekbarSegmented: '分段式',
+
     seekbarNeon: '霓虹',
+
     seekbarPulsewave: '脉冲波',
+
     seekbarParticletrail: '粒子轨迹',
+
     seekbarLiquidfill: '液体填充',
+
     seekbarRetrotape: '复古磁带',
+
     themeSchedulerTitle: '主题定时切换',
+
     themeSchedulerEnable: '启用主题定时器',
+
     themeSchedulerEnableSub: '根据一天中的时间自动在两个主题之间切换',
+
     themeSchedulerDayTheme: '白天主题',
+
     themeSchedulerDayStart: '白天开始时间',
+
     themeSchedulerNightTheme: '夜晚主题',
+
     themeSchedulerNightStart: '夜晚开始时间',
+
     themeSchedulerActiveHint: '主题定时器已启用 - 主题将自动切换。',
+
     visualOptionsTitle: '视觉选项',
+
     coverArtBackground: '封面背景',
+
     coverArtBackgroundSub: '在专辑/播放列表标题中显示模糊的封面作为背景',
+
     playlistCoverPhoto: '播放列表封面照片',
+
     playlistCoverPhotoSub: '在播放列表详细视图中显示封面照片网格',
+
     showBitrate: '显示比特率',
+
     showBitrateSub: '在曲目列表中显示音频比特率',
+
     uiScaleTitle: '界面缩放',
+
     uiScaleLabel: '缩放',
+
   },
+
   changelog: {
+
     modalTitle: '新功能',
+
     dontShowAgain: '不再显示',
+
     close: '知道了',
+
   },
+
   help: {
+
     title: '帮助',
+
     s1: '入门指南',
+
     q1: '支持哪些服务器？',
+
     a1: 'Psysonic 可与任何 Subsonic 兼容服务器配合使用：Navidrome、Gonic、Subsonic、Airsonic 等。推荐使用 Navidrome。',
+
     q2: '如何连接服务器？',
+
     a2: '打开设置并点击"添加服务器"。输入服务器地址（如 192.168.1.100:4533）、用户名和密码。Psysonic 会在保存前测试连接 — 如果连接失败则不会存储任何信息。',
+
     q3: '可以使用多个服务器吗？',
+
     a3: '可以。您可以在设置中添加任意数量的服务器，并随时切换。同一时间只能有一个服务器处于活动状态。',
+
     s2: '播放',
+
     q4: '如何播放音乐？',
+
     a4: '双击任意曲目即可播放。在专辑和艺术家页面，使用"全部播放"开始播放整张专辑。您也可以将曲目拖入队列面板。',
+
     q5: '有哪些键盘快捷键？',
+
     a5: '空格键 = 播放 / 暂停 · Esc = 关闭全屏播放器。媒体键（播放/暂停、下一首、上一首）在所有平台上都有效。在 Linux 上，请使用播放器栏按钮作为媒体键。应用内快捷键和系统级全局快捷键可在 设置 → 键盘快捷键 / 全局快捷键 中自定义。',
+
     q6: '什么是播放队列？',
+
     a6: '队列显示所有即将播放的曲目。点击右上角标题栏的面板图标（正在播放指示器旁边）打开队列。您可以通过拖拽重新排序，使用随机播放按钮打乱顺序，并将队列保存为播放列表。',
+
     q7: '如何打开全屏播放器？',
+
     a7: '点击底部播放器栏的专辑封面缩略图，或其旁边的展开图标。按 Esc 键关闭。',
+
     q8: '重复播放如何工作？',
+
     a8: '点击播放器栏的重复按钮可在以下模式间循环：关闭 → 重复全部 → 重复单曲。',
+
     s3: '音乐库',
+
     q9: '如何下载专辑？',
+
     a9: '打开专辑详情页并点击"下载 (ZIP)"。服务器会先将专辑压缩为 ZIP 文件 — 对于大型专辑或无损文件（FLAC / WAV），在实际下载开始前可能需要一些时间。这是正常的：进度条会在服务器完成压缩并开始传输后显示。',
+
     q10: '如何收藏曲目和专辑？',
+
     a10: '点击任意曲目行或专辑标题上的星形图标。收藏的项目会显示在侧边栏的收藏夹中。',
+
     q11: '首页的英雄轮播是什么？',
+
     a11: '首页顶部的横幅会随机从您的音乐库中选择专辑，每 10 秒轮换一次。点击圆点可跳转到特定专辑，或点击横幅打开专辑。',
+
     s4: '设置',
+
     q12: '如何更改主题？',
+
     a12: '设置 → 主题。从 8 个分组中的大量主题中选择：Psysonic 主题、媒体播放器、操作系统、游戏、电影、电视剧、社交媒体，以及开源经典（Catppuccin、Nord、Gruvbox、Nightfox）。',
+
     q13: '如何更改语言？',
+
     a13: '设置 → 语言。支持英语、德语、法语、荷兰语和中文。',
+
     q15: '如何设置下载文件夹？',
+
     a15: '设置 → 应用行为 → 下载文件夹。选择任意文件夹 — 下载的专辑将以 ZIP 文件形式保存在那里。未设置自定义文件夹时，将使用浏览器的默认下载位置。',
+
     s5: '歌曲记录',
+
     q16: '歌曲记录如何工作？',
+
     a16: 'Psysonic 直接向 Last.fm 发送记录 — 无需配置 Navidrome。在 设置 → Last.fm 中连接您的 Last.fm 账户并启用记录功能。',
+
     q17: '何时发送记录？',
+
     a17: '在您听完曲目的 50% 后提交记录。',
+
     q22: '播放器栏中的波形是什么？',
+
     a22: '波形进度条取代了传统的进度滑块。点击任意位置跳转到该位置，或拖动进行拖动播放。已播放部分显示蓝到紫的渐变，缓冲区域稍亮，未播放部分则淡化显示。',
+
     q24: '可以随机打乱队列吗？',
+
     a24: '可以。打开队列面板并点击队列标题栏的随机播放图标。当前播放曲目保持在第 1 位 — 其余曲目将随机重新排序。',
+
     q25: '艺术家页面上的 Last.fm 和 Wikipedia 链接会在浏览器中打开吗？',
+
     a25: '是的 — 它们会在您的默认系统浏览器中打开。点击时按钮会短暂显示确认标签。',
+
     s7: '随机混音',
+
     q26: '什么是随机混音？',
+
     a26: '随机混音从您的整个音乐库中构建一个随机曲目的播放列表。通过侧边栏的"随机混音"打开并点击"新混音"。您可以在生成前调整曲目数量。',
+
     q27: '什么是关键词过滤？',
+
     a27: '关键词过滤会排除流派、标题或专辑名称包含特定词汇的曲目。有声读物会被自动过滤。在 设置 → 随机混音 中添加自定义关键词，或点击曲目列表中的任意流派标签即时添加。',
+
     q28: '什么是超级流派混音？',
+
     a28: '超级流派混音将您的音乐库分组为宽泛的类别（摇滚、金属、电子、爵士、古典等），并从该风格构建一个专注的混音。在曲目列表下方选择类别标签。结果会随着每个子流派的获取而逐步显示。',
+
     s6: '故障排除',
+
     q18: '封面和艺术家图片加载缓慢。',
+
     a18: '图片首次加载时从服务器磁盘获取，然后本地缓存 30 天。如果服务器存储较慢，首次访问页面可能需要一些时间。后续访问将瞬间完成。',
+
     q19: '连接测试失败。',
+
     a19: '检查 URL 包括端口（如 http://192.168.1.100:4533）。确保防火墙没有阻止连接。在本地网络上尝试使用 http:// 而非 https://。同时验证用户名和密码是否正确。',
+
     q20: 'Linux 上没有音频。',
+
     a20: 'Psysonic 提供 .deb（Ubuntu/Debian）、.rpm（Fedora/RHEL）版本，以及通过 AUR 在 Arch/CachyOS 上安装（yay -S psysonic）。没有 AppImage。如果没有音频，请确保 PipeWire 或 PulseAudio 正在运行。',
+
     q21: '应用在 Linux 上显示黑屏。',
+
     a21: '这通常是 WebKitGTK 中的 GPU/EGL 驱动问题。使用 GDK_BACKEND=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1 启动。AUR 包和官方 .deb/.rpm 安装程序会自动设置这些环境变量。',
+
     q29: '什么是交叉淡入淡出和无缝播放？',
+
     a29: '两者都是 设置 → 音频 中的实验性音频功能。无缝播放预缓冲下一首曲目以消除歌曲间的静音。交叉淡入淡出让当前曲目淡出同时下一首淡入 — 调整持续时间（1-10 秒）以符合您的喜好。',
+
     q30: 'Psysonic 显示歌词吗？',
+
     a30: '是的。点击播放器栏的麦克风图标可在队列面板中打开歌词标签。Psysonic 自动从 LRCLIB 获取歌词。如果可用同步歌词，活动行会高亮并随歌曲实时滚动。如果只有纯文本歌词，则静态显示完整文本。',
+
     q31: '可以自定义键盘快捷键吗？',
+
     a31: '可以。设置 → 键盘快捷键 允许您重新映射应用内操作（播放/暂停、下一首、上一首、音量增/减、全屏等）到任意按键。设置 → 全局快捷键 允许您分配即使 Psysonic 在后台也能触发的系统级快捷键。',
+
     q32: '可以更改字体吗？',
+
     a32: '可以。设置 → 字体 允许您从 10 种字体中选择，包括 IBM Plex Mono、Fira Code、JetBrains Mono、Courier Prime 等。所选字体将应用于整个界面。',
+
     s8: '离线模式',
+
     q34: '什么是离线模式？',
+
     a34: '离线模式（测试版）允许您将专辑缓存到设备，以便在没有活动服务器连接时收听。缓存的曲目存储在本地并直接从磁盘播放 — 播放期间不进行网络请求。',
+
     q35: '如何缓存专辑以供离线使用？',
+
     a35: '打开任意专辑并点击专辑标题栏的下载图标。Psysonic 会在后台下载所有曲目。按钮上会显示进度。缓存完成后，图标变为绿色。您可以在离线音乐库页面（侧边栏）查看和移除缓存的专辑。',
+
     q36: '离线缓存可以使用多少存储空间？',
+
     a36: '您可以在 设置 → 音乐库 中设置最大缓存大小。达到限制时，专辑页面会显示警告横幅。您可以从离线音乐库中删除单个专辑以释放空间。',
+
     q37: '如何对歌曲、专辑和艺术家评分？',
+
     a37: 'Psysonic 通过 OpenSubsonic API 支持 1–5 星评分（需要 Navidrome ≥ 0.53）。可在专辑或播放列表曲目列表、右键菜单或播放器栏中对歌曲评分。专辑在详情页评分，艺术家在艺术家页评分。',
+
     q38: '可以删除或更改评分吗？',
+
     a38: '可以。再次点击当前激活的星星即可完全删除评分——第二次点击同一颗星即可清除。点击其他星星可更改评分。',
+
     q39: '什么是 Skip-to-1★ 和评分过滤器？',
+
     a39: 'Skip-to-1★ 会在歌曲被连续手动跳过一定次数后自动赋予 1 星评分。在 设置 → 评分 中启用并设置阈值。同样可在此设置随机混音的最低星级过滤条件。',
+
     q40: '什么是文件夹浏览器？',
+
     a40: '文件夹浏览器（侧边栏）使用 Miller 列布局浏览服务器音乐目录。点击文件夹查看内容；点击播放图标直接播放或添加到队列。',
+
     q41: '什么是主题调度器？',
+
     a41: '设置 → 外观 → 自动切换主题：设置日间主题和夜间主题及开始时间，Psysonic 将在指定时间自动切换主题。',
+
     q42: '可以调整界面缩放吗？',
+
     a42: '可以。设置 → 外观 → 界面缩放 可将整个界面缩放至 80%–125%。',
+
     q43: '可以更改进度条样式吗？',
+
     a43: '可以。设置 → 外观 → 进度条样式 提供 10 种样式：波形、线条与点、条形、粗条形、分段、霓虹辉光、脉冲波、粒子轨迹、液体填充和复古磁带。',
+
     q44: '什么是 AutoEQ？',
+
     a44: '设置 → 音频 中的 10 频段均衡器包含 AutoEQ 查找功能。输入耳机型号即可自动加载校正配置文件。',
+
     q45: '什么是 Replay Gain？',
+
     a45: 'Replay Gain 标准化音量，使响亮和安静的专辑以一致的音量播放。在 设置 → 音频 → Replay Gain 中启用；选择曲目模式或专辑模式。',
+
     q46: '什么是热缓存？',
+
     a46: '热缓存（Alpha，设置 → 音乐库）将队列中后续曲目预加载到磁盘，实现即时播放，对于慢速或远程服务器尤为有用。Psysonic 保留当前曲目和后续 5 首，达到大小限制时淘汰旧条目。',
+
     q47: '可以将播放列表缓存到离线吗？',
+
     a47: '可以。在播放列表详情中点击下载图标，所有曲目将在后台下载。完全缓存后图标变为红色垃圾桶；再次点击即可从离线缓存中删除该播放列表。',
-    q48: '什么是无限队列？',
-    a48: '当队列播完且关闭了重复播放时，Psysonic会自动添加随机曲目，确保播放不会中断。自动添加的曲目显示在"— 自动添加 —"分隔符下方。',
-    q49: '可以通过命令行控制Psysonic吗？',
-    a49: '可以。示例：psysonic --player play / pause / next / prev，--player volume 75，--player seek 15，--player mute，--player shuffle，--player repeat off|all|one。还可以切换服务器、音频设备、筛选音乐库和搜索。完整帮助：psysonic --player --help。',
-    q50: '如何管理播放列表？',
-    a50: '通过侧边栏中的"播放列表"进入。点击"新建播放列表"创建。在详情页可拖拽排序、点击×删除曲目、通过搜索添加歌曲，还可使用"建议"获取智能推荐。',
-    q51: '可以备份和恢复设置吗？',
-    a51: '可以。设置→备份与恢复可将所有设置、服务器配置、主题和快捷键导出为JSON文件，在其他设备上导入即可一键恢复。',
-    q52: '如何更改音频输出设备？',
-    a52: '设置→音频→输出设备。Psysonic列出所有可用输出，选择后立即生效。若设备在应用启动后连接，可点击刷新按钮更新列表。',
-    q53: '什么是设备同步？',
-    a53: '设备同步可将专辑、播放列表或艺术家复制到USB或SD卡。通过侧边栏"Device Sync"打开，选择目标文件夹和来源，点击"传输到设备"。',
-    q54: '设备同步中的文件名模板是什么？',
-    a54: '模板控制曲目的命名和组织方式。使用预设或通过可点击的令牌自定义：{artist}、{album}、{title}、{track_number}、{disc_number}、{year}，以及/作为文件夹分隔符。',
-    q55: '设备同步支持跨平台使用吗？',
-    a55: '支持。设备上的清单文件包含同步时使用的模板。在不同系统上，Psysonic能正确识别已存在的文件。',
-    s9: 'Device Sync',
-    q56: '什么是网络电台？',
-    a56: '网络电台页面可在Psysonic中播放任何直播流。电台来自Navidrome服务器，可通过管理面板添加或导入.pls/.m3u文件。播放使用HTML5音频。',
-    q57: '网络电台支持哪些流格式？',
-    a57: 'MP3、AAC、OGG Vorbis及大多数HLS流。MP3和AAC在所有平台均可使用。',
-    s10: '网络电台',
-    q58: 'Psysonic从哪里获取歌词？',
-    a58: '三个可配置来源（设置→歌词）：Navidrome服务器、LRCLIB和网易云音乐。每个来源均可启用/禁用，并可拖拽调整优先级。',
-    q59: '有没有查看其他用户正在听什么的功能？',
-    a59: '有。点击右上角的广播图标，可查看Navidrome服务器上其他用户正在收听的内容，每10秒更新一次。',
+
   },
+
   queue: {
+
     title: '队列',
+
     savePlaylist: '保存为播放列表',
+
     updatePlaylist: '更新播放列表',
+
     filterPlaylists: '筛选播放列表…',
+
     playlistName: '播放列表名称',
+
     cancel: '取消',
+
     save: '保存',
+
     loadPlaylist: '加载播放列表',
+
     loading: '加载中…',
+
     noPlaylists: '未找到播放列表。',
+
     load: '替换队列并播放',
+
     appendToQueue: '追加到队列',
+
     delete: '删除',
+
     deleteConfirm: '删除播放列表 "{{name}}"？',
+
     clear: '清空',
+
     shuffle: '随机打乱队列',
+
     gapless: '无缝播放',
+
     crossfade: '交叉淡入淡出',
+
     infiniteQueue: '无限队列',
+
     autoAdded: '— 自动添加 —',
+
     radioAdded: '— 收音机 —',
+
     hide: '隐藏',
+
     close: '关闭',
+
     nextTracks: '即将播放',
+
     emptyQueue: '队列为空。',
+
     trackSingular: '首曲目',
+
     trackPlural: '首曲目',
+
     showRemaining: '显示剩余时间',
+
     showTotal: '显示总时间',
+
   },
+
   statistics: {
+
     title: '统计',
+
     recentlyPlayed: '最近播放',
+
     mostPlayed: '最常播放的专辑',
+
     highestRated: '评分最高的专辑',
+
     genreDistribution: '流派分布（前 20）',
+
     loadMore: '加载更多',
+
     statArtists: '艺术家',
+
     statArtistsTooltip: '仅限专辑艺术家——仅作为单曲艺术家出现（合唱、客串等）且无自己专辑的艺术家不计入此处。',
+
     statAlbums: '专辑',
+
     statSongs: '歌曲',
+
     statGenres: '流派',
+
     statPlaytime: '音频总时长',
+
     genreInsights: '流派洞察',
+
     formatDistribution: '格式分布',
+
     formatSample: '{{n}} 首曲目的样本',
+
     computing: '计算中…',
+
     genreSongs: '{{count}} 首歌曲',
+
     genreAlbums: '{{count}} 张专辑',
+
     recentlyAdded: '最近添加',
+
     decadeDistribution: '按年代分布的专辑',
+
     decadeAlbums_one: '{{count}} 张专辑',
+
     decadeAlbums_other: '{{count}} 张专辑',
+
     decadeUnknown: '未知',
+
     lfmTitle: 'Last.fm 统计',
+
     lfmTopArtists: '热门艺术家',
+
     lfmTopAlbums: '热门专辑',
+
     lfmTopTracks: '热门曲目',
+
     lfmPlays: '{{count}} 次播放',
+
     lfmPeriodOverall: '全部时间',
+
     lfmPeriod7day: '7 天',
+
     lfmPeriod1month: '1 个月',
+
     lfmPeriod3month: '3 个月',
+
     lfmPeriod6month: '6 个月',
+
     lfmPeriod12month: '12 个月',
+
     lfmNotConnected: '在设置中连接 Last.fm 以查看您的统计。',
+
     lfmRecentTracks: '最近记录',
+
     lfmNowPlaying: '正在播放',
+
     lfmJustNow: '刚刚',
+
     lfmMinutesAgo: '{{n}} 分钟前',
+
     lfmHoursAgo: '{{n}} 小时前',
+
     lfmDaysAgo: '{{n}} 天前',
+
     topRatedSongs: '最高评分歌曲',
+
     topRatedArtists: '最高评分艺人',
+
     noRatedSongs: '暂无已评分歌曲。请在专辑或播放列表中为歌曲评分。',
+
     noRatedArtists: '暂无已评分艺人。',
+
   },
+
   player: {
+
     regionLabel: '音乐播放器',
+
     openFullscreen: '打开全屏播放器',
+
     fullscreen: '全屏播放器',
+
     closeFullscreen: '关闭全屏',
+
     closeTooltip: '关闭 (Esc)',
+
     noTitle: '无标题',
+
     stop: '停止',
+
     prev: '上一首',
+
     play: '播放',
+
     pause: '暂停',
+
     next: '下一首',
+
     repeat: '重复',
+
     repeatOff: '关闭',
+
     repeatAll: '全部',
+
     repeatOne: '单曲',
+
     progress: '播放进度',
+
     volume: '音量',
+
     toggleQueue: '切换队列',
+
     lyrics: '歌词',
+
     fsLyricsToggle: '全屏歌词',
+
     lyricsLoading: '正在加载歌词…',
+
     lyricsNotFound: '未找到此曲目的歌词',
+
     lyricsSourceServer: '来源：服务器',
+
     lyricsSourceLrclib: '来源：LRCLIB',
+
     lyricsSourceNetease: '来源：网易云',
+
   },
+
   songInfo: {
+
     title: '歌曲信息',
+
     songTitle: '标题',
+
     artist: '艺术家',
+
     album: '专辑',
+
     albumArtist: '专辑艺术家',
+
     year: '年份',
+
     genre: '流派',
+
     duration: '时长',
+
     track: '曲目',
+
     format: '格式',
+
     bitrate: '比特率',
+
     sampleRate: '采样率',
+
     bitDepth: '位深度',
+
     channels: '声道',
+
     fileSize: '文件大小',
+
     path: '文件路径',
+
     replayGainTrack: 'RG 曲目增益',
+
     replayGainAlbum: 'RG 专辑增益',
+
     replayGainPeak: 'RG 曲目峰值',
+
     mono: '单声道',
+
     stereo: '立体声',
+
   },
+
   playlists: {
+
     title: '播放列表',
+
     newPlaylist: '新建播放列表',
+
     unnamed: '未命名播放列表',
+
     createName: '播放列表名称…',
+
     create: '创建',
+
     cancel: '取消',
+
     empty: '暂无播放列表。',
+
     emptyPlaylist: '此播放列表为空。',
+
     addFirstSong: '添加第一首歌曲',
+
     notFound: '未找到播放列表。',
+
     songs: '{{n}} 首歌曲',
+
     playAll: '全部播放',
+
     shuffle: '随机播放',
+
     addToQueue: '添加到队列',
+
     back: '返回播放列表',
+
     deletePlaylist: '删除',
+
     confirmDelete: '再次点击确认删除',
+
     removeSong: '从播放列表中移除',
+
     addSongs: '添加歌曲',
+
     searchPlaceholder: '搜索音乐库…',
+
     noResults: '无结果。',
+
     suggestions: '推荐歌曲',
+
     noSuggestions: '暂无推荐。',
+
     titleBadge: '播放列表',
+
     refreshSuggestions: '新建议',
+
     addSong: '添加到播放列表',
+
     addSelected: '添加所选',
+
     cacheOffline: '离线缓存播放列表',
+
     offlineCached: '播放列表已缓存',
+
     removeOffline: '从离线缓存中移除',
+
     offlineDownloading: '正在缓存… ({{done}}/{{total}} 张专辑)',
+
     publicLabel: '公开',
+
     privateLabel: '私有',
+
     editMeta: '编辑播放列表',
+
     editNamePlaceholder: '播放列表名称…',
+
     editCommentPlaceholder: '添加描述…',
+
     editPublic: '公开播放列表',
+
     editSave: '保存',
+
     editCancel: '取消',
+
     changeCover: '更改封面图片',
+
     changeCoverLabel: '更改照片',
+
     removeCover: '删除照片',
+
     coverUpdated: '封面已更新',
+
     metaSaved: '播放列表已更新',
+
     downloadZip: '下载 (ZIP)',
+
     // Toast notifications for multi-select
+
     addSuccess: '{{count}} 首歌曲已添加到 {{playlist}}',
+
     addPartial: '{{added}} 首已添加，{{skipped}} 首跳过（重复）',
+
     addAllSkipped: '全部跳过（{{count}} 首重复）',
+
     addError: '添加歌曲时出错',
+
     createAndAddSuccess: '播放列表 "{{playlist}}" 已创建，包含 {{count}} 首歌曲',
+
     createError: '创建播放列表时出错',
+
     deleteSuccess: '{{count}} 个播放列表已删除',
+
     deleteFailed: '删除 {{name}} 时出错',
+
     deleteSelected: '删除所选',
+
     mergeSuccess: '{{count}} 首歌曲已合并到 {{playlist}}',
+
     mergeNoNewSongs: '没有新歌曲可添加',
+
     mergeError: '合并播放列表时出错',
+
     mergeInto: '合并到',
+
     selectionCount: '{{count}} 已选择',
+
     select: '选择',
+
     startSelect: '启用选择',
+
     cancelSelect: '取消',
+
     loadingAlbums: '正在解析 {{count}} 张专辑…',
+
     loadingArtists: '正在解析 {{count}} 位艺术家…',
+
     myPlaylists: '我的播放列表',
+
     noOtherPlaylists: '没有其他可用播放列表',
+
     addToPlaylistSuccess: '{{count}} 首歌曲已添加到 {{playlist}}',
+
     addToPlaylistNoNew: '{{playlist}} 没有新歌曲',
+
     addToPlaylistError: '添加到播放列表时出错',
+
     importCSV: '导入 CSV',
+
     importCSVTooltip: '从 Spotify CSV 导入',
+
     csvImportReport: 'CSV 导入报告',
+
     csvImportTotal: '总计',
+
     csvImportAdded: '已添加',
+
     csvImportDuplicates: '重复项',
+
     csvImportNotFound: '未找到',
+
     csvImportNetworkErrors: '网络错误',
+
     csvImportDuplicatesTitle: '重复曲目（已在播放列表中）：',
+
     csvImportNotFoundTitle: '未找到的曲目：',
+
     csvImportNetworkErrorsTitle: '网络错误（可重试导入）：',
+
     csvImportDownloadReport: '下载报告',
+
     csvImportClose: '关闭',
+
     csvImportNoValidTracks: 'CSV 文件中未找到有效曲目',
+
     csvImportFailed: 'CSV 文件导入失败',
+
     csvImportToast: '{{added}} 已添加，{{notFound}} 未找到，{{duplicates}} 重复项',
+
   },
+
   mostPlayed: {
+
     title: '最常播放',
+
     topArtists: '热门艺术家',
+
     topAlbums: '热门专辑',
+
     plays: '播放 {{n}} 次',
+
     sortMost: '最多播放在前',
+
     sortLeast: '最少播放在前',
+
     loadMore: '加载更多专辑',
+
     noData: '暂无播放数据。开始收听吧！',
+
     noArtists: '所有艺术家已过滤。',
+
     filterCompilations: '隐藏合辑艺术家（Various Artists、原声带等）',
+
     filterCompilationsShort: '隐藏合辑',
+
   },
+
   radio: {
+
     title: '网络电台',
+
     empty: '未配置任何电台。',
+
     addStation: '添加电台',
+
     editStation: '编辑',
+
     deleteStation: '删除电台',
+
     confirmDelete: '再次点击确认',
+
     stationName: '电台名称…',
+
     streamUrl: '流地址…',
+
     homepageUrl: '主页地址（可选）',
+
     save: '保存',
+
     cancel: '取消',
+
     live: '直播',
+
     liveStream: '网络电台',
+
     openHomepage: '打开主页',
+
     changeCoverLabel: '更换封面',
+
     removeCover: '移除封面',
+
     browseDirectory: '搜索目录',
+
     directoryPlaceholder: '搜索电台…',
+
     noResults: '未找到电台。',
+
     stationAdded: '电台已添加',
+
     filterAll: '全部',
+
     filterFavorites: '收藏',
+
     sortManual: '手动',
+
     sortAZ: 'A → Z',
+
     sortZA: 'Z → A',
+
     sortNewest: '最新',
+
     favorite: '添加到收藏',
+
     unfavorite: '从收藏移除',
+
     noFavorites: '没有收藏的电台。',
+
     listenerCount_one: '{{count}} 位听众',
+
     listenerCount_other: '{{count}} 位听众',
+
     recentlyPlayed: '最近播放',
+
     upNext: '即将播放',
+
   },
+
   folderBrowser: {
+
     empty: '空文件夹',
+
     error: '加载失败',
+
   },
+
   deviceSync: {
+
     title: '设备同步',
+
     targetFolder: '目标文件夹',
+
     noFolderChosen: '未选择文件夹',
+
     selectDrive: '选择驱动器…',
+
     refreshDrives: '刷新驱动器',
+
     noDrivesDetected: '未检测到可移动驱动器',
+
     browseManual: '手动浏览…',
+
     free: '可用',
+
     notMountedVolume: '目标不在已挂载的卷上。驱动器可能已断开。',
+
     chooseFolder: '选择…',
+
     filenameTemplate: '文件名模板',
+
     targetDevice: '目标设备',
+
     templateHint: '变量：{artist}、{album}、{title}、{track_number}、{disc_number}、{year}',
+
     cleanupButton: '删除不在选择范围内的文件',
+
     cleanupNothingToDelete: '无需删除 — 设备已同步。',
+
     confirmCleanup: '将从设备中删除 {{count}} 个不在当前选择范围内的文件。继续？',
+
     cleanupComplete: '已从设备中删除 {{count}} 个文件。',
+
     selectedSources: '已选来源',
+
     noSourcesSelected: '未选择来源。点击浏览器中的项目以添加。',
+
     clearAll: '全部清除',
+
     tabPlaylists: '播放列表',
+
     tabAlbums: '专辑',
+
     tabArtists: '艺术家',
+
     searchPlaceholder: '搜索…',
+
     syncButton: '同步到设备',
+
     actionTransfer: '传输到设备',
+
     actionDelete: '从设备删除',
+
     actionApplyAll: '应用所有更改',
+
     templatePreview: '预览',
-    templatePresetStandard: '标准',
-    templatePresetMultiDisc: '多碟',
-    templatePresetAltFolder: '备用文件夹',
-    tokenSlashHint: '/ = 文件夹分隔符',
+
     cancel: '取消',
+
     noTargetDir: '请先选择目标文件夹。',
+
     noSources: '请至少选择一个来源。',
+
     noTracks: '所选来源中未找到曲目。',
+
     fetchError: '从服务器加载曲目失败。',
+
     syncComplete: '同步完成。',
+
     dismiss: '关闭',
-    cancelSync: '取消',
-    syncCancelled: '同步已取消（已传输 {{done}} / {{total}}）。',
+
     colName: '名称',
+
     colType: '类型',
+
     colStatus: '状态',
+
     onDevice: '设备管理器',
+
     addSources: '添加…',
+
     syncResult: '已传输 {{done}}，{{skipped}} 已是最新（共 {{total}}）',
+
     deleteFromDevice: '标记为删除（{{count}}）',
+
     confirmDelete: '从设备删除 {{count}} 个项目：{{names}}？',
+
     deleteComplete: '已从设备删除 {{count}} 个项目。',
-    manifestImported: '已从设备清单导入 {{count}} 个来源。',
+
     statusSynced: '已同步',
+
     statusPending: '待处理',
+
     statusDeletion: '删除中',
+
     markForDeletion: '标记为删除',
+
     removeSource: '移除',
+
     undoDeletion: '撤销删除',
+
     syncInBackground: '同步已在后台启动 — 您可以离开此页面。',
+
     syncInProgress: '{{done}} / {{total}} 首曲目…',
+
     syncSummary: '同步摘要',
+
     calculating: '正在计算所需数据…',
+
     filesToAdd: '要添加的文件：',
+
     filesToDelete: '要删除的文件：',
+
     netChange: '净变化：',
+
     availableSpace: '可用磁盘空间：',
+
     spaceWarning: '警告：目标设备的可用空间不足。',
+
     proceed: '继续同步',
+
     notEnoughSpace: '检测到物理磁盘空间不足！',
+
     liveSearch: '实时',
+
     randomAlbumsLabel: '随机专辑',
+
   },
+
 };
+

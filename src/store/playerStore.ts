@@ -689,16 +689,28 @@ export function initAudioListeners(): () => void {
   let discordPrevTrackId: string | null = null;
   let discordPrevIsPlaying: boolean | null = null;
   let discordPrevFetchCovers: boolean | null = null;
+  let discordPrevTemplateDetails: string | null = null;
+  let discordPrevTemplateState: string | null = null;
+  let discordPrevTemplateLargeText: string | null = null;
 
   function syncDiscord() {
     const { currentTrack, isPlaying, currentTime } = usePlayerStore.getState();
-    const { discordRichPresence, enableAppleMusicCoversDiscord } = useAuthStore.getState();
+    const {
+      discordRichPresence,
+      enableAppleMusicCoversDiscord,
+      discordTemplateDetails,
+      discordTemplateState,
+      discordTemplateLargeText,
+    } = useAuthStore.getState();
 
     if (!discordRichPresence || !currentTrack) {
       if (discordPrevTrackId !== null) {
         discordPrevTrackId = null;
         discordPrevIsPlaying = null;
         discordPrevFetchCovers = null;
+        discordPrevTemplateDetails = null;
+        discordPrevTemplateState = null;
+        discordPrevTemplateLargeText = null;
         invoke('discord_clear_presence').catch(() => {});
       }
       return;
@@ -707,11 +719,17 @@ export function initAudioListeners(): () => void {
     const trackChanged = currentTrack.id !== discordPrevTrackId;
     const playingChanged = isPlaying !== discordPrevIsPlaying;
     const coversSettingChanged = enableAppleMusicCoversDiscord !== discordPrevFetchCovers;
-    if (!trackChanged && !playingChanged && !coversSettingChanged) return;
+    const detailsTemplateChanged = discordTemplateDetails !== discordPrevTemplateDetails;
+    const stateTemplateChanged = discordTemplateState !== discordPrevTemplateState;
+    const largeTextTemplateChanged = discordTemplateLargeText !== discordPrevTemplateLargeText;
+    if (!trackChanged && !playingChanged && !coversSettingChanged && !detailsTemplateChanged && !stateTemplateChanged && !largeTextTemplateChanged) return;
 
     discordPrevTrackId = currentTrack.id;
     discordPrevIsPlaying = isPlaying;
     discordPrevFetchCovers = enableAppleMusicCoversDiscord;
+    discordPrevTemplateDetails = discordTemplateDetails;
+    discordPrevTemplateState = discordTemplateState;
+    discordPrevTemplateLargeText = discordTemplateLargeText;
 
     invoke('discord_update_presence', {
       title: currentTrack.title,
@@ -725,6 +743,9 @@ export function initAudioListeners(): () => void {
       // iTunes cover fetching is only done when explicitly opted in.
       coverArtUrl: null,
       fetchItunesCovers: enableAppleMusicCoversDiscord,
+      detailsTemplate: discordTemplateDetails,
+      stateTemplate: discordTemplateState,
+      largeTextTemplate: discordTemplateLargeText,
     }).catch(() => {});
   }
 
