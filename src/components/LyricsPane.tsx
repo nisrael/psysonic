@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { usePlayerStore } from '../store/playerStore';
 import type { LrcLine } from '../api/lrclib';
@@ -6,21 +6,25 @@ import { useLyrics, type WordLyricsLine } from '../hooks/useLyrics';
 import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
 import type { Track } from '../store/playerStore';
+import { SpringScroller, targetForFraction } from '../utils/springScroll';
 
 interface Props {
   currentTrack: Track | null;
 }
 
 /**
- * Word-sync highlighting is driven imperatively via `usePlayerStore.subscribe`
- * so the whole lyrics block doesn't re-render on every 500 ms progress tick.
- * Active-line scroll is still React-state-driven — lines change infrequently.
+ * Apple Music-style scroll: active line scrolls to ~35% from top.
+ * User scrolling pauses auto-scroll for 4 s then resumes.
+ * Word-sync and line highlighting are imperative (no React re-renders per tick).
  */
 export default function LyricsPane({ currentTrack }: Props) {
   const { t } = useTranslation();
 
   const { syncedLines, wordLines, plainLyrics, source, loading, notFound } = useLyrics(currentTrack);
-  const { staticOnly } = useAuthStore(useShallow(s => ({ staticOnly: s.lyricsStaticOnly })));
+  const { staticOnly, sidebarLyricsStyle } = useAuthStore(useShallow(s => ({
+    staticOnly: s.lyricsStaticOnly,
+    sidebarLyricsStyle: s.sidebarLyricsStyle,
+  })));
 
   const useWords  = !staticOnly && wordLines !== null && wordLines.length > 0;
   const hasSynced = !staticOnly && !useWords && syncedLines !== null && syncedLines.length > 0;
@@ -28,19 +32,52 @@ export default function LyricsPane({ currentTrack }: Props) {
   const seek     = usePlayerStore(s => s.seek);
   const duration = usePlayerStore(s => s.currentTrack?.duration ?? 0);
 
-  const lineRefs   = useRef<(HTMLDivElement | null)[]>([]);
-  const wordRefs   = useRef<HTMLSpanElement[][]>([]);
-  const prevActive = useRef({ line: -1, word: -1 });
+  const containerRef  = useRef<HTMLDivElement | null>(null);
+  const springRef     = useRef<SpringScroller | null>(null);
+  const lineRefs      = useRef<(HTMLDivElement | null)[]>([]);
+  const wordRefs      = useRef<HTMLSpanElement[][]>([]);
+  const prevActive    = useRef({ line: -1, word: -1 });
+  const isUserScroll  = useRef(false);
+  const scrollTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Attach/detach SpringScroller when the pane mounts.
+  const setContainerRef = useCallback((el: HTMLDivElement | null) => {
+    containerRef.current = el;
+    springRef.current?.stop();
+    springRef.current = el ? new SpringScroller(el, 0.1, 0.78) : null;
+  }, []);
+
+  // Pause auto-scroll when user manually scrolls; stop spring so it doesn't fight.
+  const handleUserScroll = useCallback(() => {
+    springRef.current?.stop();
+    isUserScroll.current = true;
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => { isUserScroll.current = false; }, 4000);
+  }, []);
+
+  // Scroll active line into view.
+  // Apple style: spring-animate to ~35% from top.
+  // Classic style: native scrollIntoView center.
+  const scrollToLine = useCallback((el: HTMLDivElement) => {
+    if (isUserScroll.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    if (sidebarLyricsStyle === 'apple' && springRef.current) {
+      springRef.current.scrollTo(targetForFraction(container, el, 0.35));
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [sidebarLyricsStyle]);
 
   // Reset refs when track changes.
   useEffect(() => {
-    lineRefs.current = [];
-    wordRefs.current = [];
+    lineRefs.current  = [];
+    wordRefs.current  = [];
     prevActive.current = { line: -1, word: -1 };
+    springRef.current?.jump(0);
   }, [currentTrack?.id]);
 
-  // Imperative tracker for line+word highlighting. Subscribes directly to the
-  // store to skip React render cycles for 500 ms progress ticks.
+  // Imperative tracker — subscribes directly to the store, zero React re-renders per tick.
   useEffect(() => {
     if (!useWords && !hasSynced) return;
 
@@ -64,7 +101,6 @@ export default function LyricsPane({ currentTrack }: Props) {
       const prev = prevActive.current;
       if (prev.line === lineIdx && prev.word === wordIdx) return;
 
-      // Update line classes.
       if (prev.line !== lineIdx) {
         if (prev.line >= 0) {
           const el = lineRefs.current[prev.line];
@@ -74,16 +110,14 @@ export default function LyricsPane({ currentTrack }: Props) {
           const el = lineRefs.current[lineIdx];
           if (el) {
             el.className = lineClass(lineIdx, lineIdx);
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            scrollToLine(el);
           }
         }
-        // Reset all word classes on previous line.
         if (useWords && prev.line >= 0 && wordRefs.current[prev.line]) {
           for (const w of wordRefs.current[prev.line]) w.className = 'lyrics-word';
         }
       }
 
-      // Update word classes inside the active line.
       if (useWords && lineIdx >= 0 && wordRefs.current[lineIdx]) {
         const ws = wordRefs.current[lineIdx];
         for (let j = 0; j < ws.length; j++) {
@@ -96,11 +130,9 @@ export default function LyricsPane({ currentTrack }: Props) {
       prevActive.current = { line: lineIdx, word: wordIdx };
     };
 
-    // Prime once from the current store value.
     apply(usePlayerStore.getState().currentTime);
-    const unsub = usePlayerStore.subscribe(s => apply(s.currentTime));
-    return unsub;
-  }, [useWords, hasSynced, wordLines, syncedLines]);
+    return usePlayerStore.subscribe(s => apply(s.currentTime));
+  }, [useWords, hasSynced, wordLines, syncedLines, scrollToLine]);
 
   if (!currentTrack) {
     return (
@@ -120,14 +152,18 @@ export default function LyricsPane({ currentTrack }: Props) {
           ? t('player.lyricsSourceLyricsplus')
           : null;
 
-  // Static-only + synced or words available → render line list as static text.
   const renderAsStatic = staticOnly && (
     (syncedLines !== null && syncedLines.length > 0) ||
     (wordLines !== null && wordLines.length > 0)
   );
 
   return (
-    <div className="lyrics-pane">
+    <div
+      className="lyrics-pane"
+      ref={setContainerRef}
+      onWheel={handleUserScroll}
+      onTouchMove={handleUserScroll}
+    >
       {loading && <p className="lyrics-status">{t('player.lyricsLoading')}</p>}
       {notFound && !loading && <p className="lyrics-status">{t('player.lyricsNotFound')}</p>}
 

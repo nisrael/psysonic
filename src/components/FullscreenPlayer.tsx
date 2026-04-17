@@ -13,6 +13,7 @@ import { useLyrics, type WordLyricsLine } from '../hooks/useLyrics';
 import { useAuthStore } from '../store/authStore';
 import type { LrcLine } from '../api/lrclib';
 import type { Track } from '../store/playerStore';
+import { SpringScroller, targetForFraction } from '../utils/springScroll';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -21,19 +22,197 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// ─── Fullscreen lyrics overlay ────────────────────────────────────────────────
-// Slot height = 6vh = window.innerHeight * 0.06 — must match CSS height: 6vh.
-// railY = (2 - activeIdx) * slotH centers slot `activeIdx` in a 5-slot window:
-//   activeIdx=0 → railY=+2×slotH  (line 0 at slot 2)
-//   activeIdx=2 → railY=0         (line 2 at center)
-//   activeIdx=5 → railY=-3×slotH  (line 5 at slot 2)
+// ─── Apple Music-style fullscreen lyrics ─────────────────────────────────────
+// Full-screen scrollable list. Active line auto-scrolls to ~35% from top.
+// Word-sync runs imperatively (no React re-renders on every time tick).
+// User scroll pauses auto-scroll for 4 s then resumes.
 
-const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track | null }) {
+const FsLyricsApple = memo(function FsLyricsApple({ currentTrack }: { currentTrack: Track | null }) {
+  const { syncedLines, wordLines, plainLyrics, loading } = useLyrics(currentTrack);
+  const staticOnly = useAuthStore(s => s.lyricsStaticOnly);
+
+  const useWords = !staticOnly && wordLines !== null && wordLines.length > 0;
+  const lineSrc: LrcLine[] | null = useWords
+    ? (wordLines as WordLyricsLine[]).map(l => ({ time: l.time, text: l.text }))
+    : (syncedLines as LrcLine[] | null);
+  const hasSynced = !staticOnly && lineSrc !== null && lineSrc.length > 0;
+
+  const duration = usePlayerStore(s => s.currentTrack?.duration ?? 0);
+  const seek     = usePlayerStore(s => s.seek);
+
+  const linesRef    = useRef<LrcLine[]>([]);
+  linesRef.current  = hasSynced ? lineSrc! : [];
+
+  // React state only for the active line index — changes are infrequent.
+  const [activeIdx, setActiveIdx]   = useState(-1);
+  const activeIdxRef                = useRef(-1);
+
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const springRef     = useRef<SpringScroller | null>(null);
+  const lineRefs      = useRef<(HTMLDivElement | null)[]>([]);
+  const wordRefs      = useRef<HTMLSpanElement[][]>([]);
+  const prevWord      = useRef({ line: -1, word: -1 });
+  const isUserScroll  = useRef(false);
+  const scrollTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Create/destroy the SpringScroller when the container mounts.
+  const setContainerRef = useCallback((el: HTMLDivElement | null) => {
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    if (el) {
+      springRef.current = new SpringScroller(el, 0.1, 0.78);
+    } else {
+      springRef.current?.stop();
+      springRef.current = null;
+    }
+  }, []);
+
+  // Reset everything on track change.
+  useEffect(() => {
+    lineRefs.current   = [];
+    wordRefs.current   = [];
+    prevWord.current   = { line: -1, word: -1 };
+    activeIdxRef.current = -1;
+    setActiveIdx(-1);
+    springRef.current?.jump(0);
+  }, [currentTrack?.id]);
+
+  // Subscribe to playback time — only triggers React setState when line changes.
+  useEffect(() => {
+    if (!hasSynced) return;
+    const apply = (time: number) => {
+      const ls = linesRef.current;
+      if (!ls.length) return;
+      const idx = ls.reduce((acc, line, i) => time >= line.time ? i : acc, -1);
+      if (idx !== activeIdxRef.current) {
+        activeIdxRef.current = idx;
+        setActiveIdx(idx);
+      }
+    };
+    apply(usePlayerStore.getState().currentTime);
+    return usePlayerStore.subscribe(s => apply(s.currentTime));
+  }, [hasSynced, currentTrack?.id]);
+
+  // Spring-scroll active line to ~35% from the top of the container.
+  useEffect(() => {
+    if (activeIdx < 0 || isUserScroll.current) return;
+    const el  = lineRefs.current[activeIdx];
+    const box = containerRef.current;
+    if (!el || !box || !springRef.current) return;
+    springRef.current.scrollTo(targetForFraction(box, el, 0.35));
+  }, [activeIdx]);
+
+  // Word-sync: imperative DOM updates, zero React re-renders per tick.
+  useEffect(() => {
+    wordRefs.current = [];
+    prevWord.current = { line: -1, word: -1 };
+  }, [currentTrack?.id, useWords]);
+
+  useEffect(() => {
+    if (!useWords) return;
+    const lines = wordLines as WordLyricsLine[];
+    const apply = (time: number) => {
+      let li = -1;
+      for (let i = 0; i < lines.length; i++) { if (time >= lines[i].time) li = i; else break; }
+      let wi = -1;
+      if (li >= 0) {
+        const ws = lines[li].words;
+        for (let j = 0; j < ws.length; j++) { if (time >= ws[j].time) wi = j; else break; }
+      }
+      const prev = prevWord.current;
+      if (prev.line === li && prev.word === wi) return;
+      if (prev.line !== li && prev.line >= 0 && wordRefs.current[prev.line])
+        for (const w of wordRefs.current[prev.line]) w.className = 'fsa-lyric-word';
+      if (li >= 0 && wordRefs.current[li]) {
+        const ws = wordRefs.current[li];
+        for (let j = 0; j < ws.length; j++)
+          ws[j].className = j < wi ? 'fsa-lyric-word played' : j === wi ? 'fsa-lyric-word active' : 'fsa-lyric-word';
+      }
+      prevWord.current = { line: li, word: wi };
+    };
+    apply(usePlayerStore.getState().currentTime);
+    return usePlayerStore.subscribe(s => apply(s.currentTime));
+  }, [useWords, wordLines]);
+
+  const handleUserScroll = useCallback(() => {
+    // Stop spring animation so it doesn't fight the user's scroll.
+    springRef.current?.stop();
+    isUserScroll.current = true;
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => { isUserScroll.current = false; }, 4000);
+  }, []);
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>('[data-time]');
+    if (!target || duration <= 0) return;
+    seek(parseFloat(target.dataset.time!) / duration);
+  }, [duration, seek]);
+
+  if (!currentTrack || loading) return null;
+
+  return (
+    <div
+      className="fsa-lyrics-container"
+      ref={setContainerRef}
+      onWheel={handleUserScroll}
+      onTouchMove={handleUserScroll}
+      onClick={handleClick}
+      aria-hidden="true"
+    >
+      <div className="fsa-lyrics-top-pad" />
+
+      {hasSynced && (useWords
+        ? (wordLines as WordLyricsLine[]).map((line, i) => (
+            <div
+              key={i}
+              ref={el => { lineRefs.current[i] = el; }}
+              className={`fsa-lyric-line${i === activeIdx ? ' fsal-active' : i < activeIdx ? ' fsal-past' : ''}`}
+              data-time={line.time}
+            >
+              {line.words.length > 0
+                ? line.words.map((w, j) => (
+                    <span
+                      key={j}
+                      className="fsa-lyric-word"
+                      ref={el => {
+                        if (!wordRefs.current[i]) wordRefs.current[i] = [];
+                        if (el) wordRefs.current[i][j] = el;
+                      }}
+                    >{w.text}</span>
+                  ))
+                : (line.text || '\u00A0')}
+            </div>
+          ))
+        : lineSrc!.map((line, i) => (
+            <div
+              key={i}
+              ref={el => { lineRefs.current[i] = el; }}
+              className={`fsa-lyric-line${i === activeIdx ? ' fsal-active' : i < activeIdx ? ' fsal-past' : ''}`}
+              data-time={line.time}
+            >
+              {line.text || '\u00A0'}
+            </div>
+          ))
+      )}
+
+      {!hasSynced && plainLyrics && (
+        <div className="fsa-plain-lyrics">
+          {plainLyrics.split('\n').map((line, i) => (
+            <p key={i} className="fsa-plain-line">{line || '\u00A0'}</p>
+          ))}
+        </div>
+      )}
+
+      <div className="fsa-lyrics-bottom-pad" />
+    </div>
+  );
+});
+
+// ─── Classic 5-line rail lyrics (original "Rail" style) ──────────────────────
+// Slot height = 6vh = window.innerHeight * 0.06 — must match CSS height: 6vh.
+const FsLyricsRail = memo(function FsLyricsRail({ currentTrack }: { currentTrack: Track | null }) {
   const { syncedLines, wordLines, loading } = useLyrics(currentTrack);
   const staticOnly = useAuthStore(s => s.lyricsStaticOnly);
 
-  // Static-only hides the FS overlay entirely — the 5-line rail UX is inherently
-  // time-driven; without sync the pane view is the correct surface.
   const useWords  = !staticOnly && wordLines !== null && wordLines.length > 0;
   const lineSrc: LrcLine[] | null = useWords
     ? (wordLines as WordLyricsLine[]).map(l => ({ time: l.time, text: l.text }))
@@ -65,10 +244,8 @@ const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track 
     seek(parseFloat(target.dataset.time!) / duration);
   }, [duration, seek]);
 
-  // Per-word DOM refs keyed by line index; imperative updates skip re-renders
-  // on progress ticks. Only populated when `useWords` is true.
-  const wordRefs   = useRef<HTMLSpanElement[][]>([]);
-  const prevWord   = useRef<{ line: number; word: number }>({ line: -1, word: -1 });
+  const wordRefs = useRef<HTMLSpanElement[][]>([]);
+  const prevWord = useRef<{ line: number; word: number }>({ line: -1, word: -1 });
 
   useEffect(() => {
     wordRefs.current = [];
@@ -78,41 +255,27 @@ const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track 
   useEffect(() => {
     if (!useWords) return;
     const lines = wordLines as WordLyricsLine[];
-
     const apply = (time: number) => {
-      let lineIdx = -1;
-      for (let i = 0; i < lines.length; i++) {
-        if (time >= lines[i].time) lineIdx = i;
-        else break;
-      }
-      let wordIdx = -1;
-      if (lineIdx >= 0) {
-        const words = lines[lineIdx].words;
-        for (let j = 0; j < words.length; j++) {
-          if (time >= words[j].time) wordIdx = j;
-          else break;
-        }
+      let li = -1;
+      for (let i = 0; i < lines.length; i++) { if (time >= lines[i].time) li = i; else break; }
+      let wi = -1;
+      if (li >= 0) {
+        const ws = lines[li].words;
+        for (let j = 0; j < ws.length; j++) { if (time >= ws[j].time) wi = j; else break; }
       }
       const prev = prevWord.current;
-      if (prev.line === lineIdx && prev.word === wordIdx) return;
-      // Clear previous line's word classes.
-      if (prev.line !== lineIdx && prev.line >= 0 && wordRefs.current[prev.line]) {
-        for (const w of wordRefs.current[prev.line]) w.className = 'fs-lyric-word';
+      if (prev.line === li && prev.word === wi) return;
+      if (prev.line !== li && prev.line >= 0 && wordRefs.current[prev.line])
+        for (const w of wordRefs.current[prev.line]) w.className = 'fsr-lyric-word';
+      if (li >= 0 && wordRefs.current[li]) {
+        const ws = wordRefs.current[li];
+        for (let j = 0; j < ws.length; j++)
+          ws[j].className = j < wi ? 'fsr-lyric-word played' : j === wi ? 'fsr-lyric-word active' : 'fsr-lyric-word';
       }
-      if (lineIdx >= 0 && wordRefs.current[lineIdx]) {
-        const ws = wordRefs.current[lineIdx];
-        for (let j = 0; j < ws.length; j++) {
-          ws[j].className = j < wordIdx ? 'fs-lyric-word played'
-                          : j === wordIdx ? 'fs-lyric-word active'
-                          : 'fs-lyric-word';
-        }
-      }
-      prevWord.current = { line: lineIdx, word: wordIdx };
+      prevWord.current = { line: li, word: wi };
     };
-
     apply(usePlayerStore.getState().currentTime);
-    const unsub = usePlayerStore.subscribe(s => apply(s.currentTime));
-    return unsub;
+    return usePlayerStore.subscribe(s => apply(s.currentTime));
   }, [useWords, wordLines]);
 
   if (!currentTrack || loading || !hasSynced) return null;
@@ -120,9 +283,9 @@ const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track 
   const railY = (2 - Math.max(0, activeIdx)) * slotH.current;
 
   return (
-    <div className="fs-lyrics-overlay" aria-hidden="true">
+    <div className="fsr-lyrics-overlay" aria-hidden="true">
       <div
-        className="fs-lyrics-rail"
+        className="fsr-lyrics-rail"
         style={{ transform: `translateY(${railY}px)` }}
         onClick={handleLineClick}
       >
@@ -130,27 +293,25 @@ const FsLyrics = memo(function FsLyrics({ currentTrack }: { currentTrack: Track 
           ? (wordLines as WordLyricsLine[]).map((line, i) => (
               <div
                 key={i}
-                className={`fs-lyric-line${i === activeIdx ? ' fsl-active' : i < activeIdx ? ' fsl-past' : ''}`}
+                className={`fsr-lyric-line${i === activeIdx ? ' fsrl-active' : i < activeIdx ? ' fsrl-past' : ''}`}
                 data-time={line.time}
               >
                 {line.words.length > 0 ? line.words.map((w, j) => (
                   <span
                     key={j}
-                    className="fs-lyric-word"
+                    className="fsr-lyric-word"
                     ref={el => {
                       if (!wordRefs.current[i]) wordRefs.current[i] = [];
                       if (el) wordRefs.current[i][j] = el;
                     }}
-                  >
-                    {w.text}
-                  </span>
+                  >{w.text}</span>
                 )) : (line.text || '\u00A0')}
               </div>
             ))
           : lineSrc!.map((line, i) => (
               <div
                 key={i}
-                className={`fs-lyric-line${i === activeIdx ? ' fsl-active' : i < activeIdx ? ' fsl-past' : ''}`}
+                className={`fsr-lyric-line${i === activeIdx ? ' fsrl-active' : i < activeIdx ? ' fsrl-past' : ''}`}
                 data-time={line.time}
               >
                 {line.text || '\u00A0'}
@@ -316,6 +477,77 @@ const FsSeekbar = memo(function FsSeekbar({ duration }: { duration: number }) {
   );
 });
 
+// ─── Lyrics settings popover — shown above the mic button ────────────────────
+interface FsLyricsMenuProps {
+  open: boolean;
+  onClose: () => void;
+  accentColor: string | null;
+}
+const FsLyricsMenu = memo(function FsLyricsMenu({ open, onClose, accentColor }: FsLyricsMenuProps) {
+  const { t } = useTranslation();
+  const showLyrics  = useAuthStore(s => s.showFullscreenLyrics);
+  const lyricsStyle = useAuthStore(s => s.fsLyricsStyle);
+  const setLyrics   = useAuthStore(s => s.setShowFullscreenLyrics);
+  const setStyle    = useAuthStore(s => s.setFsLyricsStyle);
+  const panelRef    = useRef<HTMLDivElement>(null);
+
+  // Close on click outside the panel or on Escape.
+  // setTimeout(0) defers listener registration past the current click cycle
+  // so the button click that opens the panel doesn't immediately close it.
+  useEffect(() => {
+    if (!open) return;
+    const onKey   = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onMouse = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    const t = setTimeout(() => window.addEventListener('mousedown', onMouse), 0);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('mousedown', onMouse);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const accent = accentColor ?? 'var(--accent)';
+
+  return (
+    <div className="fslm-panel" ref={panelRef}>
+      {/* Toggle row */}
+      <div className="fslm-row">
+        <span className="fslm-label">{t('player.fsLyricsToggle')}</span>
+        <label className="toggle-switch" aria-label={t('player.fsLyricsToggle')}>
+          <input
+            type="checkbox"
+            checked={showLyrics}
+            onChange={e => setLyrics(e.target.checked)}
+          />
+          <span className="toggle-track" />
+        </label>
+      </div>
+
+      {/* Style selector — dimmed when lyrics are off */}
+      <div className={`fslm-style-row${showLyrics ? '' : ' fslm-disabled'}`}>
+        {(['rail', 'apple'] as const).map(style => (
+          <button
+            key={style}
+            className={`fslm-style-btn${lyricsStyle === style ? ' fslm-style-active' : ''}`}
+            onClick={() => setStyle(style)}
+            style={lyricsStyle === style ? { borderColor: accent, color: accent, background: `color-mix(in srgb, ${accent} 14%, transparent)` } : undefined}
+          >
+            <span className="fslm-style-name">{t(`settings.fsLyricsStyle${style.charAt(0).toUpperCase() + style.slice(1)}` as any)}</span>
+            <span className="fslm-style-desc">{t(`settings.fsLyricsStyle${style.charAt(0).toUpperCase() + style.slice(1)}Desc` as any)}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="fslm-arrow" />
+    </div>
+  );
+});
+
 // ─── Play/Pause button (isolated — subscribes to isPlaying only) ──────────────
 const FsPlayBtn = memo(function FsPlayBtn() {
   const { t } = useTranslation();
@@ -428,8 +660,10 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
 
   const portraitUrl = artistBgUrl || resolvedCoverUrl;
   const showFullscreenLyrics   = useAuthStore(s => s.showFullscreenLyrics);
+  const fsLyricsStyle          = useAuthStore(s => s.fsLyricsStyle);
   const showFsArtistPortrait   = useAuthStore(s => s.showFsArtistPortrait);
   const fsPortraitDim          = useAuthStore(s => s.fsPortraitDim);
+  const isAppleMode = showFullscreenLyrics && fsLyricsStyle === 'apple';
 
   // Pre-fetch next track's 300px cover into the IndexedDB cache.
   // Selector returns only the coverArt id, so it only re-runs on actual changes.
@@ -444,6 +678,10 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
     const key = coverArtCacheKey(nextCoverArt, 300);
     getCachedUrl(url, key).catch(() => {});
   }, [nextCoverArt]);
+
+  // Lyrics settings popover state
+  const [lyricsMenuOpen, setLyricsMenuOpen] = useState(false);
+  const closeLyricsMenu = useCallback(() => setLyricsMenuOpen(false), []);
 
   // Idle-fade system — hides controls after 3 s of inactivity
   const [isIdle, setIsIdle] = useState(false);
@@ -492,6 +730,7 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
       aria-modal="true"
       aria-label={t('player.fullscreen')}
       data-idle={isIdle}
+      data-lyrics={isAppleMode || undefined}
       onMouseMove={handleMouseMove}
       style={{
         ...(dynamicAccent ? { '--dynamic-fs-accent': dynamicAccent } : {}),
@@ -505,7 +744,7 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
         <div className="fs-mesh-blob fs-mesh-blob-b" />
       </div>
 
-      {/* Layer 1 — artist portrait, right half, object-fit: contain */}
+      {/* Layer 1 — artist portrait, right half; hidden in lyrics mode */}
       {showFsArtistPortrait && <FsPortrait url={portraitUrl} />}
 
       {/* Layer 2 — horizontal scrim: dark left → transparent right */}
@@ -516,8 +755,11 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
         <ChevronDown size={28} />
       </button>
 
-      {/* Lyrics overlay — upper-left quadrant, above cluster */}
-      {showFullscreenLyrics && <FsLyrics currentTrack={currentTrack} />}
+      {/* Lyrics: Apple Music-style (scrolling) or classic 5-line rail */}
+      {showFullscreenLyrics && fsLyricsStyle === 'apple' && <FsLyricsApple currentTrack={currentTrack} />}
+      {showFullscreenLyrics && fsLyricsStyle === 'apple' && <div className="fsa-fade-top"    aria-hidden="true" />}
+      {showFullscreenLyrics && fsLyricsStyle === 'apple' && <div className="fsa-fade-bottom" aria-hidden="true" />}
+      {showFullscreenLyrics && fsLyricsStyle === 'rail'  && <FsLyricsRail  currentTrack={currentTrack} />}
 
       {/* Layer 3 — info cluster, bottom-left */}
       <div className="fs-cluster">
@@ -575,15 +817,18 @@ export default function FullscreenPlayer({ onClose }: FullscreenPlayerProps) {
               <Heart size={14} fill={isStarred ? 'currentColor' : 'none'} />
             </button>
           )}
-          <button
-            className="fs-btn fs-btn-sm"
-            onClick={() => useAuthStore.getState().setShowFullscreenLyrics(!showFullscreenLyrics)}
-            aria-label={t('player.fsLyricsToggle')}
-            data-tooltip={t('player.fsLyricsToggle')}
-            style={{ color: showFullscreenLyrics ? (dynamicAccent ?? 'var(--accent)') : 'rgba(255,255,255,0.35)' }}
-          >
-            <MicVocal size={14} />
-          </button>
+          <div style={{ position: 'relative', zIndex: 9 }}>
+            <FsLyricsMenu open={lyricsMenuOpen} onClose={closeLyricsMenu} accentColor={dynamicAccent} />
+            <button
+              className={`fs-btn fs-btn-sm${lyricsMenuOpen ? ' active' : ''}`}
+              onClick={() => setLyricsMenuOpen(v => !v)}
+              aria-label={t('player.fsLyricsToggle')}
+              data-tooltip={lyricsMenuOpen ? undefined : t('player.fsLyricsToggle')}
+              style={{ color: showFullscreenLyrics ? (dynamicAccent ?? 'var(--accent)') : 'rgba(255,255,255,0.35)' }}
+            >
+              <MicVocal size={14} />
+            </button>
+          </div>
         </div>
 
       </div>

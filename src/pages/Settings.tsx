@@ -1886,6 +1886,40 @@ export default function Settings() {
 
           <section className="settings-section">
             <div className="settings-section-header">
+              <Music2 size={18} />
+              <h2>{t('settings.sidebarLyricsStyle')}</h2>
+            </div>
+            <div className="settings-card">
+              <div style={{ display: 'flex', gap: 8 }}>
+                {(['classic', 'apple'] as const).map(style => {
+                  const key = style === 'classic' ? 'Classic' : 'Apple';
+                  return (
+                    <button
+                      key={style}
+                      onClick={() => auth.setSidebarLyricsStyle(style)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        border: `2px solid ${auth.sidebarLyricsStyle === style ? 'var(--accent)' : 'var(--border)'}`,
+                        background: auth.sidebarLyricsStyle === style ? 'color-mix(in srgb, var(--accent) 12%, transparent)' : 'var(--bg-secondary)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        color: 'var(--text-primary)',
+                        transition: 'border-color 0.15s, background 0.15s',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{t(`settings.sidebarLyricsStyle${key}` as any)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{t(`settings.sidebarLyricsStyle${key}Desc` as any)}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
               <Sliders size={18} />
               <h2>{t('settings.seekbarStyle')}</h2>
             </div>

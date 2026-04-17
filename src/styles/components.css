@@ -2645,8 +2645,9 @@
 .lyrics-pane {
   flex: 1;
   overflow-y: auto;
+  /* scroll-behavior intentionally left to auto — JS drives smooth scroll imperatively */
   padding: 16px 16px 8px;
-  scroll-behavior: smooth;
+  scrollbar-width: thin;
 }
 
 .lyrics-pane-empty {
@@ -2667,57 +2668,71 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 0 16px;
+  padding: 24px 0 40px;   /* top pad lets first line start below centre, bottom lets last line scroll up */
 }
 
 .lyrics-line {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-muted);
   text-align: center;
   padding: 5px 8px;
   border-radius: 6px;
-  line-height: 1.6;
-  transition: color 0.25s;
+  line-height: 1.55;
   cursor: default;
+  transform-origin: center center;
+  /* All transitions are compositor-friendly */
+  transition:
+    color      350ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform  350ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity    350ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    text-shadow 350ms ease;
+  transform: scale(0.92);
+  opacity: 0.75;
 }
 
 .lyrics-line.completed {
   color: var(--text-muted);
+  transform: scale(0.88);
+  opacity: 0.55;
 }
 
 .lyrics-line.active {
-  color: var(--accent);
+  color: var(--text-primary);
+  font-weight: 700;
+  transform: scale(1);
+  opacity: 1;
+  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .lyrics-line:hover:not(.active) {
   color: var(--text-secondary);
+  opacity: 0.9;
 }
 
-/* Word-sync (karaoke) mode — per-word highlight inside the active line.
-   The parent `.lyrics-line.active` colour is overridden: only `.active` / `.played`
-   words carry accent tint, the remaining words stay at the line's base colour. */
+/* Word-sync: neutralise line colour so only individual words pop */
 .lyrics-word-synced .lyrics-line {
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 .lyrics-word-synced .lyrics-line.active {
-  color: var(--text-secondary); /* line colour neutralised; words decide */
+  color: var(--text-muted);
+  text-shadow: none;
 }
 .lyrics-word-synced .lyrics-line.completed {
   color: var(--text-muted);
 }
+
 .lyrics-word {
   display: inline;
-  transition: color 0.18s ease;
+  transition: color 160ms ease, text-shadow 160ms ease;
   color: inherit;
+  white-space: pre;
 }
 .lyrics-word.played {
-  color: var(--accent);
-  opacity: 0.65;
+  color: var(--text-secondary);
 }
 .lyrics-word.active {
-  color: var(--accent);
-  opacity: 1;
+  color: var(--text-primary);
   text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
@@ -3502,51 +3517,296 @@
   transition: opacity 200ms ease;
 }
 
-/* ── Lyrics overlay — upper-left quadrant, strictly 5 lines tall ── */
-/*    Slot = 6vh  →  5 × 6vh = 30vh. JS reads window.innerHeight * 0.06.       */
-.fs-lyrics-overlay {
-  position: absolute;
-  top: 15vh;          /* pushed down into the quadrant, clear of close button */
-  left: clamp(28px, 4vw, 64px);
-  right: 52%;         /* stay out of portrait area */
-  height: 30vh;       /* exactly 5 × 6vh — never grows, never overlaps cluster */
-  z-index: 3;
-  overflow: hidden;
-  pointer-events: none;
-  contain: layout style;   /* isolate reflows from rest of page */
+/* ── Apple Music-style fullscreen lyrics ─────────────────────────────────────
+   Full-screen scrollable list. Active line scrolls to ~35% from top.
+   User scroll pauses auto-scroll for 4 s. Word-sync via imperative DOM updates. */
 
-  /* Fade first and last slot (each 6/30 = 20% of container) */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    #000 20%,
-    #000 80%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    #000 20%,
-    #000 80%,
-    transparent 100%
-  );
+.fsa-lyrics-container {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  padding: 0 clamp(28px, 5vw, 72px);
+  /* pointer-events on children only — container itself scrollable */
+  pointer-events: auto;
 }
 
-/* Synced rail — smooth slide, no abrupt jumps */
-.fs-lyrics-rail {
+.fsa-lyrics-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Top padding — clears the close button (44 px) + some breathing room */
+.fsa-lyrics-top-pad {
+  height: 80px;
+  pointer-events: none;
+}
+
+/* Bottom padding — lets last line scroll to ~35% from top even on short tracks */
+.fsa-lyrics-bottom-pad {
+  height: 60vh;
+  pointer-events: none;
+}
+
+/* ── Line base styles ── */
+.fsa-lyric-line {
+  /* Fixed font-size avoids layout reflow on active-line switch.
+     Visual "size" difference is done via transform: scale below. */
+  font-size: clamp(1.4rem, 3.2vh, 3rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.28);
+  margin-bottom: 0.45em;
+  cursor: pointer;
+  user-select: none;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  transform-origin: left center;
+  /* All visual changes are compositor-friendly (color, text-shadow, transform) */
+  transition:
+    color      380ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    text-shadow 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform   380ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity     380ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: scale(0.9);
+  opacity: 0.9;
+}
+
+.fsa-lyric-line:hover {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Past: subtly smaller and more faded */
+.fsa-lyric-line.fsal-past {
+  color: rgba(255, 255, 255, 0.16);
+  transform: scale(0.86);
+  opacity: 0.7;
+}
+
+/* Active: full scale, bright, glowing — font-weight snaps (no layout cost on same size) */
+.fsa-lyric-line.fsal-active {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
+  transform: scale(1);
+  opacity: 1;
+  text-shadow:
+    0 0 48px color-mix(in srgb, var(--dynamic-fs-accent, var(--accent)), transparent 25%),
+    0 2px 18px rgba(0, 0, 0, 0.55);
+}
+
+/* Word-sync — active line dims base so only lit words pop */
+.fsa-lyric-line.fsal-active .fsa-lyric-word {
+  color: rgba(255, 255, 255, 0.28);
+  text-shadow: none;
+}
+
+.fsa-lyric-word {
+  display: inline;
+  white-space: pre;  /* preserve trailing spaces from lyricsplus tokens */
+  transition: color 160ms ease, text-shadow 160ms ease;
+}
+
+.fsa-lyric-line.fsal-active .fsa-lyric-word.played {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fsa-lyric-line.fsal-active .fsa-lyric-word.active {
+  color: #ffffff;
+  text-shadow: 0 0 32px color-mix(in srgb, var(--dynamic-fs-accent, var(--accent)), transparent 10%);
+}
+
+/* Plain (unsynced) lyrics */
+.fsa-plain-lyrics {
+  pointer-events: none;
+}
+
+.fsa-plain-line {
+  font-size: clamp(1.1rem, 2.5vh, 2.2rem);
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 0.2em;
+  word-break: break-word;
+}
+
+/* ── Gradient fades — top and bottom chrome ──────────────────────────────── */
+
+/* Top fade: covers close button area; pointer-events none so button stays clickable */
+.fsa-fade-top {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
+  height: 110px;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 6, 14, 0.92) 0%,
+    rgba(6, 6, 14, 0.5)  55%,
+    transparent 100%
+  );
+}
+
+/* Bottom fade: sits above lyrics (same z-index, later in DOM) but under cluster */
+.fsa-fade-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45vh;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(6, 6, 14, 0.55) 40%,
+    rgba(6, 6, 14, 0.88) 72%,
+    rgba(6, 6, 14, 0.96) 100%
+  );
+}
+
+/* ── Layout overrides when lyrics mode is active ────────────────────────── */
+
+/* Hide portrait — lyrics use the full width */
+.fs-player[data-lyrics] .fs-portrait-wrap {
+  display: none;
+}
+
+/* Scrim is redundant without the portrait — hide it */
+.fs-player[data-lyrics] .fs-scrim {
+  display: none;
+}
+
+/* ── Lyrics settings popover (above mic button) ─────────────────────────────── */
+
+/* The panel itself — floated above the mic button.
+   Rendered inside position:relative wrapper (the button wrapper).
+   z-index: 9 sits above the backdrop (8). */
+.fslm-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  width: 230px;
+  z-index: 9;
+  background: rgba(18, 18, 28, 0.88);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  animation: fslmIn 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: bottom right;
+}
+
+@keyframes fslmIn {
+  from { opacity: 0; transform: scale(0.88) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* Toggle row */
+.fslm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.fslm-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Style selector */
+.fslm-style-row {
+  display: flex;
+  gap: 7px;
+  transition: opacity 200ms ease;
+}
+
+.fslm-disabled .fslm-style-row,
+.fslm-style-row.fslm-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.fslm-style-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.fslm-style-btn:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fslm-style-active {
+  /* accent colors set inline via accentColor prop */
+}
+
+.fslm-style-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.fslm-style-desc {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+  opacity: 0.7;
+  line-height: 1.3;
+}
+
+/* Small arrow pointing down toward the button */
+.fslm-arrow {
+  position: absolute;
+  bottom: -6px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  background: rgba(18, 18, 28, 0.88);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transform: rotate(45deg);
+}
+
+/* ── Classic 5-line rail (Rail style) ───────────────────────────────────────── */
+
+.fsr-lyrics-overlay {
+  position: absolute;
+  top: 15vh;
+  left: clamp(28px, 4vw, 64px);
+  right: 52%;
+  height: 30vh;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout style;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+}
+
+.fsr-lyrics-rail {
+  position: absolute;
+  top: 0; left: 0; right: 0;
   will-change: transform;
   transition: transform 500ms ease-out;
 }
 
-/* Each lyric slot is exactly 6vh — matches JS window.innerHeight * 0.06.
-   Fixed height (not min-height) is intentional: keeps rail math correct
-   regardless of whether the text wraps or not. 2 wrapped lines of 2vh
-   font at 1.4 line-height = 5.6vh, comfortably inside the 6vh slot.      */
-.fs-lyric-line {
+.fsr-lyric-line {
   height: 6vh;
   display: flex;
   align-items: center;
@@ -3560,50 +3820,41 @@
   font-weight: 400;
   cursor: pointer;
   pointer-events: auto;
-  /* font-weight intentionally NOT transitioned — triggers layout reflow on every frame */
   transition: color 280ms ease, text-shadow 280ms ease, transform 280ms ease;
   transform-origin: left center;
   user-select: none;
 }
 
-.fs-lyric-line:hover {
-  color: rgba(255, 255, 255, 0.5);
-}
+.fsr-lyric-line:hover { color: rgba(255, 255, 255, 0.5); }
 
-.fs-lyric-line.fsl-past {
-  color: rgba(255, 255, 255, 0.1);
-}
+.fsr-lyric-line.fsrl-past { color: rgba(255, 255, 255, 0.1); }
 
-/* Active: emphasis via scale + glow; font-weight snaps instantly (no layout-reflow transition) */
-.fs-lyric-line.fsl-active {
+.fsr-lyric-line.fsrl-active {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 0 28px var(--accent-glow, var(--accent)), 0 1px 8px rgba(0, 0, 0, 0.6);
-  transform: scaleX(1.015);   /* subtle compositor-only emphasis, no layout cost */
+  transform: scaleX(1.015);
 }
 
-/* Fullscreen word-sync (karaoke). Parent .fsl-active base colour stays dim so
-   only the .active/.played words pop. */
-.fs-lyric-line.fsl-active .fs-lyric-word {
+.fsr-lyric-line.fsrl-active .fsr-lyric-word {
   color: rgba(255, 255, 255, 0.35);
   text-shadow: none;
 }
-.fs-lyric-word {
+
+.fsr-lyric-word {
   display: inline;
-  /* Preserve the trailing space the lyricsplus API embeds in each syllabus
-     token (`"Gina "`, `"dreams "`, …). Without this the flex formatting
-     context collapses it and words run together. */
   white-space: pre;
   transition: color 0.18s ease, text-shadow 0.18s ease;
 }
-.fs-lyric-line.fsl-active .fs-lyric-word.played {
-  color: rgba(255, 255, 255, 0.75);
-}
-.fs-lyric-line.fsl-active .fs-lyric-word.active {
+
+.fsr-lyric-line.fsrl-active .fsr-lyric-word.played { color: rgba(255, 255, 255, 0.75); }
+.fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
   color: #ffffff;
   text-shadow: 0 0 28px var(--accent-glow, var(--accent)), 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
+html.no-compositing .fsr-lyrics-overlay { -webkit-mask-image: none; mask-image: none; }
+html.no-compositing .fsr-lyrics-rail    { will-change: auto; }
 
 /* ── no-compositing overrides ─────────────────────────────────────────────────
    Applied only when WEBKIT_DISABLE_COMPOSITING_MODE=1 is set (Arch Linux etc).
@@ -3648,16 +3899,7 @@ html.no-compositing .fs-portrait-wrap::before {
   );
 }
 
-/* Lyrics overlay: just remove the fade — no replacement needed */
-html.no-compositing .fs-lyrics-overlay {
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-/* Lyrics rail: remove will-change */
-html.no-compositing .fs-lyrics-rail {
-  will-change: auto;
-}
+/* Lyrics fade overlays: gradient-only, no backdrop-filter — fine in no-compositing */
 
 /* Mesh blobs: stop animations — in software mode each frame composites surfaces
    larger than the screen (blob-a is 130 × 130 % of the viewport); on high-DPI

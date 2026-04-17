@@ -81,6 +81,10 @@ interface AuthState {
    */
   lyricsStaticOnly: boolean;
   showFullscreenLyrics: boolean;
+  /** 'rail' = classic 5-line sliding rail; 'apple' = full-screen scrolling list */
+  fsLyricsStyle: 'rail' | 'apple';
+  /** Sidebar lyrics scroll style: 'classic' = scrollIntoView center; 'apple' = scroll to 35% */
+  sidebarLyricsStyle: 'classic' | 'apple';
   showFsArtistPortrait: boolean;
   /** Portrait dimming 0–100 (percent), applied as CSS rgba alpha */
   fsPortraitDim: number;
@@ -212,6 +216,8 @@ interface AuthState {
   setLyricsMode: (v: 'standard' | 'lyricsplus') => void;
   setLyricsStaticOnly: (v: boolean) => void;
   setShowFullscreenLyrics: (v: boolean) => void;
+  setFsLyricsStyle: (v: 'rail' | 'apple') => void;
+  setSidebarLyricsStyle: (v: 'classic' | 'apple') => void;
   setShowFsArtistPortrait: (v: boolean) => void;
   setFsPortraitDim: (v: number) => void;
   setShowChangelogOnUpdate: (v: boolean) => void;
@@ -315,6 +321,8 @@ export const useAuthStore = create<AuthState>()(
       lyricsMode: 'standard',
       lyricsStaticOnly: false,
       showFullscreenLyrics: true,
+      fsLyricsStyle: 'apple',
+      sidebarLyricsStyle: 'apple',
       showFsArtistPortrait: true,
       fsPortraitDim: 28,
       showChangelogOnUpdate: true,
@@ -442,6 +450,8 @@ export const useAuthStore = create<AuthState>()(
       setLyricsMode: (v) => set({ lyricsMode: v }),
       setLyricsStaticOnly: (v) => set({ lyricsStaticOnly: v }),
       setShowFullscreenLyrics: (v: boolean) => set({ showFullscreenLyrics: v }),
+      setFsLyricsStyle: (v) => set({ fsLyricsStyle: v }),
+      setSidebarLyricsStyle: (v) => set({ sidebarLyricsStyle: v }),
       setShowFsArtistPortrait: (v: boolean) => set({ showFsArtistPortrait: v }),
       setFsPortraitDim: (v: number) => set({ fsPortraitDim: v }),
       setShowChangelogOnUpdate: (v) => set({ showChangelogOnUpdate: v }),
