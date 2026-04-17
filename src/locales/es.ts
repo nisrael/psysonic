@@ -861,6 +861,9 @@ export const esTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Pico {{pk}}',
+    sourceOffline: 'Reproducción desde la biblioteca sin conexión',
+    sourceHot: 'Reproducción desde la caché',
+    sourceStream: 'Reproducción desde la transmisión en red',
   },
   statistics: {
     title: 'Estadísticas',

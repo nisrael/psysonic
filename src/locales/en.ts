@@ -860,6 +860,9 @@ export const enTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Peak {{pk}}',
+    sourceOffline: 'Playing from offline library',
+    sourceHot: 'Playing from cache',
+    sourceStream: 'Playing from network stream',
   },
   statistics: {
     title: 'Statistics',

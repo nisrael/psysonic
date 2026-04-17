@@ -858,6 +858,9 @@ export const deTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Peak {{pk}}',
+    sourceOffline: 'Wiedergabe aus der Offline-Bibliothek',
+    sourceHot: 'Wiedergabe aus dem Cache',
+    sourceStream: 'Wiedergabe aus dem Netzwerkstream',
   },
   statistics: {
     title: 'Statistiken',

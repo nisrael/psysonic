@@ -1200,11 +1200,15 @@ impl SizedDecoder {
         })
     }
 
-    /// Build a decoder from any `MediaSource` (e.g. `RadioBuffer`).
+    /// Build a decoder from any `MediaSource` (e.g. track-stream or radio).
     /// Uses `enable_gapless: false` — live streams are not seekable; gapless
     /// trimming requires seeking to read the LAME/iTunSMPB end-padding info.
-    fn new_streaming(media: Box<dyn MediaSource>, format_hint: Option<&str>) -> Result<Self, String> {
-        // Larger read-ahead buffer for the live radio SPSC consumer — reduces
+    fn new_streaming(
+        media: Box<dyn MediaSource>,
+        format_hint: Option<&str>,
+        source_tag: &str,
+    ) -> Result<Self, String> {
+        // Larger read-ahead buffer for the live streaming SPSC consumer — reduces
         // read() call frequency into the ring buffer, easing I/O spikes.
         let mss = MediaSourceStream::new(media, MediaSourceStreamOptions { buffer_len: 512 * 1024 });
         let mut hint = Hint::new();
@@ -1212,16 +1216,16 @@ impl SizedDecoder {
         let format_opts = FormatOptions { enable_gapless: false, ..Default::default() };
         let probed = symphonia::default::get_probe()
             .format(&hint, mss, &format_opts, &MetadataOptions::default())
-            .map_err(|e| format!("radio: format probe failed: {e}"))?;
+            .map_err(|e| format!("{source_tag}: format probe failed: {e}"))?;
 
         let track = probed.format.tracks().iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
-            .ok_or_else(|| "radio: no audio track found".to_string())?;
+            .ok_or_else(|| format!("{source_tag}: no audio track found"))?;
         let track_id = track.id;
         // Live streams have no known total frame count → total_duration = None.
         let total_duration = None;
         let mut decoder = try_make_radio_decoder(&track.codec_params, &DecoderOptions::default())
-            .map_err(|e| format!("radio: codec init failed: {e}"))?;
+            .map_err(|e| format!("{source_tag}: codec init failed: {e}"))?;
         let mut format = probed.format;
 
         let mut errors = 0usize;
@@ -1235,12 +1239,12 @@ impl SizedDecoder {
                 Ok(d) => break d,
                 Err(symphonia::core::errors::Error::DecodeError(ref msg)) => {
                     errors += 1;
-                    eprintln!("[psysonic] radio init: dropped corrupt frame #{errors}: {msg}");
+                    eprintln!("[psysonic] {source_tag} init: dropped corrupt frame #{errors}: {msg}");
                     if errors >= MAX_CONSECUTIVE_DECODE_ERRORS {
-                        return Err("radio: too many consecutive decode errors".into());
+                        return Err(format!("{source_tag}: too many consecutive decode errors"));
                     }
                 }
-                Err(e) => return Err(format!("radio: decode error: {e}")),
+                Err(e) => return Err(format!("{source_tag}: decode error: {e}")),
             }
         };
         let spec = decoded.spec().to_owned();
@@ -2349,7 +2353,7 @@ pub async fn audio_play(
         ),
         PlayInput::Streaming { reader, format_hint } => {
             let decoder = tokio::task::spawn_blocking(move || {
-                SizedDecoder::new_streaming(Box::new(reader), format_hint.as_deref())
+                SizedDecoder::new_streaming(Box::new(reader), format_hint.as_deref(), "track-stream")
             })
             .await
             .map_err(|e| e.to_string())??;
@@ -3076,11 +3080,13 @@ pub fn audio_set_eq(gains: [f32; 10], enabled: bool, pre_gain: f32, state: State
 pub async fn audio_preload(
     url: String,
     duration_hint: f64,
+    app: AppHandle,
     state: State<'_, AudioEngine>,
 ) -> Result<(), String> {
     {
         let preloaded = state.preloaded.lock().unwrap();
         if preloaded.as_ref().is_some_and(|p| same_playback_target(&p.url, &url)) {
+            let _ = app.emit("audio:preload-ready", url.clone());
             return Ok(());
         }
     }
@@ -3102,7 +3108,9 @@ pub async fn audio_preload(
         response.bytes().await.map_err(|e| e.to_string())?.into()
     };
     let _ = duration_hint; // kept in API for compatibility
+    let url_for_emit = url.clone();
     *state.preloaded.lock().unwrap() = Some(PreloadedTrack { url, data });
+    let _ = app.emit("audio:preload-ready", url_for_emit);
     Ok(())
 }
 
@@ -3201,7 +3209,7 @@ pub async fn audio_play_radio(
 
     let hint_clone = fmt_hint.clone();
     let decoder = tokio::task::spawn_blocking(move || {
-        SizedDecoder::new_streaming(Box::new(reader), hint_clone.as_deref())
+        SizedDecoder::new_streaming(Box::new(reader), hint_clone.as_deref(), "radio")
     })
     .await
     .map_err(|e| e.to_string())??;

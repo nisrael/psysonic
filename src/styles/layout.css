@@ -1593,6 +1593,24 @@
   text-overflow: ellipsis;
   text-align: center;
   backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.queue-current-tech-source {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  opacity: 0.92;
+}
+
+.queue-current-tech-main {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .queue-divider {

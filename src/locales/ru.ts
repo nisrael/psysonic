@@ -906,6 +906,9 @@ export const ruTranslation = {
     rgTrack: 'Т {{db}} дБ',
     rgAlbum: 'А {{db}} дБ',
     rgPeak: 'Пик {{pk}}',
+    sourceOffline: 'Играет из офлайн-библиотеки',
+    sourceHot: 'Играет из кэша',
+    sourceStream: 'Играет из сетевого потока',
   },
   statistics: {
     title: 'Статистика',

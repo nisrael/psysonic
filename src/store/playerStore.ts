@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { showToast } from '../utils/toast';
 import { buildCoverArtUrl, buildStreamUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong, getSong, getRandomSongs, getSimilarSongs2, getTopSongs, InternetRadioStation, setRating } from '../api/subsonic';
-import { resolvePlaybackUrl } from '../utils/resolvePlaybackUrl';
+import { resolvePlaybackUrl, streamUrlTrackId, getPlaybackSourceKind, type PlaybackSourceKind } from '../utils/resolvePlaybackUrl';
 import { setDeferHotCachePrefetch } from '../utils/hotCacheGate';
 import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTrack, lastfmGetTrackLoved, lastfmGetAllLovedTracks } from '../api/lastfm';
 import { useAuthStore } from './authStore';
@@ -113,6 +113,13 @@ async function buildInfiniteQueueCandidates(
 interface PlayerState {
   currentTrack: Track | null;
   currentRadio: InternetRadioStation | null;
+  /** Latches the source used to start the currently playing track. */
+  currentPlaybackSource: PlaybackSourceKind | null;
+  /**
+   * Subsonic track id for which `audio_preload` finished into the engine RAM slot (see `audio:preload-ready`).
+   * Cleared after a successful `audio_play` consumed that preload, or when starting another track.
+   */
+  enginePreloadedTrackId: string | null;
   queue: Track[];
   queueIndex: number;
   isPlaying: boolean;
@@ -465,6 +472,16 @@ function handleAudioProgress(current_time: number, duration: number) {
     // Byte pre-download — runs early so bytes are cached by chain time.
     if ((shouldBytePreload || shouldBytePreloadForGaplessBackup) && nextTrack.id !== bytePreloadingId) {
       bytePreloadingId = nextTrack.id;
+      if (import.meta.env.DEV) {
+        console.info('[psysonic][preload-request]', {
+          nextTrackId: nextTrack.id,
+          nextUrl,
+          shouldBytePreload,
+          shouldBytePreloadForGaplessBackup,
+          remaining,
+          gaplessEnabled,
+        });
+      }
       invoke('audio_preload', { url: nextUrl, durationHint: nextTrack.duration }).catch(() => {});
     }
 
@@ -627,6 +644,20 @@ export function initAudioListeners(): () => void {
     listen<void>('audio:ended', () => handleAudioEnded()),
     listen<string>('audio:error', ({ payload }) => handleAudioError(payload)),
     listen<number>('audio:track_switched', ({ payload }) => handleAudioTrackSwitched(payload)),
+    listen<string>('audio:preload-ready', ({ payload }) => {
+      const tid = streamUrlTrackId(payload);
+      if (import.meta.env.DEV) {
+        console.info('[psysonic][preload-ready]', {
+          payload,
+          parsedTrackId: tid,
+          prevEnginePreloadedTrackId: usePlayerStore.getState().enginePreloadedTrackId,
+        });
+      }
+      if (tid) usePlayerStore.setState({ enginePreloadedTrackId: tid });
+      else if (import.meta.env.DEV) {
+        console.warn('[psysonic][preload-ready] could not parse track id from payload URL');
+      }
+    }),
   ];
 
   // Sync Last.fm loved tracks cache on startup.
@@ -823,6 +854,8 @@ export const usePlayerStore = create<PlayerState>()(
     (set, get) => ({
       currentTrack: null,
       currentRadio: null,
+      currentPlaybackSource: null,
+      enginePreloadedTrackId: null,
       queue: [],
       queueIndex: 0,
       isPlaying: false,
@@ -934,7 +967,15 @@ export const usePlayerStore = create<PlayerState>()(
         }
         isAudioPaused = false;
         if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; } seekTarget = null;
-        set({ isPlaying: false, progress: 0, buffered: 0, currentTime: 0, currentRadio: null });
+        set({
+          isPlaying: false,
+          progress: 0,
+          buffered: 0,
+          currentTime: 0,
+          currentRadio: null,
+          currentPlaybackSource: null,
+          enginePreloadedTrackId: null,
+        });
       },
 
       // ── playRadio ────────────────────────────────────────────────────────────
@@ -965,6 +1006,7 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           currentRadio: station,
           currentTrack: null,
+          currentPlaybackSource: null,
           queue: [],
           queueIndex: 0,
           isPlaying: true,
@@ -1005,6 +1047,25 @@ export const usePlayerStore = create<PlayerState>()(
         const newQueue = queue ?? state.queue;
         const idx = newQueue.findIndex(t => t.id === track.id);
 
+        const authState = useAuthStore.getState();
+        const url = resolvePlaybackUrl(track.id, authState.activeServerId ?? '');
+        const preloadedTrackId = get().enginePreloadedTrackId;
+        const keepPreloadHint = preloadedTrackId === track.id;
+        const playbackSourceHint = getPlaybackSourceKind(
+          track.id,
+          authState.activeServerId ?? '',
+          keepPreloadHint ? track.id : null,
+        );
+        if (import.meta.env.DEV) {
+          console.info('[psysonic][playTrack-source]', {
+            trackId: track.id,
+            resolvedUrl: url,
+            preloadedTrackId,
+            keepPreloadHint,
+            playbackSourceHint,
+          });
+        }
+
         // Set state immediately so the UI updates before the download completes.
         // currentRadio: null ensures the PlayerBar switches out of radio mode right away.
         set({
@@ -1018,9 +1079,10 @@ export const usePlayerStore = create<PlayerState>()(
           scrobbled: false,
           lastfmLoved: false,
           isPlaying: true, // optimistic — reverted on error
+          currentPlaybackSource: playbackSourceHint,
+          enginePreloadedTrackId: keepPreloadHint ? track.id : null,
         });
 
-        const authState = useAuthStore.getState();
         if (
           prevTrack
           && prevTrack.id !== track.id
@@ -1034,7 +1096,6 @@ export const usePlayerStore = create<PlayerState>()(
           );
         }
         setDeferHotCachePrefetch(true);
-        const url = resolvePlaybackUrl(track.id, authState.activeServerId ?? '');
         const replayGainDb = authState.replayGainEnabled
           ? (authState.replayGainMode === 'album' ? (track.replayGainAlbumDb ?? track.replayGainTrackDb) : track.replayGainTrackDb) ?? null
           : null;
@@ -1049,16 +1110,23 @@ export const usePlayerStore = create<PlayerState>()(
           fallbackDb: authState.replayGainFallbackDb,
           manual,
           hiResEnabled: authState.enableHiRes,
-        }).catch((err: unknown) => {
-          if (playGeneration !== gen) return;
-          setDeferHotCachePrefetch(false);
-          console.error('[psysonic] audio_play failed:', err);
-          set({ isPlaying: false });
-          setTimeout(() => {
+        })
+          .then(() => {
             if (playGeneration !== gen) return;
-            get().next(false);
-          }, 500);
-        });
+            if (keepPreloadHint) {
+              usePlayerStore.setState({ enginePreloadedTrackId: null });
+            }
+          })
+          .catch((err: unknown) => {
+            if (playGeneration !== gen) return;
+            setDeferHotCachePrefetch(false);
+            console.error('[psysonic] audio_play failed:', err);
+            set({ isPlaying: false });
+            setTimeout(() => {
+              if (playGeneration !== gen) return;
+              get().next(false);
+            }, 500);
+          });
 
         // Report Now Playing to Navidrome (for Live/getNowPlaying) + Last.fm
         const { nowPlayingEnabled: npEnabled, scrobblingEnabled: lfmEnabled, lastfmSessionKey: lfmKey } = useAuthStore.getState();

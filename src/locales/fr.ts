@@ -856,6 +856,9 @@ export const frTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Pic {{pk}}',
+    sourceOffline: 'Lecture depuis la bibliothèque hors ligne',
+    sourceHot: 'Lecture depuis le cache',
+    sourceStream: 'Lecture depuis le flux réseau',
   },
   statistics: {
     title: 'Statistiques',

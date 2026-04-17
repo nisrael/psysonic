@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Track, usePlayerStore, songToTrack } from '../store/playerStore';
-import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio } from 'lucide-react';
+import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio, HardDrive } from 'lucide-react';
 import { buildCoverArtUrl, coverArtCacheKey, getAlbum, getPlaylists, getPlaylist, updatePlaylist, deletePlaylist, SubsonicPlaylist } from '../api/subsonic';
 import { usePlaylistStore } from '../store/playlistStore';
 import { useCachedUrl } from './CachedImage';
@@ -251,6 +251,8 @@ export default function QueuePanel() {
   const enqueueAt = usePlayerStore(s => s.enqueueAt);
   const contextMenu = usePlayerStore(s => s.contextMenu);
 
+  const playbackSource = usePlayerStore(s => s.currentPlaybackSource);
+
   const crossfadeEnabled = useAuthStore(s => s.crossfadeEnabled);
   const crossfadeSecs = useAuthStore(s => s.crossfadeSecs);
   const gaplessEnabled = useAuthStore(s => s.gaplessEnabled);
@@ -450,8 +452,29 @@ export default function QueuePanel() {
             ].filter(Boolean) as string[];
             const rgParts = formatQueueReplayGainParts(currentTrack, t);
             const techLine = [...baseParts, ...rgParts].join(' · ');
-            if (!techLine) return null;
-            return <div className="queue-current-tech">{techLine}</div>;
+            if (!techLine && !playbackSource) return null;
+            return (
+              <div className="queue-current-tech">
+                {playbackSource && (
+                  <span
+                    className="queue-current-tech-source"
+                    data-tooltip={
+                      playbackSource === 'offline'
+                        ? t('queue.sourceOffline')
+                        : playbackSource === 'hot'
+                          ? t('queue.sourceHot')
+                          : t('queue.sourceStream')
+                    }
+                    aria-hidden
+                  >
+                    {playbackSource === 'offline' && <FolderOpen size={11} strokeWidth={2.25} />}
+                    {playbackSource === 'hot' && <HardDrive size={11} strokeWidth={2.25} />}
+                    {playbackSource === 'stream' && <Waves size={11} strokeWidth={2.25} />}
+                  </span>
+                )}
+                <span className="queue-current-tech-main">{techLine}</span>
+              </div>
+            );
           })()}
           <div className="queue-current-track-body">
             <div className="queue-current-cover">

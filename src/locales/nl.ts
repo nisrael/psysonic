@@ -855,6 +855,9 @@ export const nlTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Piek {{pk}}',
+    sourceOffline: 'Afspelen vanuit offlinebibliotheek',
+    sourceHot: 'Afspelen vanuit cache',
+    sourceStream: 'Afspelen vanuit netwerkstream',
   },
   statistics: {
     title: 'Statistieken',

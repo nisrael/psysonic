@@ -851,6 +851,9 @@ export const zhTranslation = {
     rgTrack: '曲目 {{db}} dB',
     rgAlbum: '专辑 {{db}} dB',
     rgPeak: '峰值 {{pk}}',
+    sourceOffline: '正在从离线库播放',
+    sourceHot: '正在从缓存播放',
+    sourceStream: '正在从网络流播放',
   },
   statistics: {
     title: '统计',

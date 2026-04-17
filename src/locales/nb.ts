@@ -855,6 +855,9 @@ export const nbTranslation = {
     rgTrack: 'T {{db}} dB',
     rgAlbum: 'A {{db}} dB',
     rgPeak: 'Topp {{pk}}',
+    sourceOffline: 'Spiller fra offlinebibliotek',
+    sourceHot: 'Spiller fra cache',
+    sourceStream: 'Spiller fra nettverksstrøm',
   },
   statistics: {
     title: 'Statistikk',
