@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **⚠️ Note for Windows users:** This is the last release with an unsigned Windows installer. We are waiting for our code signing certificate and hope it will arrive within the next few days. The installer does not contain a virus — any warnings from Windows SmartScreen or antivirus software are false positives. If you'd like to help cover the certificate costs, you can do so at [ko-fi.com/psychotoxic](https://ko-fi.com/psychotoxic) — completely voluntary, no pressure at all.
 
+## [1.34.13] - 2026-04-17
+
+### Added
+
+- **YouLyPlus — word-by-word synced lyrics (karaoke)** *(Issue [#172](https://github.com/Psychotoxical/psysonic/issues/172), by [@Psychotoxical](https://github.com/Psychotoxical))*: Settings → Lyrics now exposes a mode toggle between the existing **Standard** pipeline (Server tags + LRCLIB + Netease, configurable order) and a new **YouLyPlus** mode that fetches karaoke-style word-sync lyrics from the public `lyricsplus` aggregator (Apple Music / Spotify / Musixmatch / QQ Music). When a track has no YouLyPlus entry the app silently falls back to the Standard pipeline, so obscure titles still resolve. Active word highlighting in both the sidebar Lyrics pane and the Fullscreen Player. Five backend mirrors are tried on network failure; no API keys on the user side — subscription costs are borne by the lyricsplus operator.
+
+- **Static-only lyrics option** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: A new toggle renders synced lyrics as plain static text — no auto-scroll, no word highlighting — for users who prefer to read rather than follow. Works in both Standard and YouLyPlus modes.
+
+- **Discord Rich Presence — collapsible advanced options** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: The *Fetch covers from Apple Music* toggle and the *Custom text templates* form are now tucked under a single collapsible **Advanced Discord options** header (default collapsed) that only appears when Discord Rich Presence is enabled. Reduces vertical noise in Settings → General for the common case.
+
+### Fixed
+
+- **macOS — spurious microphone permission prompt (real fix)** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: The 1.34.12 attempt of removing `NSMicrophoneUsageDescription` did not actually suppress the prompt — on modern macOS, TCC fires at AudioUnit instantiation time, not at Info.plist level. Root cause: `cpal` (via `rodio`) instantiates an `AUHAL` output unit (`IOType::HalOutput`), which macOS classifies as input-capable even for playback-only apps. Psysonic now ships a vendored `cpal 0.15.3` at `src-tauri/patches/cpal-0.15.3/` wired via `[patch.crates-io]`; the patch forces `IOType::DefaultOutput` for all output streams, which never touches input and never triggers the mic dialog. **Tradeoff:** per-device output selection is a no-op on macOS — the stream always follows the system default (change via System Settings → Sound or the menu-bar speaker icon). Matches the behaviour of Apple Music and Spotify on macOS. Settings surfaces this with an explanatory notice on macOS and hides the device picker there.
+
+---
+
 ## [1.34.12] - 2026-04-17
 
 ### Added
