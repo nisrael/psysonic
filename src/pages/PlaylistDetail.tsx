@@ -69,6 +69,8 @@ interface SpotifyCsvTrack {
   artistNames: string[];  // Array of all artists for better matching
   albumName: string;
   isrc?: string;
+  score?: number;           // Match score when track not found
+  thresholdNeeded?: number; // Threshold required to pass
 }
 
 // Header mapping to canonical fields (supports English and Spanish)
@@ -651,6 +653,29 @@ export default function PlaylistDetail() {
     return 1 - dist / maxLen;
   };
 
+  // Calculate dynamic threshold based on match quality signals
+  const calculateDynamicThreshold = (
+    bestMatch: { score: number; artistScore: number },
+    secondMatch: { score: number } | undefined,
+    titleWords: number
+  ): number => {
+    const baseThreshold = 0.6; // Minimum acceptable score
+
+    // Bonus if there's a large gap between best and second match (clear winner)
+    const gap = secondMatch ? bestMatch.score - secondMatch.score : 0.3;
+    const gapBonus = gap > 0.15 ? 0.1 : gap > 0.08 ? 0.05 : 0;
+
+    // Short titles (< 3 words) are more ambiguous, need higher threshold
+    // Long titles (> 4 words) are more specific, can use lower threshold
+    const lengthBonus = titleWords > 4 ? 0.05 : titleWords < 3 ? -0.05 : 0;
+
+    // Strong artist match gives confidence to accept lower overall score
+    const artistBonus = bestMatch.artistScore > 0.85 ? 0.08 : bestMatch.artistScore > 0.7 ? 0.04 : 0;
+
+    // Calculate final threshold, clamp between 0.55 and 0.75
+    return Math.max(0.55, Math.min(0.75, baseThreshold - gapBonus - lengthBonus - artistBonus));
+  };
+
   // Process searches in batches to avoid overloading the server
   const processBatch = async <T, R>(
     items: T[],
@@ -703,9 +728,12 @@ export default function PlaylistDetail() {
           let attempts = 0;
           const maxAttempts = 2;
 
+          // Clean title before search to find matches despite version suffixes
+          const cleanTitleForSearch = cleanTrackTitle(track.trackName);
+
           while (attempts < maxAttempts) {
             try {
-              searchResult = await search(track.trackName, { songCount: 40, artistCount: 0, albumCount: 0 });
+              searchResult = await search(cleanTitleForSearch, { songCount: 40, artistCount: 0, albumCount: 0 });
               break;
             } catch (err) {
               attempts++;
@@ -716,7 +744,11 @@ export default function PlaylistDetail() {
           }
 
           if (!searchResult || searchResult.songs.length === 0) {
-            notFound.push(track);
+            notFound.push({
+              ...track,
+              score: 0,
+              thresholdNeeded: 0.6, // Minimum threshold, nothing to compare
+            });
             return null;
           }
 
@@ -756,11 +788,19 @@ export default function PlaylistDetail() {
             return { song: s, score: totalScore, titleScore, artistScore, albumScore, isrcMatch: false };
           }).sort((a, b) => b.score - a.score);
 
-          // Only accept if score is >= 0.7 (70% confidence)
+          // Use dynamic threshold based on match quality signals
           const bestMatch = scoredMatches[0];
+          const secondMatch = scoredMatches[1];
+          const titleWords = cleanCsvTitle.split(/\s+/).length;
 
-          if (bestMatch.score < 0.7) {
-            notFound.push({ ...track, albumName: `${track.albumName} (score: ${bestMatch.score.toFixed(2)})` });
+          const threshold = calculateDynamicThreshold(bestMatch, secondMatch, titleWords);
+
+          if (bestMatch.score < threshold) {
+            notFound.push({
+              ...track,
+              score: bestMatch.score,
+              thresholdNeeded: threshold,
+            });
             return null;
           }
 
@@ -1937,7 +1977,7 @@ function CsvImportReportModal({ report, playlistName, onClose }: CsvReportModalP
         `Total: ${report.total}, Added: ${report.added}, Duplicates: ${report.duplicates}, Not Found: ${report.notFound.length}${report.searchErrors ? `, Network Errors: ${report.searchErrors.length}` : ''}`,
         '',
         ...(report.duplicateTracks.length > 0 ? ['Duplicate Tracks (skipped):', ...report.duplicateTracks.map(t => `- ${t.trackName} by ${t.artistName}${t.albumName ? ` (${t.albumName})` : ''}`), ''] : []),
-        ...(report.notFound.length > 0 ? ['Not Found Tracks:', ...report.notFound.map(t => `- ${t.trackName} by ${t.artistName}${t.albumName ? ` (${t.albumName})` : ''}`), ''] : []),
+        ...(report.notFound.length > 0 ? ['Not Found Tracks:', ...report.notFound.map(t => `  - ${t.trackName} | ${t.artistName} | ${t.albumName || 'N/A'} | Score: ${(t.score ?? 0).toFixed(2)} (threshold: ${(t.thresholdNeeded ?? 0).toFixed(2)})`), ''] : []),
         ...(report.searchErrors && report.searchErrors.length > 0 ? ['Network Error Tracks (may retry):', ...report.searchErrors.map(t => `- ${t.trackName} by ${t.artistName}`), ''] : []),
       ].join('\n');
 
@@ -1956,10 +1996,10 @@ function CsvImportReportModal({ report, playlistName, onClose }: CsvReportModalP
       a.click();
       URL.revokeObjectURL(url);
 
-      showToast('Report downloaded successfully', 3000, 'info');
+      showToast(t('playlists.csvImportDownloadSuccess'), 3000, 'info');
     } catch (err) {
       console.error('Failed to download report:', err);
-      showToast('Failed to download report', 3000, 'error');
+      showToast(t('playlists.csvImportDownloadError'), 3000, 'error');
     }
   };
 
@@ -2044,6 +2084,16 @@ function CsvImportReportModal({ report, playlistName, onClose }: CsvReportModalP
                 <div key={i} style={{ padding: '8px 12px', borderBottom: '1px solid var(--surface)', fontSize: 13 }}>
                   <div style={{ fontWeight: 500 }}>{track.trackName}</div>
                   <div style={{ color: 'var(--text-muted)' }}>{track.artistName}</div>
+                  {track.albumName && <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>{track.albumName}</div>}
+                  {track.score !== undefined && (
+                    <div style={{ fontSize: 11, marginTop: 2 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Score: </span>
+                      <span style={{ color: track.score >= (track.thresholdNeeded ?? 0.6) ? '#4ade80' : '#f87171' }}>
+                        {track.score.toFixed(2)}
+                      </span>
+                      <span style={{ color: 'var(--text-muted)' }}> (threshold: {(track.thresholdNeeded ?? 0.6).toFixed(2)})</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

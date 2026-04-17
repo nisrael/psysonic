@@ -1037,6 +1037,8 @@ export const deTranslation = {
     csvImportNoValidTracks: 'Keine gültigen Titel in CSV-Datei gefunden',
     csvImportFailed: 'CSV-Import fehlgeschlagen',
     csvImportToast: '{{added}} hinzugefügt, {{notFound}} nicht gefunden, {{duplicates}} Duplikate',
+    csvImportDownloadSuccess: 'Bericht erfolgreich heruntergeladen',
+    csvImportDownloadError: 'Bericht konnte nicht heruntergeladen werden',
   },
   mostPlayed: {
     title: 'Meistgehört',

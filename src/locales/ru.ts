@@ -1093,6 +1093,8 @@ export const ruTranslation = {
     csvImportNoValidTracks: 'В CSV-файле не найдено действительных треков',
     csvImportFailed: 'Не удалось импортировать CSV-файл',
     csvImportToast: '{{added}} добавлено, {{notFound}} не найдено, {{duplicates}} дубликатов',
+    csvImportDownloadSuccess: 'Отчёт успешно скачан',
+    csvImportDownloadError: 'Не удалось скачать отчёт',
   },
   mostPlayed: {
     title: 'Популярное',

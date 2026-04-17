@@ -1028,6 +1028,8 @@ export const zhTranslation = {
     csvImportNoValidTracks: 'CSV 文件中未找到有效曲目',
     csvImportFailed: 'CSV 文件导入失败',
     csvImportToast: '{{added}} 已添加，{{notFound}} 未找到，{{duplicates}} 重复项',
+    csvImportDownloadSuccess: '报告下载成功',
+    csvImportDownloadError: '报告下载失败',
   },
   mostPlayed: {
     title: '最常播放',

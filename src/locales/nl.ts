@@ -1034,6 +1034,8 @@ export const nlTranslation = {
     csvImportNoValidTracks: 'Geen geldige nummers gevonden in CSV-bestand',
     csvImportFailed: 'CSV-import mislukt',
     csvImportToast: '{{added}} toegevoegd, {{notFound}} niet gevonden, {{duplicates}} duplicaten',
+    csvImportDownloadSuccess: 'Rapport succesvol gedownload',
+    csvImportDownloadError: 'Rapport downloaden mislukt',
   },
   mostPlayed: {
     title: 'Meest gespeeld',

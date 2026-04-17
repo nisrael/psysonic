@@ -1034,6 +1034,8 @@ export const nbTranslation = {
     csvImportNoValidTracks: 'Ingen gyldige spor funnet i CSV-filen',
     csvImportFailed: 'Kunne ikke importere CSV-fil',
     csvImportToast: '{{added}} lagt til, {{notFound}} ikke funnet, {{duplicates}} duplikater',
+    csvImportDownloadSuccess: 'Rapport lastet ned',
+    csvImportDownloadError: 'Kunne ikke laste ned rapport',
   },
   mostPlayed: {
     title: 'Mest spilt',

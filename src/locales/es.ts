@@ -1040,6 +1040,8 @@ export const esTranslation = {
     csvImportNoValidTracks: 'No se encontraron canciones válidas en el archivo CSV',
     csvImportFailed: 'Error al importar el archivo CSV',
     csvImportToast: '{{added}} agregadas, {{notFound}} no encontradas, {{duplicates}} duplicadas',
+    csvImportDownloadSuccess: 'Reporte descargado exitosamente',
+    csvImportDownloadError: 'Error al descargar el reporte',
   },
   mostPlayed: {
     title: 'Más Reproducidos',
