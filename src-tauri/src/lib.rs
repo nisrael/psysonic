@@ -1302,6 +1302,56 @@ async fn download_track_hot_cache(
     })
 }
 
+/// Promotes bytes captured by the manual streaming path into hot cache on disk.
+/// Returns `Ok(None)` when no completed stream cache is available for this URL.
+#[tauri::command]
+async fn promote_stream_cache_to_hot_cache(
+    track_id: String,
+    server_id: String,
+    url: String,
+    suffix: String,
+    custom_dir: Option<String>,
+    app: tauri::AppHandle,
+    state: tauri::State<'_, audio::AudioEngine>,
+) -> Result<Option<HotCacheDownloadResult>, String> {
+    let root = resolve_hot_cache_root(custom_dir, &app)?;
+    let cache_dir = root.join(&server_id);
+    tokio::fs::create_dir_all(&cache_dir)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let file_path = cache_dir.join(format!("{}.{}", track_id, suffix));
+    let path_str = file_path.to_string_lossy().to_string();
+
+    if file_path.exists() {
+        let size = tokio::fs::metadata(&file_path)
+            .await
+            .map(|m| m.len())
+            .unwrap_or(0);
+        return Ok(Some(HotCacheDownloadResult { path: path_str, size }));
+    }
+
+    let bytes = match audio::take_stream_completed_for_url(&state, &url) {
+        Some(b) => b,
+        None => return Ok(None),
+    };
+
+    let part_path = file_path.with_extension(format!("{suffix}.part"));
+    if let Err(e) = tokio::fs::write(&part_path, &bytes).await {
+        let _ = tokio::fs::remove_file(&part_path).await;
+        return Err(e.to_string());
+    }
+    tokio::fs::rename(&part_path, &file_path)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let size = tokio::fs::metadata(&file_path)
+        .await
+        .map(|m| m.len())
+        .unwrap_or(0);
+    Ok(Some(HotCacheDownloadResult { path: path_str, size }))
+}
+
 #[tauri::command]
 async fn get_hot_cache_size(custom_dir: Option<String>, app: tauri::AppHandle) -> u64 {
     fn dir_size(root: std::path::PathBuf) -> u64 {
@@ -2570,6 +2620,7 @@ pub fn run() {
             delete_offline_track,
             get_offline_cache_size,
             download_track_hot_cache,
+            promote_stream_cache_to_hot_cache,
             get_hot_cache_size,
             delete_hot_cache_track,
             purge_hot_cache,

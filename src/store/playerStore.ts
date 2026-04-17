@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { showToast } from '../utils/toast';
-import { buildCoverArtUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong, getSong, getRandomSongs, getSimilarSongs2, getTopSongs, InternetRadioStation, setRating } from '../api/subsonic';
+import { buildCoverArtUrl, buildStreamUrl, getPlayQueue, savePlayQueue, reportNowPlaying, scrobbleSong, SubsonicSong, getSong, getRandomSongs, getSimilarSongs2, getTopSongs, InternetRadioStation, setRating } from '../api/subsonic';
 import { resolvePlaybackUrl } from '../utils/resolvePlaybackUrl';
 import { setDeferHotCachePrefetch } from '../utils/hotCacheGate';
 import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTrack, lastfmGetTrackLoved, lastfmGetAllLovedTracks } from '../api/lastfm';
@@ -213,6 +213,10 @@ let seekDebounce: ReturnType<typeof setTimeout> | null = null;
 // Target time of the last seek — blocks stale Rust progress ticks until the
 // engine has actually caught up to the new position.
 let seekTarget: number | null = null;
+// Streaming fallback seek guard: coalesce repeated "not seekable" recoveries.
+let seekFallbackRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let seekFallbackTrackId: string | null = null;
+let seekFallbackRestartAt = 0;
 
 // Guard against rapid double-click play/pause sending two state transitions
 // to the Rust backend before it has finished the previous one.
@@ -324,6 +328,25 @@ function touchHotCacheOnPlayback(trackId: string, serverId: string) {
   useHotCacheStore.getState().touchPlayed(trackId, serverId);
 }
 
+async function promoteCompletedStreamToHotCache(track: Track, serverId: string, customDir: string | null) {
+  try {
+    const res = await invoke<{ path: string; size: number } | null>(
+      'promote_stream_cache_to_hot_cache',
+      {
+        trackId: track.id,
+        serverId,
+        url: buildStreamUrl(track.id),
+        suffix: track.suffix || 'mp3',
+        customDir,
+      },
+    );
+    if (!res || !res.path) return;
+    useHotCacheStore.getState().setEntry(track.id, serverId, res.path, res.size || 0);
+  } catch {
+    // best-effort promotion; normal hot-cache prefetch remains fallback
+  }
+}
+
 // Track ID that has already been sent to audio_chain_preload (gapless chain).
 let gaplessPreloadingId: string | null = null;
 // Track ID that has already been sent to audio_preload (byte pre-download).
@@ -380,22 +403,38 @@ function handleAudioProgress(current_time: number, duration: number) {
     }
   }
 
-  // Pre-buffer / pre-chain next track based on preload mode.
-  const { gaplessEnabled, preloadMode, preloadCustomSeconds, hotCacheEnabled } = useAuthStore.getState();
+  // Pre-buffer / pre-chain next track based on preload mode and crossfade.
+  const {
+    gaplessEnabled,
+    preloadMode,
+    preloadCustomSeconds,
+    hotCacheEnabled,
+    crossfadeEnabled,
+    crossfadeSecs,
+  } = useAuthStore.getState();
   const remaining = dur - current_time;
 
   // Gapless chain: always triggers at 30s regardless of preloadMode.
   const shouldChainGapless = gaplessEnabled && remaining < 30 && remaining > 0;
   // Byte pre-download: skip when Hot Cache is active (it already handles buffering).
-  const shouldBytePreload = !hotCacheEnabled && preloadMode !== 'off' && (
+  // Even with preload mode OFF, crossfade needs the next track bytes ready before
+  // we enter the fade window to avoid a hard gap after track boundary.
+  const shouldBytePreloadFromMode = preloadMode !== 'off' && (
     preloadMode === 'early'
       ? current_time >= 5
       : preloadMode === 'custom'
         ? remaining < preloadCustomSeconds && remaining > 0
         : remaining < 30 && remaining > 0 // balanced (default)
   );
+  const crossfadeWindowSecs = Math.max(8, Math.min(30, crossfadeSecs + 6));
+  const shouldBytePreloadForCrossfade =
+    !gaplessEnabled && crossfadeEnabled && remaining < crossfadeWindowSecs && remaining > 0;
+  const shouldBytePreload = !hotCacheEnabled && (
+    shouldBytePreloadFromMode ||
+    shouldBytePreloadForCrossfade
+  );
 
-  if (shouldChainGapless || shouldBytePreload) {
+  if (shouldChainGapless || shouldBytePreload || gaplessEnabled) {
     const { queue, queueIndex, repeatMode } = store;
     const nextIdx = queueIndex + 1;
     const nextTrack = repeatMode === 'one'
@@ -403,11 +442,28 @@ function handleAudioProgress(current_time: number, duration: number) {
       : (nextIdx < queue.length ? queue[nextIdx] : (repeatMode === 'all' ? queue[0] : null));
     if (!nextTrack || nextTrack.id === track.id) return;
 
+    // Gapless backup: keep next-track bytes ready even if chain/decode misses
+    // the boundary. Start earlier for larger files / slower conservative link.
+    const estBytes = (() => {
+      if (typeof nextTrack.size === 'number' && Number.isFinite(nextTrack.size) && nextTrack.size > 0) {
+        return nextTrack.size;
+      }
+      const kbps = typeof nextTrack.bitRate === 'number' && Number.isFinite(nextTrack.bitRate) && nextTrack.bitRate > 0
+        ? nextTrack.bitRate
+        : 320;
+      return Math.max(256 * 1024, Math.ceil((nextTrack.duration || 240) * kbps * 1000 / 8));
+    })();
+    const conservativeBytesPerSec = 300 * 1024; // ~2.4 Mbps effective throughput
+    const estDownloadSecs = estBytes / conservativeBytesPerSec;
+    const gaplessBackupWindowSecs = Math.max(15, Math.min(60, Math.ceil(estDownloadSecs * 1.4 + 8)));
+    const shouldBytePreloadForGaplessBackup =
+      gaplessEnabled && remaining < gaplessBackupWindowSecs && remaining > 0;
+
     const serverId = useAuthStore.getState().activeServerId ?? '';
     const nextUrl = resolvePlaybackUrl(nextTrack.id, serverId);
 
     // Byte pre-download — runs early so bytes are cached by chain time.
-    if (shouldBytePreload && nextTrack.id !== bytePreloadingId) {
+    if ((shouldBytePreload || shouldBytePreloadForGaplessBackup) && nextTrack.id !== bytePreloadingId) {
       bytePreloadingId = nextTrack.id;
       invoke('audio_preload', { url: nextUrl, durationHint: nextTrack.duration }).catch(() => {});
     }
@@ -912,6 +968,9 @@ export const usePlayerStore = create<PlayerState>()(
         isAudioPaused = false;
         gaplessPreloadingId = null; bytePreloadingId = null; // new track — allow fresh preload for next
         if (seekDebounce) { clearTimeout(seekDebounce); seekDebounce = null; } seekTarget = null;
+        if (seekFallbackRetryTimer) { clearTimeout(seekFallbackRetryTimer); seekFallbackRetryTimer = null; }
+        seekFallbackTrackId = null;
+        seekFallbackRestartAt = 0;
 
         // If a radio stream is active, stop it before the new track starts so
         // the PlayerBar clears radio mode immediately and the stream is released.
@@ -923,6 +982,7 @@ export const usePlayerStore = create<PlayerState>()(
         }
 
         const state = get();
+        const prevTrack = state.currentTrack;
         const newQueue = queue ?? state.queue;
         const idx = newQueue.findIndex(t => t.id === track.id);
 
@@ -942,6 +1002,18 @@ export const usePlayerStore = create<PlayerState>()(
         });
 
         const authState = useAuthStore.getState();
+        if (
+          prevTrack
+          && prevTrack.id !== track.id
+          && authState.hotCacheEnabled
+          && authState.activeServerId
+        ) {
+          void promoteCompletedStreamToHotCache(
+            prevTrack,
+            authState.activeServerId,
+            authState.hotCacheDownloadDir || null,
+          );
+        }
         setDeferHotCachePrefetch(true);
         const url = resolvePlaybackUrl(track.id, authState.activeServerId ?? '');
         const replayGainDb = authState.replayGainEnabled
@@ -1267,7 +1339,32 @@ export const usePlayerStore = create<PlayerState>()(
         seekDebounce = setTimeout(() => {
           seekDebounce = null;
           seekTarget = time;
-          invoke('audio_seek', { seconds: time }).catch(console.error);
+          invoke('audio_seek', { seconds: time }).catch((err: unknown) => {
+            const msg = String(err ?? '');
+            if (!msg.includes('not seekable')) {
+              console.error(err);
+              return;
+            }
+            // Streaming-start path can be non-seekable until the download finishes.
+            // Fallback: at most one restart burst per track, then keep only the latest retry seek.
+            const s = get();
+            if (!s.currentTrack) return;
+            const now = Date.now();
+            const sameBurst =
+              seekFallbackTrackId === s.currentTrack.id
+              && now - seekFallbackRestartAt < 600;
+            if (!sameBurst) {
+              seekFallbackTrackId = s.currentTrack.id;
+              seekFallbackRestartAt = now;
+              // Keep manual semantics (no crossfade) for seek recovery restarts.
+              s.playTrack(s.currentTrack, s.queue, true);
+            }
+            if (seekFallbackRetryTimer) clearTimeout(seekFallbackRetryTimer);
+            seekFallbackRetryTimer = setTimeout(() => {
+              seekFallbackRetryTimer = null;
+              invoke('audio_seek', { seconds: time }).catch(() => {});
+            }, 220);
+          });
         }, 100);
       },
 

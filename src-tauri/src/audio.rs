@@ -443,6 +443,14 @@ impl<S: Source<Item = f32>> Source for CountingSource<S> {
 /// Small enough that stale audio drains within a few seconds on reconnect;
 /// large enough to absorb brief network hiccups without stuttering.
 const RADIO_BUF_CAPACITY: usize = 256 * 1024;
+/// Minimum ring buffer for on-demand track streaming starts.
+const TRACK_STREAM_MIN_BUF_CAPACITY: usize = 1024 * 1024;
+/// Cap ring buffer growth when content-length is known.
+const TRACK_STREAM_MAX_BUF_CAPACITY: usize = 32 * 1024 * 1024;
+/// Max bytes kept in memory to promote a completed streamed track for fast replay/seek recovery.
+const TRACK_STREAM_PROMOTE_MAX_BYTES: usize = 64 * 1024 * 1024;
+/// Consecutive body-stream failures tolerated for track streaming before abort.
+const TRACK_STREAM_MAX_RECONNECTS: u32 = 3;
 /// Seconds at stall threshold while paused before hard-disconnect.
 const RADIO_HARD_PAUSE_SECS: u64 = 5;
 /// AudioStreamReader timeout: if no audio bytes arrive for this long → EOF.
@@ -580,6 +588,11 @@ struct AudioStreamReader {
     deadline: std::time::Instant,
     gen_arc: Arc<AtomicU64>,
     gen: u64,
+    /// Diagnostic tag for logs ("radio" or "track-stream").
+    source_tag: &'static str,
+    /// Optional completion marker: when true and the ring buffer is empty,
+    /// return EOF immediately (used by one-shot track streaming).
+    eof_when_empty: Option<Arc<AtomicBool>>,
     /// Monotonic byte offset for SeekFrom::Current(0) "tell" (Symphonia probe).
     pos: u64,
 }
@@ -615,14 +628,22 @@ impl Read for AudioStreamReader {
                     std::time::Instant::now() + Duration::from_secs(RADIO_READ_TIMEOUT_SECS);
                 return Ok(read);
             }
+            if self
+                .eof_when_empty
+                .as_ref()
+                .is_some_and(|done| done.load(Ordering::SeqCst))
+            {
+                return Ok(0);
+            }
             if std::time::Instant::now() >= self.deadline {
                 eprintln!(
-                    "[radio] AudioStreamReader: {}s without data → EOF",
+                    "[{}] AudioStreamReader: {}s without data → EOF",
+                    self.source_tag,
                     RADIO_READ_TIMEOUT_SECS
                 );
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::TimedOut,
-                    "radio: no data received",
+                    format!("{}: no data received", self.source_tag),
                 ));
             }
             std::thread::sleep(Duration::from_millis(RADIO_YIELD_MS));
@@ -636,7 +657,7 @@ impl Seek for AudioStreamReader {
             SeekFrom::Current(0) => Ok(self.pos),
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
-                "radio stream is not seekable",
+                format!("{} stream is not seekable", self.source_tag),
             )),
         }
     }
@@ -851,6 +872,132 @@ async fn radio_download_task(
     } // 'outer
 
     eprintln!("[radio] download task done ({bytes_total} B total)");
+}
+
+/// One-shot HTTP downloader for track streaming starts.
+///
+/// Pushes response chunks into an SPSC ring buffer consumed by `AudioStreamReader`.
+/// Terminates when:
+/// - generation changes (track superseded),
+/// - response stream ends, or
+/// - response emits an error.
+async fn track_download_task(
+    gen: u64,
+    gen_arc: Arc<AtomicU64>,
+    http_client: reqwest::Client,
+    url: String,
+    initial_response: reqwest::Response,
+    mut prod: HeapProducer<u8>,
+    done: Arc<AtomicBool>,
+    promote_cache_slot: Arc<Mutex<Option<PreloadedTrack>>>,
+) {
+    let mut downloaded: u64 = 0;
+    let mut reconnects: u32 = 0;
+    let mut next_response: Option<reqwest::Response> = Some(initial_response);
+    let mut capture: Vec<u8> = Vec::new();
+    let mut capture_over_limit = false;
+    'outer: loop {
+        let response = if let Some(r) = next_response.take() {
+            r
+        } else {
+            let mut req = http_client.get(&url);
+            if downloaded > 0 {
+                req = req.header(reqwest::header::RANGE, format!("bytes={downloaded}-"));
+            }
+            match req.send().await {
+                Ok(r) => r,
+                Err(err) => {
+                    if reconnects >= TRACK_STREAM_MAX_RECONNECTS {
+                        eprintln!(
+                            "[audio] streaming reconnect failed after {} attempts: {}",
+                            reconnects, err
+                        );
+                        done.store(true, Ordering::SeqCst);
+                        return;
+                    }
+                    reconnects += 1;
+                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    continue 'outer;
+                }
+            }
+        };
+        if downloaded > 0 && response.status() != reqwest::StatusCode::PARTIAL_CONTENT {
+            eprintln!(
+                "[audio] streaming reconnect returned {}, expected 206 for range resume",
+                response.status()
+            );
+            done.store(true, Ordering::SeqCst);
+            return;
+        }
+        if downloaded == 0 && !response.status().is_success() {
+            eprintln!("[audio] streaming HTTP {}", response.status());
+            done.store(true, Ordering::SeqCst);
+            return;
+        }
+
+        let mut byte_stream = response.bytes_stream();
+        while let Some(chunk) = byte_stream.next().await {
+            if gen_arc.load(Ordering::SeqCst) != gen {
+                done.store(true, Ordering::SeqCst);
+                return;
+            }
+            let chunk = match chunk {
+                Ok(c) => c,
+                Err(e) => {
+                    if reconnects >= TRACK_STREAM_MAX_RECONNECTS {
+                        eprintln!(
+                            "[audio] streaming download error after {} reconnects: {}",
+                            reconnects, e
+                        );
+                        done.store(true, Ordering::SeqCst);
+                        return;
+                    }
+                    reconnects += 1;
+                    eprintln!(
+                        "[audio] streaming download error (attempt {}/{}): {} — reconnecting",
+                        reconnects,
+                        TRACK_STREAM_MAX_RECONNECTS,
+                        e
+                    );
+                    next_response = None;
+                    continue 'outer;
+                }
+            };
+            reconnects = 0;
+            let mut offset = 0;
+            while offset < chunk.len() {
+                if gen_arc.load(Ordering::SeqCst) != gen {
+                    done.store(true, Ordering::SeqCst);
+                    return;
+                }
+                let pushed = prod.push_slice(&chunk[offset..]);
+                if pushed == 0 {
+                    tokio::time::sleep(Duration::from_millis(5)).await;
+                } else {
+                    if !capture_over_limit {
+                        if capture.len().saturating_add(pushed) <= TRACK_STREAM_PROMOTE_MAX_BYTES {
+                            let from = offset;
+                            let to = offset + pushed;
+                            capture.extend_from_slice(&chunk[from..to]);
+                        } else {
+                            capture.clear();
+                            capture_over_limit = true;
+                        }
+                    }
+                    offset += pushed;
+                    downloaded += pushed as u64;
+                }
+            }
+        }
+        if !capture_over_limit && !capture.is_empty() {
+            *promote_cache_slot.lock().unwrap() = Some(PreloadedTrack {
+                url: url.clone(),
+                data: capture,
+            });
+        }
+        done.store(true, Ordering::SeqCst);
+        return;
+    }
 }
 
 fn content_type_to_hint(ct: &str) -> Option<String> {
@@ -1429,11 +1576,70 @@ fn build_source(
     })
 }
 
+/// Streaming variant of `build_source`: uses a live `SizedDecoder` source
+/// (non-seekable) and skips iTunSMPB parsing, but preserves the same EQ/fade/
+/// counting wrappers and output metadata.
+fn build_streaming_source(
+    decoder: SizedDecoder,
+    duration_hint: f64,
+    eq_gains: Arc<[AtomicU32; 10]>,
+    eq_enabled: Arc<AtomicBool>,
+    eq_pre_gain: Arc<AtomicU32>,
+    done_flag: Arc<AtomicBool>,
+    fade_in_dur: Duration,
+    sample_counter: Arc<AtomicU64>,
+    target_rate: u32,
+) -> Result<BuiltSource, String> {
+    let sample_rate = decoder.sample_rate();
+    let channels = decoder.channels();
+
+    // For streaming starts prefer server-provided duration when available.
+    let effective_dur = if duration_hint > 1.0 {
+        duration_hint
+    } else {
+        decoder
+            .total_duration()
+            .map(|d| d.as_secs_f64())
+            .unwrap_or(duration_hint)
+    };
+
+    let converted = decoder.convert_samples::<f32>();
+    let dyn_src: DynSource = if target_rate > 0 && sample_rate != target_rate {
+        DynSource::new(UniformSourceIterator::new(converted, channels, target_rate))
+    } else {
+        DynSource::new(converted)
+    };
+
+    let output_rate = if target_rate > 0 && sample_rate != target_rate {
+        target_rate
+    } else {
+        sample_rate
+    };
+
+    let fadeout_trigger = Arc::new(AtomicBool::new(false));
+    let fadeout_samples = Arc::new(AtomicU64::new(0));
+
+    let eq_src = EqSource::new(dyn_src, eq_gains, eq_enabled, eq_pre_gain);
+    let fade_in = EqualPowerFadeIn::new(eq_src, fade_in_dur);
+    let fade_out = TriggeredFadeOut::new(fade_in, fadeout_trigger.clone(), fadeout_samples.clone());
+    let notifying = NotifyingSource::new(fade_out, done_flag);
+    let counting = CountingSource::new(notifying, sample_counter);
+
+    Ok(BuiltSource {
+        source: counting,
+        duration_secs: effective_dur,
+        output_rate,
+        output_channels: channels,
+        fadeout_trigger,
+        fadeout_samples,
+    })
+}
+
 // ─── Engine state ─────────────────────────────────────────────────────────────
 
 pub(crate) struct PreloadedTrack {
-    url: String,
-    data: Vec<u8>,
+    pub(crate) url: String,
+    pub(crate) data: Vec<u8>,
 }
 
 /// Info about the track that has been appended (chained) to the current Sink
@@ -1474,6 +1680,9 @@ pub struct AudioEngine {
     pub eq_enabled: Arc<AtomicBool>,
     pub eq_pre_gain: Arc<AtomicU32>,
     pub(crate) preloaded: Arc<Mutex<Option<PreloadedTrack>>>,
+    /// Last fully downloaded manual-stream track bytes (same playback identity),
+    /// used to recover seek/replay without waiting for network again.
+    pub(crate) stream_completed_cache: Arc<Mutex<Option<PreloadedTrack>>>,
     pub crossfade_enabled: Arc<AtomicBool>,
     pub crossfade_secs: Arc<AtomicU32>,
     pub fading_out_sink: Arc<Mutex<Option<Sink>>>,
@@ -1731,6 +1940,7 @@ pub fn create_engine() -> (AudioEngine, std::thread::JoinHandle<()>) {
         eq_enabled: Arc::new(AtomicBool::new(false)),
         eq_pre_gain: Arc::new(AtomicU32::new(0f32.to_bits())),
         preloaded: Arc::new(Mutex::new(None)),
+        stream_completed_cache: Arc::new(Mutex::new(None)),
         crossfade_enabled: Arc::new(AtomicBool::new(false)),
         crossfade_secs: Arc::new(AtomicU32::new(3.0f32.to_bits())),
         fading_out_sink: Arc::new(Mutex::new(None)),
@@ -1782,6 +1992,18 @@ fn same_playback_target(a_url: &str, b_url: &str) -> bool {
     }
 }
 
+/// Take (consume) completed manual-stream bytes if they correspond to `url`.
+pub(crate) fn take_stream_completed_for_url(state: &AudioEngine, url: &str) -> Option<Vec<u8>> {
+    let mut guard = state.stream_completed_cache.lock().unwrap();
+    if guard
+        .as_ref()
+        .is_some_and(|p| same_playback_target(&p.url, url))
+    {
+        return guard.take().map(|p| p.data);
+    }
+    None
+}
+
 /// Fetch track bytes from the preload cache or via HTTP.
 async fn fetch_data(
     url: &str,
@@ -1789,7 +2011,20 @@ async fn fetch_data(
     gen: u64,
     app: &AppHandle,
 ) -> Result<Option<Vec<u8>>, String> {
-    // Check preload cache first.
+    // Check completed streamed-track cache first (manual streaming fallback cache).
+    let streamed_cached = {
+        let mut streamed = state.stream_completed_cache.lock().unwrap();
+        if streamed.as_ref().is_some_and(|p| same_playback_target(&p.url, url)) {
+            streamed.take().map(|p| p.data)
+        } else {
+            None
+        }
+    };
+    if let Some(data) = streamed_cached {
+        return Ok(Some(data));
+    }
+
+    // Check preload cache next.
     let cached = {
         let mut preloaded = state.preloaded.lock().unwrap();
         if preloaded.as_ref().is_some_and(|p| same_playback_target(&p.url, url)) {
@@ -1958,15 +2193,104 @@ pub async fn audio_play(
         old.stop();
     }
 
-    // Fetch bytes (preload cache) unless we reused the chained download above.
-    let data = if let Some(d) = reuse_chained_bytes {
-        Some(d)
+    // Extract format hint from URL for better symphonia probing.
+    let format_hint = url.rsplit('.').next()
+        .and_then(|ext| ext.split('?').next())
+        .map(|s| s.to_lowercase());
+
+    enum PlayInput {
+        Bytes(Vec<u8>),
+        Streaming {
+            reader: AudioStreamReader,
+            format_hint: Option<String>,
+        },
+    }
+
+    // Data source selection:
+    // 1) Reused chained bytes (manual skip onto pre-chained track)
+    // 2) Manual uncached remote start -> stream immediately (no full prefetch)
+    // 3) Existing byte path (preloaded/offline/full HTTP fetch)
+    let play_input = if let Some(d) = reuse_chained_bytes {
+        PlayInput::Bytes(d)
     } else {
-        fetch_data(&url, &state, gen, &app).await?
-    };
-    let data = match data {
-        Some(d) => d,
-        None => return Ok(()), // superseded while downloading
+        let stream_cache_hit = {
+            let streamed = state.stream_completed_cache.lock().unwrap();
+            streamed
+                .as_ref()
+                .is_some_and(|p| same_playback_target(&p.url, &url))
+        };
+        let preloaded_hit = {
+            let preloaded = state.preloaded.lock().unwrap();
+            preloaded
+                .as_ref()
+                .is_some_and(|p| same_playback_target(&p.url, &url))
+        };
+        let is_local = url.starts_with("psysonic-local://");
+
+        if manual && !stream_cache_hit && !preloaded_hit && !is_local {
+            let response = state.http_client.get(&url).send().await.map_err(|e| e.to_string())?;
+            if !response.status().is_success() {
+                if state.generation.load(Ordering::SeqCst) != gen {
+                    return Ok(()); // superseded
+                }
+                let status = response.status().as_u16();
+                let msg = format!("HTTP {status}");
+                app.emit("audio:error", &msg).ok();
+                return Err(msg);
+            }
+
+            let stream_hint = content_type_to_hint(
+                response
+                    .headers()
+                    .get("content-type")
+                    .and_then(|v| v.to_str().ok())
+                    .unwrap_or(""),
+            ).or_else(|| format_hint.clone());
+
+            let buffer_cap = response
+                .content_length()
+                .map(|n| n as usize)
+                .unwrap_or(TRACK_STREAM_MIN_BUF_CAPACITY)
+                .clamp(TRACK_STREAM_MIN_BUF_CAPACITY, TRACK_STREAM_MAX_BUF_CAPACITY);
+            let rb = HeapRb::<u8>::new(buffer_cap);
+            let (prod, cons) = rb.split();
+            let done = Arc::new(AtomicBool::new(false));
+            tokio::spawn(track_download_task(
+                gen,
+                state.generation.clone(),
+                state.http_client.clone(),
+                url.clone(),
+                response,
+                prod,
+                done.clone(),
+                state.stream_completed_cache.clone(),
+            ));
+
+            // Track streaming has no reconnect producer; keep an empty channel.
+            let (_new_cons_tx, new_cons_rx) = std::sync::mpsc::channel::<HeapConsumer<u8>>();
+            let reader = AudioStreamReader {
+                cons,
+                new_cons_rx: Mutex::new(new_cons_rx),
+                deadline: std::time::Instant::now()
+                    + Duration::from_secs(RADIO_READ_TIMEOUT_SECS),
+                gen_arc: state.generation.clone(),
+                gen,
+                source_tag: "track-stream",
+                eof_when_empty: Some(done),
+                pos: 0,
+            };
+            PlayInput::Streaming {
+                reader,
+                format_hint: stream_hint,
+            }
+        } else {
+            let data = fetch_data(&url, &state, gen, &app).await?;
+            let data = match data {
+                Some(d) => d,
+                None => return Ok(()), // superseded while downloading
+            };
+            PlayInput::Bytes(data)
+        }
     };
 
     if state.generation.load(Ordering::SeqCst) != gen {
@@ -2009,23 +2333,40 @@ pub async fn audio_play(
     // Always 0 — no application-level resampling. Rodio handles conversion to
     // the output device rate internally; we let every track play at its native rate.
     let target_rate: u32 = 0;
-    // Extract format hint from URL for better symphonia probing.
-    let format_hint = url.rsplit('.').next()
-        .and_then(|ext| ext.split('?').next())
-        .map(|s| s.to_lowercase());
-    let built = build_source(
-        data,
-        duration_hint,
-        state.eq_gains.clone(),
-        state.eq_enabled.clone(),
-        state.eq_pre_gain.clone(),
-        done_flag.clone(),
-        fade_in_dur,
-        state.samples_played.clone(),
-        target_rate,
-        format_hint.as_deref(),
-        hi_res_enabled,
-    ).map_err(|e| { app.emit("audio:error", &e).ok(); e })?;
+    let built = match play_input {
+        PlayInput::Bytes(data) => build_source(
+            data,
+            duration_hint,
+            state.eq_gains.clone(),
+            state.eq_enabled.clone(),
+            state.eq_pre_gain.clone(),
+            done_flag.clone(),
+            fade_in_dur,
+            state.samples_played.clone(),
+            target_rate,
+            format_hint.as_deref(),
+            hi_res_enabled,
+        ),
+        PlayInput::Streaming { reader, format_hint } => {
+            let decoder = tokio::task::spawn_blocking(move || {
+                SizedDecoder::new_streaming(Box::new(reader), format_hint.as_deref())
+            })
+            .await
+            .map_err(|e| e.to_string())??;
+
+            build_streaming_source(
+                decoder,
+                duration_hint,
+                state.eq_gains.clone(),
+                state.eq_enabled.clone(),
+                state.eq_pre_gain.clone(),
+                done_flag.clone(),
+                fade_in_dur,
+                state.samples_played.clone(),
+                target_rate,
+            )
+        }
+    }.map_err(|e| { app.emit("audio:error", &e).ok(); e })?;
     let source = built.source;
     let duration_secs = built.duration_secs;
     let output_rate = built.output_rate;
@@ -2392,8 +2733,9 @@ fn spawn_progress_task(
         let mut samples_played = samples_played;
 
         loop {
-            // 500 ms tick — frontend interpolates visually at 60 fps via rAF.
-            tokio::time::sleep(Duration::from_millis(500)).await;
+            // 100 ms tick keeps near-end detection timely for crossfade/gapless
+            // handoff while frontend still interpolates smoothly via rAF.
+            tokio::time::sleep(Duration::from_millis(100)).await;
 
             if gen_counter.load(Ordering::SeqCst) != gen {
                 break;
@@ -2596,6 +2938,7 @@ pub async fn audio_resume(state: State<'_, AudioEngine>, app: AppHandle) -> Resu
 pub fn audio_stop(state: State<'_, AudioEngine>) {
     state.generation.fetch_add(1, Ordering::SeqCst);
     *state.chained_info.lock().unwrap() = None;
+    *state.stream_completed_cache.lock().unwrap() = None;
     // Drop RadioLiveState → triggers Drop → task.abort() → TCP released.
     drop(state.radio_state.lock().unwrap().take());
     let mut cur = state.current.lock().unwrap();
@@ -2849,6 +3192,8 @@ pub async fn audio_play_radio(
         deadline: std::time::Instant::now() + Duration::from_secs(RADIO_READ_TIMEOUT_SECS),
         gen_arc:  state.generation.clone(),
         gen,
+        source_tag: "radio",
+        eof_when_empty: None,
         pos: 0,
     };
 
