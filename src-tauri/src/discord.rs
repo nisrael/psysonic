@@ -216,6 +216,16 @@ fn try_connect() -> Option<DiscordIpcClient> {
     Some(client)
 }
 
+/// Apply a template string, replacing placeholders with actual values.
+/// Supported placeholders: {title}, {artist}, {album}
+fn apply_template(template: &str, title: &str, artist: &str, album: Option<&str>) -> String {
+    let album_text = album.unwrap_or("");
+    template
+        .replace("{title}", title)
+        .replace("{artist}", artist)
+        .replace("{album}", album_text)
+}
+
 /// Update the Discord Rich Presence activity.
 ///
 /// - `is_playing`: true = playing (timer shown), false = paused (no timer, state shows "Paused").
@@ -225,6 +235,12 @@ fn try_connect() -> Option<DiscordIpcClient> {
 /// - `fetch_itunes_covers`: if true, fetch artwork from the iTunes Search API when no
 ///   `cover_art_url` is provided. If false (default), fall back to the Psysonic app icon
 ///   without making any external request — required for privacy opt-in.
+/// - `details_template`: template string for the "details" field. Default: "{artist} - {title}".
+///   Supported placeholders: {title}, {artist}, {album}
+/// - `state_template`: template string for the "state" field. Default: "{album}".
+///   Supported placeholders: {title}, {artist}, {album}
+/// - `large_text_template`: template string for the large image tooltip. Default: "{album}".
+///   Supported placeholders: {title}, {artist}, {album}
 #[tauri::command]
 pub async fn discord_update_presence(
     state: tauri::State<'_, DiscordState>,
@@ -235,6 +251,9 @@ pub async fn discord_update_presence(
     elapsed_secs: Option<f64>,
     cover_art_url: Option<String>,
     fetch_itunes_covers: bool,
+    details_template: Option<String>,
+    state_template: Option<String>,
+    large_text_template: Option<String>,
 ) -> Result<(), String> {
     // Resolve artwork on a dedicated blocking thread — reqwest::blocking must not
     // run on the Tokio async executor directly.
@@ -273,62 +292,54 @@ pub async fn discord_update_presence(
 
     let client = guard.as_mut().unwrap();
 
-    // Discord RPC only exposes two visible text rows (details + state).
-    // The application name "Psysonic" is shown automatically by Discord as the
-    // header line. Album goes into large_text — visible as a hover tooltip on
-    // the cover art icon.
-    let large_text = album.as_deref().unwrap_or("Psysonic");
+    // Apply templates for the three configurable text fields.
+    let details_str = details_template.as_deref().unwrap_or("{artist} - {title}");
+    let details_text = apply_template(details_str, &title, &artist, album.as_deref());
+
+    let state_str = state_template.as_deref().unwrap_or("{album}");
+    let state_text = apply_template(state_str, &title, &artist, album.as_deref());
+
+    let large_text_str = large_text_template.as_deref().unwrap_or("{album}");
+    let large_text = apply_template(large_text_str, &title, &artist, album.as_deref());
 
     let assets = if let Some(ref url) = artwork_url {
         Assets::new()
             .large_image(url.as_str())
-            .large_text(large_text)
+            .large_text(&large_text)
     } else {
         // Fallback to default Psysonic icon
         Assets::new()
             .large_image("psysonic")
-            .large_text(large_text)
+            .large_text(&large_text)
     };
 
-    // When paused, show "Paused" as the state text (replaces artist name).
-    let state_text: String = if is_playing {
-        artist.clone()
-    } else {
-        "Paused".to_string()
-    };
+    // When paused: clear activity completely to avoid any timer issues
+    // When playing: show full activity with timer
+    if !is_playing {
+        if client.clear_activity().is_err() {
+            *guard = None;
+        }
+        return Ok(());
+    }
 
-    // ActivityType::Listening causes the Discord client to auto-start a running
-    // timer from "now" even when no timestamps are provided. Switch to Playing
-    // when paused — Playing only shows a timer when timestamps are explicitly set.
-    let activity_type = if is_playing {
-        ActivityType::Listening
-    } else {
-        ActivityType::Playing
-    };
-
-    let mut activity = Activity::new()
-        .activity_type(activity_type)
-        .details(&title)
+    // Only reach here when playing
+    let activity = Activity::new()
+        .activity_type(ActivityType::Listening)
+        .details(&details_text)
         .state(&state_text)
-        .assets(assets);
-
-    // Start timestamp: Discord auto-counts up from this point. We back-calculate
-    // it so the displayed elapsed time matches the actual playback position.
-    // Only set when playing — Playing type without timestamps shows no timer.
-    if is_playing {
-        if let Some(elapsed) = elapsed_secs {
+        .assets(assets)
+        .timestamps(if let Some(elapsed) = elapsed_secs {
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs() as i64;
             let start = now - elapsed.floor() as i64;
-            activity = activity.timestamps(Timestamps::new().start(start));
-        }
-    }
+            Timestamps::new().start(start)
+        } else {
+            Timestamps::new()
+        });
 
     if client.set_activity(activity).is_err() {
-        // IPC pipe broke (Discord restarted etc.) — drop the client so the next
-        // call re-connects.
         *guard = None;
     }
 

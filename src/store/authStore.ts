@@ -61,6 +61,9 @@ interface AuthState {
   minimizeToTray: boolean;
   discordRichPresence: boolean;
   enableAppleMusicCoversDiscord: boolean;
+  discordTemplateDetails: string;
+  discordTemplateState: string;
+  discordTemplateLargeText: string;
   useCustomTitlebar: boolean;
   nowPlayingEnabled: boolean;
   lyricsServerFirst: boolean;
@@ -187,6 +190,9 @@ interface AuthState {
   setMinimizeToTray: (v: boolean) => void;
   setDiscordRichPresence: (v: boolean) => void;
   setEnableAppleMusicCoversDiscord: (v: boolean) => void;
+  setDiscordTemplateDetails: (v: string) => void;
+  setDiscordTemplateState: (v: string) => void;
+  setDiscordTemplateLargeText: (v: string) => void;
   setUseCustomTitlebar: (v: boolean) => void;
   setNowPlayingEnabled: (v: boolean) => void;
   setLyricsServerFirst: (v: boolean) => void;
@@ -285,6 +291,9 @@ export const useAuthStore = create<AuthState>()(
       minimizeToTray: false,
       discordRichPresence: false,
       enableAppleMusicCoversDiscord: false,
+      discordTemplateDetails: '{artist} - {title}',
+      discordTemplateState: '{album}',
+      discordTemplateLargeText: '{album}',
       useCustomTitlebar: false,
       nowPlayingEnabled: false,
       lyricsServerFirst: true,
@@ -407,6 +416,9 @@ export const useAuthStore = create<AuthState>()(
       setMinimizeToTray: (v) => set({ minimizeToTray: v }),
       setDiscordRichPresence: (v) => set({ discordRichPresence: v }),
       setEnableAppleMusicCoversDiscord: (v) => set({ enableAppleMusicCoversDiscord: v }),
+      setDiscordTemplateDetails: (v) => set({ discordTemplateDetails: v }),
+      setDiscordTemplateState: (v) => set({ discordTemplateState: v }),
+      setDiscordTemplateLargeText: (v) => set({ discordTemplateLargeText: v }),
       setUseCustomTitlebar: (v) => set({ useCustomTitlebar: v }),
       setNowPlayingEnabled: (v) => set({ nowPlayingEnabled: v }),
       setLyricsServerFirst: (v: boolean) => set({ lyricsServerFirst: v }),

@@ -1155,6 +1155,41 @@ export default function Settings() {
                       <span className="toggle-track" />
                     </label>
                   </div>
+                  <div className="settings-section-divider" />
+                  <div style={{ paddingLeft: 16, paddingTop: 8, paddingBottom: 8 }}>
+                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 8 }}>{t('settings.discordTemplates')}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{t('settings.discordTemplatesDesc')}</div>
+                    <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                      <label style={{ fontSize: 12 }}>{t('settings.discordTemplateDetails')}</label>
+                      <input
+                        className="input"
+                        type="text"
+                        value={auth.discordTemplateDetails}
+                        onChange={e => auth.setDiscordTemplateDetails(e.target.value)}
+                        placeholder="{artist} - {title}"
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                      <label style={{ fontSize: 12 }}>{t('settings.discordTemplateState')}</label>
+                      <input
+                        className="input"
+                        type="text"
+                        value={auth.discordTemplateState}
+                        onChange={e => auth.setDiscordTemplateState(e.target.value)}
+                        placeholder="{album}"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ fontSize: 12 }}>{t('settings.discordTemplateLargeText')}</label>
+                      <input
+                        className="input"
+                        type="text"
+                        value={auth.discordTemplateLargeText}
+                        onChange={e => auth.setDiscordTemplateLargeText(e.target.value)}
+                        placeholder="{album}"
+                      />
+                    </div>
+                  </div>
                 </>
               )}
               <div className="settings-section-divider" />
