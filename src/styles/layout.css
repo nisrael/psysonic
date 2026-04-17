@@ -309,7 +309,7 @@
   padding: var(--space-1);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-dropdown, rgba(255, 255, 255, 0.12));
-  background: var(--bg-secondary, #1e1e2e);
+  background: var(--bg-card);
   box-shadow: 0 8px 24px var(--shadow-dropdown, rgba(0, 0, 0, 0.45));
   box-sizing: border-box;
   overflow-y: visible;

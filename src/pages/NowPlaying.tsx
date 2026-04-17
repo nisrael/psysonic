@@ -44,7 +44,7 @@ function renderStars(rating?: number) {
       {[1, 2, 3, 4, 5].map(i => (
         <Star key={i} size={13}
           fill={i <= rating ? 'var(--ctp-yellow)' : 'none'}
-          color={i <= rating ? 'var(--ctp-yellow)' : 'rgba(255,255,255,0.4)'}
+          color={i <= rating ? 'var(--ctp-yellow)' : 'var(--ctp-overlay1)'}
         />
       ))}
     </div>
@@ -175,7 +175,7 @@ const NpTrackList = memo(function NpTrackList({ albumTracks, currentTrackId, alb
   return (
     <div className="np-info-card">
       <div className="np-card-header">
-        <h3 className="np-card-title">{t('nowPlaying.fromAlbum')}: <em style={{ fontStyle: 'normal', color: 'rgba(255,255,255,0.6)' }}>{album}</em></h3>
+        <h3 className="np-card-title">{t('nowPlaying.fromAlbum')}: <em style={{ fontStyle: 'normal', color: 'var(--text-muted)' }}>{album}</em></h3>
         {albumId && (
           <button className="np-card-link" onClick={() => onNavigate(`/album/${albumId}`)}>
             {t('nowPlaying.viewAlbum')} <ExternalLink size={12} />
@@ -429,13 +429,13 @@ export default function NowPlaying() {
                     <button onClick={toggleStar} className="np-star-btn"
                       data-tooltip={starred ? t('contextMenu.unfavorite') : t('contextMenu.favorite')}
                     >
-                      <Heart size={17} fill={starred ? 'var(--ctp-yellow)' : 'none'} color={starred ? 'var(--ctp-yellow)' : 'white'} />
+                      <Heart size={17} fill={starred ? 'var(--ctp-yellow)' : 'none'} color={starred ? 'var(--ctp-yellow)' : 'currentColor'} />
                     </button>
                     <button
                       className="np-star-btn"
                       onClick={() => { if (!isQueueVisible) toggleQueue(); showLyrics(); }}
                       data-tooltip={t('player.lyrics')}
-                      style={{ color: activeTab === 'lyrics' && isQueueVisible ? 'var(--accent)' : 'white' }}
+                      style={{ color: activeTab === 'lyrics' && isQueueVisible ? 'var(--accent)' : undefined }}
                     >
                       <MicVocal size={17} />
                     </button>
