@@ -83,10 +83,8 @@ jobs:
             args: '--target aarch64-apple-darwin'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
-          # TEMPORARILY DISABLED during macOS updater testing — faster turnaround.
-          # Re-add before the next public release.
-          # - platform: 'windows-latest'
-          #   args: '--bundles nsis'
+          - platform: 'windows-latest'
+            args: '--bundles nsis'
     runs-on: ${{ matrix.settings.platform }}
     steps:
       - uses: actions/checkout@v5
@@ -183,9 +181,6 @@ jobs:
           gh release upload "app-v${VERSION}" latest.json --clobber
 
   build-linux:
-    # TEMPORARILY DISABLED during macOS updater testing — faster turnaround.
-    # Re-enable by removing `if: false` before the next public release.
-    if: false
     needs: create-release
     permissions:
       contents: write
@@ -241,11 +236,6 @@ jobs:
   #
   # The refreshed lock/hash files are committed back to `main` when they change.
   verify-nix:
-    # TEMPORARILY DISABLED during the v1.34.x testing iteration (signing +
-    # updater stabilisation). Remove `if: false` to re-enable — it auto-commits
-    # flake.lock / npmDepsHash refreshes to main on every release, which causes
-    # rebase friction while we're iterating fast on the release pipeline.
-    if: false
     needs: create-release
     runs-on: ubuntu-24.04
     permissions:
