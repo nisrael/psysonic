@@ -6622,11 +6622,11 @@ input[type="range"]:hover::-webkit-slider-thumb {
   --volume-accent: #d4a820;
   --text-primary: #1e1408;
   --text-secondary: #3e2c1a;
-  --text-muted: #6a5230;
-  --border: rgba(180, 140, 50, 0.38);
+  --text-muted: #5a4428;
+  --border: rgba(122, 92, 24, 0.85);
   --border-subtle: rgba(180, 140, 50, 0.18);
   --positive: #4a7038;
-  --warning: #c88a10;
+  --warning: #805408;
   --danger: #8a2820;
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -6694,7 +6694,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .nav-section-label {
-  color: #6a5030;
+  color: #b88a50;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.67em;
@@ -6730,7 +6730,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .player-time {
-  color: #7a5c30;
+  color: #a88048;
 }
 
 /* ── Transport buttons: Mithril-crafted, hearthlit ── */
@@ -6882,10 +6882,10 @@ input[type="range"]:hover::-webkit-slider-thumb {
   pointer-events: none;
 }
 
-/* Connection indicators */
+/* Connection indicators — sidebar is dark, need light text */
 [data-theme='middle-earth'] .connection-type,
 [data-theme='middle-earth'] .connection-server {
-  color: #5a4828;
+  color: #b88a50;
 }
 
 /* ── Theme accordion: old book binding ── */
@@ -6973,7 +6973,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .glass [style*="var(--text-muted)"] {
-  color: #8a7250 !important;
+  color: #5e4828 !important;
 }
 
 /* ── Hover / selection: candlelight — warm gold glow ── */
@@ -7088,7 +7088,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .queue-item-duration {
-  color: #8a6838;
+  color: #b08858;
 }
 
 [data-theme='middle-earth'] .queue-tab-btn {
@@ -7106,7 +7106,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .lyrics-line {
-  color: #8a6840;
+  color: #b08858;
 }
 
 [data-theme='middle-earth'] .lyrics-line.active {
@@ -7119,12 +7119,12 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 [data-theme='middle-earth'] .lyrics-status {
-  color: #7a5a30;
+  color: #a88048;
 }
 
 /* Queue: "Nächste Titel" divider label */
 [data-theme='middle-earth'] .queue-divider span {
-  color: #a07840 !important;
+  color: #b8905a !important;
 }
 
 /* Queue: artist text visible on hover for inactive items */
