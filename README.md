@@ -9,7 +9,7 @@
     <a href="https://tauri.app/"><img alt="Built with Tauri" src="https://img.shields.io/badge/Built%20with-Tauri-242938?style=flat-square&logo=tauri"></a>
     <a href="https://aur.archlinux.org/packages/psysonic"><img alt="AUR" src="https://img.shields.io/aur/version/psysonic?style=flat-square&color=1793d1"></a>
     <a href="https://aur.archlinux.org/packages/psysonic-bin"><img alt="AUR (bin)" src="https://img.shields.io/aur/version/psysonic-bin?style=flat-square&color=1793d1&label=AUR%20(bin)"></a>
-    <a href="https://discord.gg/pq6d2ZYSg"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20us-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
+    <a href="[https://discord.gg/pq6d2ZYSg](https://discord.gg/AMnDRErm4u)"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20us-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
   </p>
 </div>
 
