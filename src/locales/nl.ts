@@ -533,6 +533,8 @@ export const nlTranslation = {
     showTrayIconDesc: 'Toont het Psysonic-pictogram in het systeemvak / de menubalk.',
     minimizeToTray: 'Minimaliseren naar systeemvak',
     minimizeToTrayDesc: 'Bij het sluiten van het venster blijft Psysonic actief in het systeemvak in plaats van af te sluiten.',
+    linuxWebkitSmoothScroll: 'Vloeiend muiswiel (Linux)',
+    linuxWebkitSmoothScrollDesc: 'Aan: traag naloop. Uit: regel voor regel, GTK-stijl.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Toont het huidige nummer op je Discord-profiel. Discord moet daarvoor geopend zijn.',
     discordAppleCovers: 'Hoezen ophalen via Apple Music voor Discord',

@@ -90,6 +90,35 @@ fn set_window_decorations(enabled: bool, app_handle: tauri::AppHandle) {
     }
 }
 
+/// WebKitGTK: `enable-smooth-scrolling` also drives deferred / kinetic wheel scrolling.
+#[cfg(target_os = "linux")]
+fn linux_webkit_apply_smooth_scrolling(win: &tauri::WebviewWindow, enabled: bool) -> Result<(), String> {
+    win.with_webview(move |platform| {
+        use webkit2gtk::{SettingsExt, WebViewExt};
+        if let Some(settings) = platform.inner().settings() {
+            settings.set_enable_smooth_scrolling(enabled);
+        }
+    })
+    .map_err(|e| e.to_string())
+}
+
+/// Called from the frontend settings toggle (Linux); no-op on other platforms.
+#[tauri::command]
+fn set_linux_webkit_smooth_scrolling(enabled: bool, app_handle: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    {
+        use tauri::Manager;
+        if let Some(win) = app_handle.get_webview_window("main") {
+            linux_webkit_apply_smooth_scrolling(&win, enabled)?;
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = (enabled, app_handle);
+    }
+    Ok(())
+}
+
 
 /// Authenticate with Navidrome's own REST API and return a Bearer token.
 async fn navidrome_token(server_url: &str, username: &str, password: &str) -> Result<String, String> {
@@ -2578,6 +2607,7 @@ pub fn run() {
             cli_publish_server_list,
             cli_publish_search_results,
             set_window_decorations,
+            set_linux_webkit_smooth_scrolling,
             no_compositing_mode,
             is_tiling_wm_cmd,
             register_global_shortcut,

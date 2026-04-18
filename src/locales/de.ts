@@ -538,6 +538,8 @@ export const deTranslation = {
     discordRichPresenceDesc: 'Zeigt den aktuell gespielten Titel im Discord-Profil an. Discord muss dafür geöffnet sein.',
     useCustomTitlebar: 'Eigene Titelleiste',
     useCustomTitlebarDesc: 'Ersetzt die System-Titelleiste durch eine eingebaute, die zum App-Theme passt. Deaktivieren, um die native GNOME/GTK-Titelleiste zu verwenden.',
+    linuxWebkitSmoothScroll: 'Sanftes Mausrad (Linux)',
+    linuxWebkitSmoothScrollDesc: 'An: mit Nachlauf. Aus: zeilenweise wie in GTK-Apps.',
     discordAppleCovers: 'Cover über Apple Music für Discord laden',
     discordAppleCoversDesc: 'Sendet Künstler- und Albumname an die Apple-Such-API, um Cover für dein Discord-Profil zu finden. Standardmäßig aus Datenschutzgründen deaktiviert.',
     discordOptions: 'Erweiterte Discord-Optionen',

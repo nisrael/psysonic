@@ -529,6 +529,8 @@ export const zhTranslation = {
     showTrayIconDesc: '在系统通知区域 / 菜单栏显示 Psysonic 图标。',
     minimizeToTray: '最小化到托盘',
     minimizeToTrayDesc: '关闭窗口时，Psysonic 将继续在系统托盘中运行，而不是退出。',
+    linuxWebkitSmoothScroll: '滚轮平滑（Linux）',
+    linuxWebkitSmoothScrollDesc: '开：惯性滚动。关：逐行，类似 GTK。',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: '在 Discord 个人资料上显示当前播放的曲目。需要 Discord 处于运行状态。',
     discordAppleCovers: '通过 Apple Music 为 Discord 获取封面',

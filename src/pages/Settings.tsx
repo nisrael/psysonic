@@ -1136,6 +1136,25 @@ export default function Settings() {
                   </div>
                 </>
               )}
+              {IS_LINUX && (
+                <>
+                  <div className="settings-section-divider" />
+                  <div className="settings-toggle-row">
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{t('settings.linuxWebkitSmoothScroll')}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.linuxWebkitSmoothScrollDesc')}</div>
+                    </div>
+                    <label className="toggle-switch" aria-label={t('settings.linuxWebkitSmoothScroll')}>
+                      <input
+                        type="checkbox"
+                        checked={auth.linuxWebkitKineticScroll}
+                        onChange={e => auth.setLinuxWebkitKineticScroll(e.target.checked)}
+                      />
+                      <span className="toggle-track" />
+                    </label>
+                  </div>
+                </>
+              )}
               <div className="settings-section-divider" />
               <div className="settings-toggle-row">
                 <div>

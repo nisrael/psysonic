@@ -139,6 +139,7 @@ function AppShell() {
   const activeServerId = useAuthStore(s => s.activeServerId);
   const setMusicFolders = useAuthStore(s => s.setMusicFolders);
   const useCustomTitlebar = useAuthStore(s => s.useCustomTitlebar);
+  const linuxWebkitKineticScroll = useAuthStore(s => s.linuxWebkitKineticScroll);
   const setEntityRatingSupport = useAuthStore(s => s.setEntityRatingSupport);
   const offlineAlbums = useOfflineStore(s => s.albums);
   const hasOfflineContent = Object.values(offlineAlbums).some(a => a.serverId === serverId);
@@ -150,6 +151,11 @@ function AppShell() {
     const enabled = isTilingWm ? false : !useCustomTitlebar;
     invoke('set_window_decorations', { enabled }).catch(() => {});
   }, [useCustomTitlebar, isTilingWm]);
+
+  useEffect(() => {
+    if (!IS_LINUX) return;
+    invoke('set_linux_webkit_smooth_scrolling', { enabled: linuxWebkitKineticScroll }).catch(() => {});
+  }, [linuxWebkitKineticScroll]);
 
   useEffect(() => {
     if (!isLoggedIn || !activeServerId) return;

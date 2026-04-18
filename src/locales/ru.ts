@@ -555,6 +555,8 @@ export const ruTranslation = {
     useCustomTitlebar: 'Своя строка заголовка',
     useCustomTitlebarDesc:
       'Заменить системную строку заголовка встроенной, в стиле темы приложения. Отключите, чтобы использовать родную строку GNOME/GTK и т.д.',
+    linuxWebkitSmoothScroll: 'Плавное колесо (Linux)',
+    linuxWebkitSmoothScrollDesc: 'Вкл — инерция. Выкл — по шагам, как в GTK.',
     discordRichPresence: 'Статус в Discord',
     discordRichPresenceDesc:
       'Показывать текущий трек в профиле и статусе Discord. Нужен запущенный клиент Discord.',

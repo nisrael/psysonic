@@ -54,6 +54,8 @@ libc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = { version = "5.9", default-features = false, features = ["blocking-api"] }
+# Match wry/tauri’s WebKitGTK stack — used only to turn off kinetic wheel scrolling.
+webkit2gtk = { version = "2.0", default-features = false, features = ["v2_40"] }
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [

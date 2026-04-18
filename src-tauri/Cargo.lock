@@ -3612,6 +3612,7 @@ dependencies = [
  "thread-priority",
  "tokio",
  "url",
+ "webkit2gtk",
  "windows 0.58.0",
  "zbus 5.14.0",
 ]

@@ -541,6 +541,8 @@ export const esTranslation = {
     discordRichPresenceDesc: 'Muestra la pista actual en tu perfil de Discord. Requiere que Discord esté ejecutándose.',
     useCustomTitlebar: 'Barra de título personalizada',
     useCustomTitlebarDesc: 'Reemplaza la barra de título del sistema con una integrada que coincide con el tema de la app. Desactiva para usar la barra nativa de GNOME/GTK.',
+    linuxWebkitSmoothScroll: 'Rueda suave (Linux)',
+    linuxWebkitSmoothScrollDesc: 'Activado: inercia. Desactivado: pasos por línea (estilo GTK).',
     discordAppleCovers: 'Obtener portadas de Apple Music para Discord',
     discordAppleCoversDesc: 'Envía el artista y nombre del álbum a la API de búsqueda de Apple para encontrar portadas para tu perfil de Discord. Desactivado por defecto por privacidad.',
     discordOptions: 'Opciones avanzadas de Discord',

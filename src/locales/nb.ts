@@ -533,6 +533,8 @@ export const nbTranslation = {
     showArtistImagesDesc: 'Last inn og vis artistbilder i artistoversikten. Denne er deaktivert som standard, for å redusere disk-I/O og nettverksbelastningen på store biblioteker.',
     minimizeToTray: 'Minimer til oppgavelinjen',
     minimizeToTrayDesc: 'Når vinduet lukkes, vil Psysonic bli kjørende i oppgavelinjen fremfor å bli avsluttet.',
+    linuxWebkitSmoothScroll: 'Mykt musehjul (Linux)',
+    linuxWebkitSmoothScrollDesc: 'På: treg rull med etterslep. Av: trinnvis som i GTK.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Vis sporet som spilles i din Discord-profil. Krever at Discord kjører.',
     discordAppleCovers: 'Hent covere fra Apple Music til Discord',

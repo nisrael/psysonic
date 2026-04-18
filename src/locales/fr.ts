@@ -534,6 +534,8 @@ export const frTranslation = {
     showTrayIconDesc: 'Affiche l\'icône Psysonic dans la zone de notification / barre des menus.',
     minimizeToTray: 'Réduire dans la barre système',
     minimizeToTrayDesc: 'Lors de la fermeture, Psysonic continue de fonctionner dans la barre système au lieu de se fermer.',
+    linuxWebkitSmoothScroll: 'Molette fluide (Linux)',
+    linuxWebkitSmoothScrollDesc: 'Activé : inertie. Désactivé : pas à la ligne, style GTK.',
     discordRichPresence: 'Discord Rich Presence',
     discordRichPresenceDesc: 'Affiche le titre en cours de lecture sur votre profil Discord. Discord doit être ouvert.',
     discordAppleCovers: 'Récupérer les pochettes via Apple Music pour Discord',
