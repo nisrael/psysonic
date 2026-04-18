@@ -5,7 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **⚠️ Note for Windows users:** This is the last release with an unsigned Windows installer. We are waiting for our code signing certificate and hope it will arrive within the next few days. The installer does not contain a virus — any warnings from Windows SmartScreen or antivirus software are false positives. If you'd like to help cover the certificate costs, you can do so at [ko-fi.com/psychotoxic](https://ko-fi.com/psychotoxic) — completely voluntary, no pressure at all.
+> **⚠️ Note for Windows users:** This is one of the last releases with an unsigned Windows installer. We are waiting for our code signing certificate and hope it will arrive within the next few days. The installer does not contain a virus — any warnings from Windows SmartScreen or antivirus software are false positives. If you'd like to help cover the certificate costs, you can do so at [ko-fi.com/psychotoxic](https://ko-fi.com/psychotoxic) — completely voluntary, no pressure at all.
+>
+> **✅ macOS users:** Starting with this release, macOS builds are **signed and notarized** by Apple. No more "unidentified developer" warnings — the app launches with a single click.
+
+## [1.34.14] - 2026-04-18
+
+### Added
+
+- **macOS — signed and notarized builds** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: macOS releases are now signed with a Developer ID Application certificate and notarized by Apple. Gatekeeper no longer shows the "app from unidentified developer" dialog; the DMG opens and runs with a single click on both Apple Silicon and Intel Macs. Signing + notarization happens in CI on every release.
+
+- **WebKitGTK wheel scroll mode (Linux)** *(contributed by [@cucadmuh](https://github.com/cucadmuh), PR [#207](https://github.com/Psychotoxical/psysonic/pull/207))*: The Linux build now defaults to WebKitGTK's native smooth (kinetic) wheel scrolling and exposes a toggle in Settings → General to fall back to classic linear line-by-line scroll. Existing installs are migrated to smooth scrolling once, after which the toggle is fully user-controlled.
+
+### Fixed
+
+- **WCAG contrast audit — Middle-Earth theme** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: Raised `--warning`, `--border`, `--text-muted`, `--positive`, and multiple component-level overrides (connection indicators, nav section labels, lyrics status, queue duration, player time, glass-panel muted text) to AA thresholds on all background variants. The warm bronze / aged-parchment palette is preserved — no cool tones introduced.
+
+- **WCAG contrast audit — Nucleo theme** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: Darkened `--warning`, `--border`, `--text-muted`, and `--positive` tokens to reach AA on the warm cream palette; added a component-level override for the column resize grip (default `--ctp-surface1` was 1.08:1 on the card background, effectively invisible) using the new `--border` token at 2px width. Brass-and-parchment aesthetic preserved.
+
+### Changed
+
+- **Contributors list updated** *(by [@Psychotoxical](https://github.com/Psychotoxical))*: Settings → About now credits PRs [#205](https://github.com/Psychotoxical/psysonic/pull/205) (Apple Music-style scrolling lyrics by [@kilyabin](https://github.com/kilyabin)), [#206](https://github.com/Psychotoxical/psysonic/pull/206) (Golos Text + Unbounded fonts with Cyrillic support by [@kilyabin](https://github.com/kilyabin)), and [#207](https://github.com/Psychotoxical/psysonic/pull/207) (WebKitGTK wheel scroll mode by [@cucadmuh](https://github.com/cucadmuh)).
+
+---
 
 ## [1.34.13] - 2026-04-17
 
