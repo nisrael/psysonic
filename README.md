@@ -75,6 +75,9 @@ curl -fsSL https://raw.githubusercontent.com/Psychotoxical/psysonic/main/scripts
 - **Ubuntu / Debian**: `.deb` from GitHub Releases
 - **Fedora / RHEL**: `.rpm` from GitHub Releases
 
+**NixOS (flakes):**
+- Install guide (including Cachix setup): [`nixos-install.md`](./nixos-install.md)
+
 ### 🍎 macOS
 
 - **macOS**: `.dmg` (Universal or Apple Silicon)
