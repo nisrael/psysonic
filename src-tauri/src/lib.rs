@@ -1499,9 +1499,15 @@ fn get_removable_drives() -> Vec<RemovableDrive> {
 /// The file records which sources (albums/playlists/artists) are synced to this
 /// device so that another machine can pick them up without relying on localStorage.
 #[tauri::command]
-fn write_device_manifest(dest_dir: String, sources: serde_json::Value, filename_template: String) -> Result<(), String> {
+fn write_device_manifest(dest_dir: String, sources: serde_json::Value) -> Result<(), String> {
     let path = std::path::Path::new(&dest_dir).join("psysonic-sync.json");
-    let payload = serde_json::json!({ "version": 1, "sources": sources, "filenameTemplate": filename_template });
+    // Manifest v2: fixed "{AlbumArtist}/{Album}/{TrackNum} - {Title}.{ext}" schema,
+    // no user-configurable filename template. Readers still accept v1 manifests.
+    let payload = serde_json::json!({
+        "version": 2,
+        "schema": "fixed-v1",
+        "sources": sources
+    });
     let json = serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| e.to_string())
 }
@@ -1513,6 +1519,138 @@ fn read_device_manifest(dest_dir: String) -> Option<serde_json::Value> {
     let path = std::path::Path::new(&dest_dir).join("psysonic-sync.json");
     let content = std::fs::read_to_string(&path).ok()?;
     serde_json::from_str(&content).ok()
+}
+
+/// Per-entry result for `rename_device_files`.
+#[derive(serde::Serialize)]
+struct RenameResult {
+    #[serde(rename = "oldPath")]
+    old_path: String,
+    #[serde(rename = "newPath")]
+    new_path: String,
+    ok: bool,
+    error: Option<String>,
+}
+
+/// Atomically renames files on the device from their old path to the new fixed-
+/// schema path. Intended for the migration flow when switching away from the
+/// user-configurable template. All paths are relative to `target_dir`.
+///
+/// After renaming, removes any directories left empty under `target_dir`
+/// (so stale `{OldArtist}/{OldAlbum}/` trees don't linger).
+///
+/// Returns a per-entry result so the UI can show which renames succeeded
+/// and which failed. Does not roll back on partial failure — each `fs::rename`
+/// is atomic, so nothing can be half-renamed.
+#[tauri::command]
+fn rename_device_files(
+    target_dir: String,
+    pairs: Vec<(String, String)>,
+) -> Result<Vec<RenameResult>, String> {
+    let root = std::path::PathBuf::from(&target_dir);
+    if !root.exists() {
+        return Err("VOLUME_NOT_FOUND".to_string());
+    }
+    if !is_path_on_mounted_volume(&root) {
+        return Err("NOT_MOUNTED_VOLUME".to_string());
+    }
+
+    let mut results = Vec::with_capacity(pairs.len());
+    for (old_rel, new_rel) in pairs {
+        let old_abs = root.join(&old_rel);
+        let new_abs = root.join(&new_rel);
+
+        let entry = if old_rel == new_rel {
+            // Nothing to do, count as success so the UI can show "already correct".
+            RenameResult { old_path: old_rel, new_path: new_rel, ok: true, error: None }
+        } else if !old_abs.exists() {
+            RenameResult {
+                old_path: old_rel, new_path: new_rel,
+                ok: false, error: Some("source not found".to_string()),
+            }
+        } else if new_abs.exists() {
+            RenameResult {
+                old_path: old_rel, new_path: new_rel,
+                ok: false, error: Some("target already exists".to_string()),
+            }
+        } else {
+            // Ensure target parent exists.
+            if let Some(parent) = new_abs.parent() {
+                if let Err(e) = std::fs::create_dir_all(parent) {
+                    results.push(RenameResult {
+                        old_path: old_rel, new_path: new_rel,
+                        ok: false, error: Some(format!("mkdir: {}", e)),
+                    });
+                    continue;
+                }
+            }
+            match std::fs::rename(&old_abs, &new_abs) {
+                Ok(_) => RenameResult { old_path: old_rel, new_path: new_rel, ok: true, error: None },
+                Err(e) => RenameResult {
+                    old_path: old_rel, new_path: new_rel,
+                    ok: false, error: Some(e.to_string()),
+                },
+            }
+        };
+        results.push(entry);
+    }
+
+    // Clean up directories emptied by the renames. Walk depth-first and remove
+    // any dir whose only remaining contents were the files we moved out.
+    fn remove_empty_dirs(dir: &std::path::Path, root: &std::path::Path) {
+        if dir == root { return; }
+        let rd = match std::fs::read_dir(dir) {
+            Ok(r) => r,
+            Err(_) => return,
+        };
+        let mut empty = true;
+        let mut children: Vec<std::path::PathBuf> = Vec::new();
+        for entry in rd.flatten() {
+            let p = entry.path();
+            if p.is_dir() { children.push(p); } else { empty = false; }
+        }
+        for child in children {
+            remove_empty_dirs(&child, root);
+        }
+        // Re-check after recursion cleared subdirs.
+        let still_empty = std::fs::read_dir(dir).map(|r| r.count() == 0).unwrap_or(false);
+        if empty && still_empty {
+            let _ = std::fs::remove_dir(dir);
+        }
+    }
+    remove_empty_dirs(&root, &root);
+
+    Ok(results)
+}
+
+/// Writes an Extended-M3U playlist at `{dest_dir}/Playlists/{name}/{name}.m3u8`.
+/// References are sibling filenames (just `01 - Artist - Title.ext`) so the
+/// playlist is self-contained — moving/copying the folder anywhere keeps it
+/// working. Tracks are expected to be in playlist order (index starts at 1).
+#[tauri::command]
+fn write_playlist_m3u8(
+    dest_dir: String,
+    playlist_name: String,
+    tracks: Vec<TrackSyncInfo>,
+) -> Result<(), String> {
+    let safe_name = sanitize_or(&playlist_name, "Unnamed Playlist");
+    let playlist_dir = std::path::Path::new(&dest_dir).join("Playlists").join(&safe_name);
+    std::fs::create_dir_all(&playlist_dir).map_err(|e| e.to_string())?;
+    let file_path = playlist_dir.join(format!("{}.m3u8", safe_name));
+
+    let mut body = String::from("#EXTM3U\n");
+    for (i, track) in tracks.iter().enumerate() {
+        let idx = (i as u32) + 1;
+        let duration = track.duration.map(|d| d as i64).unwrap_or(-1);
+        let display_artist = if track.artist.trim().is_empty() { &track.album_artist[..] } else { &track.artist[..] };
+        let title = track.title.trim();
+        body.push_str(&format!("#EXTINF:{},{} - {}\n", duration, display_artist.trim(), title));
+        // Sibling filename — same shape as build_track_path's playlist branch.
+        let artist_safe = sanitize_or(display_artist, "Unknown Artist");
+        let title_safe  = sanitize_or(title,          "Unknown Title");
+        body.push_str(&format!("{:02} - {} - {}.{}\n", idx, artist_safe, title_safe, track.suffix));
+    }
+    std::fs::write(&file_path, body).map_err(|e| e.to_string())
 }
 
 /// Checks whether `path` sits on top of an active mount point (i.e. not the root
@@ -1556,14 +1694,28 @@ struct TrackSyncInfo {
     id: String,
     url: String,
     suffix: String,
+    /// Track artist — used in Extended M3U (#EXTINF) entries so playlists display
+    /// the actual performer rather than the album artist.
     artist: String,
+    /// Album artist — used for the top-level folder so compilation albums stay together.
+    /// Falls back to `artist` in the frontend when the server has no albumArtist tag.
+    #[serde(rename = "albumArtist")]
+    album_artist: String,
     album: String,
     title: String,
     #[serde(rename = "trackNumber")]
     track_number: Option<u32>,
-    #[serde(rename = "discNumber")]
-    disc_number: Option<u32>,
-    year: Option<u32>,
+    /// Duration in seconds — needed for Extended M3U (#EXTINF) playlist entries.
+    #[serde(default)]
+    duration: Option<u32>,
+    /// When set, the track belongs to a playlist source and is placed under
+    /// `Playlists/{name}/` with `playlist_index` as its filename prefix.
+    /// Same track synced from both an album and a playlist source ends up twice
+    /// on the device — once in the album tree, once in the playlist folder.
+    #[serde(default, rename = "playlistName")]
+    playlist_name: Option<String>,
+    #[serde(default, rename = "playlistIndex")]
+    playlist_index: Option<u32>,
 }
 
 /// Summary returned by `sync_batch_to_device` after all tracks are processed.
@@ -1581,8 +1733,9 @@ struct SyncTrackResult {
 }
 
 /// Replaces characters that are invalid in file/directory names on Windows and
-/// most Unix filesystems with an underscore. Also trims leading/trailing dots
-/// and spaces which cause issues on Windows.
+/// most Unix filesystems with an underscore, and trims leading/trailing dots and
+/// spaces which cause issues on Windows. Underscore (not deletion) so that "AC/DC"
+/// and "ACDC" don't collapse into the same folder.
 fn sanitize_path_component(s: &str) -> String {
     const INVALID: &[char] = &['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
     let sanitized: String = s
@@ -1592,31 +1745,37 @@ fn sanitize_path_component(s: &str) -> String {
     sanitized.trim_matches(|c| c == '.' || c == ' ').to_string()
 }
 
-/// Evaluates `template` by substituting `{artist}`, `{album}`, `{title}`,
-/// `{track_number}`, `{disc_number}`, `{year}` with sanitized values from `track`.
-fn apply_device_sync_template(template: &str, track: &TrackSyncInfo) -> String {
-    let track_number = track.track_number
-        .map(|n| format!("{:02}", n))
-        .unwrap_or_default();
-    let disc_number = track.disc_number
-        .map(|n| n.to_string())
-        .unwrap_or_default();
-    let year = track.year
-        .map(|y| y.to_string())
-        .unwrap_or_default();
+/// Sanitize and replace empty results with a placeholder — prevents paths like
+/// `//01 - .flac` when metadata is missing.
+fn sanitize_or(s: &str, fallback: &str) -> String {
+    let cleaned = sanitize_path_component(s);
+    if cleaned.is_empty() { fallback.to_string() } else { cleaned }
+}
 
-    let result = template
-        .replace("{artist}", &sanitize_path_component(&track.artist))
-        .replace("{album}", &sanitize_path_component(&track.album))
-        .replace("{title}", &sanitize_path_component(&track.title))
-        .replace("{track_number}", &track_number)
-        .replace("{disc_number}", &disc_number)
-        .replace("{year}", &year);
-    // Normalize to the OS path separator so compute_sync_paths and list_device_dir_files
-    // produce identical strings for Set comparison.
+/// Builds the fixed device path for a track. When the track carries a playlist
+/// context it goes into the playlist folder, otherwise into the album tree.
+///
+/// Album-tree:  `{AlbumArtist}/{Album}/{TrackNum:02d} - {Title}.{ext}`
+/// Playlist:    `Playlists/{PlaylistName}/{PlaylistIndex:02d} - {Artist} - {Title}.{ext}`
+fn build_track_path(track: &TrackSyncInfo) -> String {
+    let relative = match (&track.playlist_name, track.playlist_index) {
+        (Some(name), Some(idx)) => {
+            let playlist = sanitize_or(name, "Unnamed Playlist");
+            let artist   = sanitize_or(&track.artist, "Unknown Artist");
+            let title    = sanitize_or(&track.title,  "Unknown Title");
+            format!("Playlists/{}/{:02} - {} - {}", playlist, idx, artist, title)
+        }
+        _ => {
+            let album_artist = sanitize_or(&track.album_artist, "Unknown Artist");
+            let album        = sanitize_or(&track.album,        "Unknown Album");
+            let title        = sanitize_or(&track.title,        "Unknown Title");
+            let track_num    = track.track_number.map(|n| format!("{:02}", n)).unwrap_or_else(|| "00".to_string());
+            format!("{}/{}/{} - {}", album_artist, album, track_num, title)
+        }
+    };
     #[cfg(target_os = "windows")]
-    let result = result.replace('/', "\\");
-    result
+    let relative = relative.replace('/', "\\");
+    relative
 }
 
 /// Downloads a single track to a USB/SD device using the configured filename template.
@@ -1625,11 +1784,10 @@ fn apply_device_sync_template(template: &str, track: &TrackSyncInfo) -> String {
 async fn sync_track_to_device(
     track: TrackSyncInfo,
     dest_dir: String,
-    template: String,
     job_id: String,
     app: tauri::AppHandle,
 ) -> Result<SyncTrackResult, String> {
-    let relative = apply_device_sync_template(&template, &track);
+    let relative = build_track_path(&track);
     let file_name = format!("{}.{}", relative, track.suffix);
     let dest_path = std::path::Path::new(&dest_dir).join(&file_name);
     let path_str = dest_path.to_string_lossy().to_string();
@@ -1679,16 +1837,12 @@ async fn sync_track_to_device(
     Ok(SyncTrackResult { path: path_str, skipped: false })
 }
 
-/// Computes the expected file paths for a batch of tracks using the given template,
-/// without downloading anything. Used by the cleanup flow to find orphans.
+/// Computes the expected file paths for a batch of tracks under the fixed schema.
+/// Used by the cleanup flow to find orphans.
 #[tauri::command]
-fn compute_sync_paths(
-    tracks: Vec<TrackSyncInfo>,
-    dest_dir: String,
-    template: String,
-) -> Vec<String> {
+fn compute_sync_paths(tracks: Vec<TrackSyncInfo>, dest_dir: String) -> Vec<String> {
     tracks.iter().map(|track| {
-        let relative = apply_device_sync_template(&template, track);
+        let relative = build_track_path(track);
         let file_name = format!("{}.{}", relative, track.suffix);
         std::path::Path::new(&dest_dir)
             .join(&file_name)
@@ -1771,11 +1925,15 @@ struct SubsonicAuthPayload {
     f: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 struct DeviceSyncSourcePayload {
     #[serde(rename = "type")]
     source_type: String,
     id: String,
+    /// Playlist display name — only present for playlist sources, used when
+    /// computing the playlist-folder path on the device.
+    #[serde(default)]
+    name: Option<String>,
 }
 
 #[derive(serde::Serialize)]
@@ -1831,7 +1989,6 @@ async fn calculate_sync_payload(
     deletion_ids: Vec<String>,
     auth: SubsonicAuthPayload,
     target_dir: String,
-    template: String,
 ) -> Result<SyncDeltaResult, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -1853,14 +2010,15 @@ async fn calculate_sync_payload(
         }
     }
     
-    let mut handles = Vec::new();
+    let mut handles: Vec<(DeviceSyncSourcePayload, tokio::task::JoinHandle<Vec<serde_json::Value>>)> = Vec::new();
     for source in add_sources {
         let auth_clone = SubsonicAuthPayload {
             base_url: auth.base_url.clone(), u: auth.u.clone(), t: auth.t.clone(), s: auth.s.clone(),
             v: auth.v.clone(), c: auth.c.clone(), f: auth.f.clone(),
         };
         let cli = client.clone();
-        handles.push(tokio::spawn(async move {
+        let source_snapshot = source.clone();
+        let handle = tokio::spawn(async move {
             let mut res_tracks = Vec::new();
             if source.source_type == "album" {
                 if let Ok(ts) = fetch_subsonic_songs(&cli, &auth_clone, "getAlbum.view", &source.id).await { res_tracks.extend(ts); }
@@ -1887,9 +2045,10 @@ async fn calculate_sync_payload(
                 }
             }
             res_tracks
-        }));
+        });
+        handles.push((source_snapshot, handle));
     }
-    
+
     let mut del_handles = Vec::new();
     for source in del_sources {
         let auth_clone = SubsonicAuthPayload {
@@ -1908,39 +2067,65 @@ async fn calculate_sync_payload(
         }));
     }
 
-    let mut seen = std::collections::HashSet::new();
-    for handle in handles {
+    // Dedup key is (source_id, track_id) rather than just track_id — a track
+    // appearing in both an album and a playlist needs to end up on the device
+    // in both locations (album tree + playlist folder).
+    let mut seen_by_source: std::collections::HashSet<(String, String)> = std::collections::HashSet::new();
+    for (source, handle) in handles {
         if let Ok(ts) = handle.await {
+            let is_playlist = source.source_type == "playlist";
+            let mut playlist_position: u32 = 0;
             for track in ts {
                 if let Some(tid) = track.get("id").and_then(|i| i.as_str()) {
-                    if !seen.contains(tid) {
-                        seen.insert(tid.to_string());
-                        // Build the expected path and skip files already present on device.
-                        let already_exists = {
-                            let suffix = track.get("suffix").and_then(|s| s.as_str()).unwrap_or("mp3");
-                            let sync_info = TrackSyncInfo {
-                                id: tid.to_string(),
-                                url: String::new(),
-                                suffix: suffix.to_string(),
-                                artist: track.get("artist").and_then(|v| v.as_str()).unwrap_or("").to_string(),
-                                album: track.get("album").and_then(|v| v.as_str()).unwrap_or("").to_string(),
-                                title: track.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string(),
-                                track_number: track.get("track").and_then(|v| v.as_u64()).map(|n| n as u32),
-                                disc_number: track.get("discNumber").and_then(|v| v.as_u64()).map(|n| n as u32),
-                                year: track.get("year").and_then(|v| v.as_u64()).map(|n| n as u32),
-                            };
-                            let relative = apply_device_sync_template(&template, &sync_info);
-                            let file_name = format!("{}.{}", relative, suffix);
-                            std::path::Path::new(&target_dir).join(&file_name).exists()
+                    let key = (source.id.clone(), tid.to_string());
+                    if seen_by_source.contains(&key) { continue; }
+                    seen_by_source.insert(key);
+                    if is_playlist { playlist_position += 1; }
+                    let pl_name = if is_playlist { source.name.clone() } else { None };
+                    let pl_idx  = if is_playlist { Some(playlist_position) } else { None };
+
+                    let already_exists = {
+                        let suffix = track.get("suffix").and_then(|s| s.as_str()).unwrap_or("mp3");
+                        let artist_raw = track.get("artist").and_then(|v| v.as_str()).unwrap_or("");
+                        let album_artist = track.get("albumArtist")
+                            .and_then(|v| v.as_str())
+                            .filter(|s| !s.trim().is_empty())
+                            .unwrap_or(artist_raw);
+                        let sync_info = TrackSyncInfo {
+                            id: tid.to_string(),
+                            url: String::new(),
+                            suffix: suffix.to_string(),
+                            artist: artist_raw.to_string(),
+                            album_artist: album_artist.to_string(),
+                            album: track.get("album").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                            title: track.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                            track_number: track.get("track").and_then(|v| v.as_u64()).map(|n| n as u32),
+                            duration: track.get("duration").and_then(|v| v.as_u64()).map(|n| n as u32),
+                            playlist_name: pl_name.clone(),
+                            playlist_index: pl_idx,
                         };
-                        if !already_exists {
-                            add_count += 1;
-                            let size = track.get("size").and_then(|s| s.as_u64()).unwrap_or_else(|| {
-                                track.get("duration").and_then(|d| d.as_u64()).unwrap_or(0) * 320_000 / 8
-                            });
-                            add_bytes += size;
-                            sync_tracks.push(track);
+                        let relative = build_track_path(&sync_info);
+                        let file_name = format!("{}.{}", relative, suffix);
+                        std::path::Path::new(&target_dir).join(&file_name).exists()
+                    };
+                    if !already_exists {
+                        add_count += 1;
+                        let size = track.get("size").and_then(|s| s.as_u64()).unwrap_or_else(|| {
+                            track.get("duration").and_then(|d| d.as_u64()).unwrap_or(0) * 320_000 / 8
+                        });
+                        add_bytes += size;
+                        // Embed playlist context in the track JSON so the frontend
+                        // can pass it back to sync_batch_to_device without re-computing it.
+                        let mut track_with_ctx = track.clone();
+                        if let Some(obj) = track_with_ctx.as_object_mut() {
+                            if let Some(name) = &pl_name {
+                                obj.insert("_playlistName".to_string(), serde_json::Value::String(name.clone()));
+                            }
+                            if let Some(idx) = pl_idx {
+                                obj.insert("_playlistIndex".to_string(), serde_json::Value::Number(idx.into()));
+                            }
                         }
+                        sync_tracks.push(track_with_ctx);
                     }
                 }
             }
@@ -1991,7 +2176,6 @@ fn cancel_device_sync(job_id: String, app: tauri::AppHandle) {
 async fn sync_batch_to_device(
     tracks: Vec<TrackSyncInfo>,
     dest_dir: String,
-    template: String,
     job_id: String,
     expected_bytes: u64,
     app: tauri::AppHandle,
@@ -2057,7 +2241,6 @@ async fn sync_batch_to_device(
         let cli = client.clone();
         let app2 = app.clone();
         let job = job_id.clone();
-        let tmpl = template.clone();
         let dest = dest_dir.clone();
         let d = done.clone();
         let s = skipped.clone();
@@ -2071,7 +2254,7 @@ async fn sync_batch_to_device(
             // Bail out if cancelled while waiting in the semaphore queue.
             if cancel.load(Ordering::Relaxed) { return; }
 
-            let relative = apply_device_sync_template(&tmpl, &track);
+            let relative = build_track_path(&track);
             let file_name = format!("{}.{}", relative, track.suffix);
             let dest_path = std::path::Path::new(&dest).join(&file_name);
             let path_str = dest_path.to_string_lossy().to_string();
@@ -2665,6 +2848,8 @@ pub fn run() {
             get_removable_drives,
             write_device_manifest,
             read_device_manifest,
+            write_playlist_m3u8,
+            rename_device_files,
             toggle_tray_icon,
             check_dir_accessible,
             download_zip,

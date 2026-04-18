@@ -17,12 +17,47 @@ import {
   SubsonicSong, SubsonicAlbum, SubsonicPlaylist, SubsonicArtist,
 } from '../api/subsonic';
 import { showToast } from '../utils/toast';
+import { IS_WINDOWS } from '../utils/platform';
 
 type SourceTab = 'playlists' | 'albums' | 'artists';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function uuid(): string { return crypto.randomUUID(); }
+
+// Same sanitize rules the Rust side uses (`sanitize_path_component`): strip
+// Windows-illegal chars and control chars, trim leading/trailing dots + spaces.
+// Kept in JS only for the migration flow — computes the *old* path under a
+// user-supplied template so we can diff against the current files on disk.
+function sanitizeComponent(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[/\\:*?"<>|\x00-\x1f\x7f]/g, '_').replace(/^[. ]+|[. ]+$/g, '');
+}
+
+interface OldTemplateTrack {
+  artist: string;
+  album: string;
+  title: string;
+  trackNumber?: number;
+  discNumber?: number;
+  year?: number;
+  suffix: string;
+}
+
+/** Renders a track's path under a legacy (user-configurable) template. Used only
+ *  for the migration preview — the live sync flow goes through Rust's fixed
+ *  `build_track_path`. */
+function applyLegacyTemplate(template: string, track: OldTemplateTrack): string {
+  const relative = template
+    .replace(/\{artist\}/g,       sanitizeComponent(track.artist))
+    .replace(/\{album\}/g,        sanitizeComponent(track.album))
+    .replace(/\{title\}/g,        sanitizeComponent(track.title))
+    .replace(/\{track_number\}/g, track.trackNumber != null ? String(track.trackNumber).padStart(2, '0') : '')
+    .replace(/\{disc_number\}/g,  track.discNumber != null ? String(track.discNumber) : '')
+    .replace(/\{year\}/g,         track.year != null ? String(track.year) : '');
+  const withExt = `${relative}.${track.suffix}`;
+  return IS_WINDOWS ? withExt.replace(/\//g, '\\') : withExt;
+}
 
 async function fetchTracksForSource(source: DeviceSyncSource): Promise<SubsonicSong[]> {
   if (source.type === 'playlist') { const { songs } = await getPlaylist(source.id); return songs; }
@@ -33,16 +68,31 @@ async function fetchTracksForSource(source: DeviceSyncSource): Promise<SubsonicS
   return all;
 }
 
-function trackToSyncInfo(track: SubsonicSong, url: string) {
+/** Tracks that came from `calculate_sync_payload` may carry embedded playlist
+ *  context so the follow-up `sync_batch_to_device` call knows to place them
+ *  under `Playlists/{Name}/` instead of the album tree. */
+type SyncTrackMaybePlaylist = SubsonicSong & { _playlistName?: string; _playlistIndex?: number };
+
+function trackToSyncInfo(
+  track: SyncTrackMaybePlaylist,
+  url: string,
+  playlistCtx?: { name: string; index: number },
+) {
+  // Fall back to track artist when the file has no albumArtist tag — not every
+  // library is tagged with it. Treat empty strings as missing (some Subsonic
+  // servers return "" rather than omitting the field).
+  const albumArtist = (track.albumArtist?.trim() || track.artist?.trim() || '');
   return {
     id: track.id, url,
     suffix: track.suffix ?? 'mp3',
     artist: track.artist ?? '',
+    albumArtist,
     album: track.album ?? '',
     title: track.title ?? '',
     trackNumber: track.track,
-    discNumber: track.discNumber,
-    year: track.year,
+    duration: track.duration,
+    playlistName: playlistCtx?.name ?? track._playlistName,
+    playlistIndex: playlistCtx?.index ?? track._playlistIndex,
   };
 }
 
@@ -71,14 +121,13 @@ export default function DeviceSync() {
   const { t } = useTranslation();
 
   const targetDir        = useDeviceSyncStore(s => s.targetDir);
-  const filenameTemplate = useDeviceSyncStore(s => s.filenameTemplate);
   const sources          = useDeviceSyncStore(s => s.sources);
   const checkedIds       = useDeviceSyncStore(s => s.checkedIds);
   const pendingDeletion  = useDeviceSyncStore(s => s.pendingDeletion);
   const deviceFilePaths  = useDeviceSyncStore(s => s.deviceFilePaths);
   const scanning         = useDeviceSyncStore(s => s.scanning);
   const {
-    setTargetDir, setFilenameTemplate, addSource, removeSource,
+    setTargetDir, addSource, removeSource,
     clearSources, toggleChecked, setCheckedIds, markForDeletion,
     unmarkDeletion, removeSources, setDeviceFilePaths, setScanning,
   } = useDeviceSyncStore.getState();
@@ -103,9 +152,6 @@ export default function DeviceSync() {
 
   // Map source IDs → computed device paths (for status derivation)
   const [sourcePathsMap, setSourcePathsMap] = useState<Map<string, string[]>>(new Map());
-  // Template stored in the manifest — may differ from local filenameTemplate when reading a
-  // manifest written on another OS. Used only for status checks, not for new syncs.
-  const [deviceManifestTemplate, setDeviceManifestTemplate] = useState<string | null>(null);
 
   // ─── Removable drive detection ──────────────────────────────────────────
   const [drives, setDrives] = useState<RemovableDrive[]>([]);
@@ -114,6 +160,15 @@ export default function DeviceSync() {
   const [preSyncOpen, setPreSyncOpen] = useState(false);
   const [preSyncLoading, setPreSyncLoading] = useState(false);
   const [syncDelta, setSyncDelta] = useState({ addBytes: 0, addCount: 0, delBytes: 0, delCount: 0, availableBytes: 0, tracks: [] as SubsonicSong[] });
+
+  // ─── Migration (rename existing files into the fixed scheme) ────────────
+  type MigrationPhase = 'closed' | 'loading' | 'preview' | 'executing' | 'done' | 'nothing';
+  const [migrationPhase, setMigrationPhase] = useState<MigrationPhase>('closed');
+  const [migrationOldTemplate, setMigrationOldTemplate] = useState<string>('');
+  const [migrationPairs, setMigrationPairs] = useState<{ old: string; new: string }[]>([]);
+  const [migrationCollisions, setMigrationCollisions] = useState<{ old: string; new: string }[]>([]);
+  const [migrationUnchanged, setMigrationUnchanged] = useState(0);
+  const [migrationResult, setMigrationResult] = useState<{ ok: number; failed: number; errors: string[] } | null>(null);
 
   const refreshDrives = useCallback(async () => {
     setDrivesLoading(true);
@@ -170,13 +225,12 @@ export default function DeviceSync() {
   useEffect(() => {
     if (!targetDir || !driveDetected || manifestImportedRef.current) return;
     manifestImportedRef.current = true;
-    invoke<{ version: number; sources: DeviceSyncSource[]; filenameTemplate?: string } | null>(
+    invoke<{ version: number; sources: DeviceSyncSource[] } | null>(
       'read_device_manifest', { destDir: targetDir }
     ).then(manifest => {
       if (manifest?.sources?.length) {
         useDeviceSyncStore.getState().clearSources();
         manifest.sources.forEach(s => useDeviceSyncStore.getState().addSource(s));
-        setDeviceManifestTemplate(manifest.filenameTemplate ?? null);
         showToast(t('deviceSync.manifestImported', { count: manifest.sources.length }), 4000, 'info');
       }
     }).catch(() => {});
@@ -186,7 +240,6 @@ export default function DeviceSync() {
   useEffect(() => {
     if (!driveDetected) {
       setDeviceFilePaths([]);
-      setDeviceManifestTemplate(null);
       manifestImportedRef.current = false;
     }
   }, [driveDetected]);
@@ -197,9 +250,7 @@ export default function DeviceSync() {
       setSourcePathsMap(new Map());
       return;
     }
-    // Use the template from the manifest (written by the original sync machine) so that
-    // status checks work correctly even when the local template differs (e.g. Windows→Linux).
-    const templateForStatus = deviceManifestTemplate ?? filenameTemplate;
+    // Path schema is fixed in the Rust backend now — no template parameter.
     let cancelled = false;
     (async () => {
       const map = new Map<string, string[]>();
@@ -208,9 +259,11 @@ export default function DeviceSync() {
         try {
           const tracks = await fetchTracksForSource(source);
           const paths = await invoke<string[]>('compute_sync_paths', {
-            tracks: tracks.map(t => trackToSyncInfo(t, '')),
+            tracks: tracks.map((tr, idx) => trackToSyncInfo(
+              tr, '',
+              source.type === 'playlist' ? { name: source.name, index: idx + 1 } : undefined,
+            )),
             destDir: targetDir,
-            template: templateForStatus,
           });
           map.set(source.id, paths);
         } catch {
@@ -220,7 +273,7 @@ export default function DeviceSync() {
       if (!cancelled) setSourcePathsMap(map);
     })();
     return () => { cancelled = true; };
-  }, [targetDir, filenameTemplate, deviceManifestTemplate, sources]);
+  }, [targetDir, sources]);
 
   // Derive sync status per source
   const sourceStatuses = useMemo(() => {
@@ -300,8 +353,24 @@ export default function DeviceSync() {
             5000, 'info'
           );
           // Write manifest so another machine can read the synced sources from the stick
-          const { targetDir: dir, sources: srcs, filenameTemplate: tpl } = useDeviceSyncStore.getState();
-          if (dir) invoke('write_device_manifest', { destDir: dir, sources: srcs, filenameTemplate: tpl }).catch(() => {});
+          const { targetDir: dir, sources: srcs } = useDeviceSyncStore.getState();
+          if (dir) {
+            invoke('write_device_manifest', { destDir: dir, sources: srcs }).catch(() => {});
+            // For every playlist source, write an Extended-M3U next to the
+            // playlist-folder tracks. Context carries the playlist name +
+            // per-track index so the filenames match the files we just synced.
+            const playlistSources = srcs.filter(s => s.type === 'playlist');
+            playlistSources.forEach(async playlist => {
+              try {
+                const tracks = await fetchTracksForSource(playlist);
+                await invoke('write_playlist_m3u8', {
+                  destDir: dir,
+                  playlistName: playlist.name,
+                  tracks: tracks.map((tr, idx) => trackToSyncInfo(tr, '', { name: playlist.name, index: idx + 1 })),
+                });
+              } catch { /* m3u8 failure is non-fatal — skip silently */ }
+            });
+          }
         }
         // Re-scan the device after sync completes (cancelled or not)
         scanDevice();
@@ -380,6 +449,119 @@ export default function DeviceSync() {
   const filteredPlaylists = useMemo(() => playlists.filter(p => p.name.toLowerCase().includes(q)), [playlists, q]);
   const filteredArtists   = useMemo(() => artists.filter(a => a.name.toLowerCase().includes(q)), [artists, q]);
 
+  // ─── Migration handlers ─────────────────────────────────────────────────
+  const startMigrationPreview = async () => {
+    if (!targetDir || sources.length === 0) return;
+    setMigrationPhase('loading');
+    setMigrationResult(null);
+    try {
+      // Look up the old template from the v1 manifest on disk.
+      const manifest = await invoke<{ version: number; filenameTemplate?: string } | null>(
+        'read_device_manifest', { destDir: targetDir }
+      );
+      const oldTemplate = manifest?.filenameTemplate?.trim() || '';
+      if (!oldTemplate) {
+        // v2 manifest or missing — nothing to migrate from.
+        setMigrationPhase('nothing');
+        return;
+      }
+      setMigrationOldTemplate(oldTemplate);
+
+      // Migration only renames tracks that came from album/artist sources —
+      // under the old template all tracks lived in a flat album tree. Playlist
+      // sources get their own `Playlists/{name}/…` folder under the new scheme,
+      // so the files they need are a subset (or copies) of the album tracks and
+      // are cleaner to just re-download on the next sync.
+      const albumSourceTracks: SubsonicSong[] = [];
+      const seenIds = new Set<string>();
+      for (const source of sources.filter(s => s.type !== 'playlist')) {
+        try {
+          const tracks = await fetchTracksForSource(source);
+          for (const tr of tracks) {
+            if (seenIds.has(tr.id)) continue;
+            seenIds.add(tr.id);
+            albumSourceTracks.push(tr);
+          }
+        } catch { /* skip unreachable source */ }
+      }
+
+      // New paths via Rust (fixed album-tree schema).
+      const newAbsPaths = await invoke<string[]>('compute_sync_paths', {
+        tracks: albumSourceTracks.map(tr => trackToSyncInfo(tr, '')),
+        destDir: targetDir,
+      });
+      const sepChar = IS_WINDOWS ? '\\' : '/';
+      const prefix = targetDir.endsWith(sepChar) ? targetDir : targetDir + sepChar;
+      const newRelPaths = newAbsPaths.map(p => p.startsWith(prefix) ? p.slice(prefix.length) : p);
+
+      // Old paths via the legacy template (JS).
+      const oldRelPaths = albumSourceTracks.map(tr => applyLegacyTemplate(oldTemplate, {
+        artist: tr.artist ?? '',
+        album: tr.album ?? '',
+        title: tr.title ?? '',
+        trackNumber: tr.track,
+        discNumber: tr.discNumber,
+        year: tr.year,
+        suffix: tr.suffix ?? 'mp3',
+      }));
+
+      const pairs: { old: string; new: string }[] = [];
+      const collisions: { old: string; new: string }[] = [];
+      const newPathCounts = new Map<string, number>();
+      let unchanged = 0;
+
+      for (let i = 0; i < albumSourceTracks.length; i++) {
+        const o = oldRelPaths[i];
+        const n = newRelPaths[i];
+        if (o === n) { unchanged += 1; continue; }
+        newPathCounts.set(n, (newPathCounts.get(n) ?? 0) + 1);
+        pairs.push({ old: o, new: n });
+      }
+      // Two separate old files mapping onto the same new path → collision.
+      const colliding = new Set([...newPathCounts.entries()].filter(([, c]) => c > 1).map(([p]) => p));
+      const cleanPairs = pairs.filter(p => !colliding.has(p.new));
+      for (const p of pairs.filter(p => colliding.has(p.new))) collisions.push(p);
+
+      setMigrationPairs(cleanPairs);
+      setMigrationCollisions(collisions);
+      setMigrationUnchanged(unchanged);
+      setMigrationPhase(cleanPairs.length === 0 && collisions.length === 0 ? 'nothing' : 'preview');
+    } catch (e) {
+      setMigrationResult({ ok: 0, failed: 0, errors: [String(e)] });
+      setMigrationPhase('done');
+    }
+  };
+
+  const executeMigration = async () => {
+    if (!targetDir || migrationPairs.length === 0) { setMigrationPhase('closed'); return; }
+    setMigrationPhase('executing');
+    try {
+      const results = await invoke<{ oldPath: string; newPath: string; ok: boolean; error: string | null }[]>(
+        'rename_device_files',
+        { targetDir, pairs: migrationPairs.map(p => [p.old, p.new]) }
+      );
+      const ok = results.filter(r => r.ok).length;
+      const failed = results.filter(r => !r.ok).length;
+      const errors = results.filter(r => !r.ok).map(r => `${r.oldPath}: ${r.error ?? 'unknown'}`);
+      setMigrationResult({ ok, failed, errors });
+      // Bump manifest to v2 (no template field) + rescan the device.
+      invoke('write_device_manifest', { destDir: targetDir, sources }).catch(() => {});
+      scanDevice();
+      setMigrationPhase('done');
+    } catch (e) {
+      setMigrationResult({ ok: 0, failed: migrationPairs.length, errors: [String(e)] });
+      setMigrationPhase('done');
+    }
+  };
+
+  const closeMigration = () => {
+    setMigrationPhase('closed');
+    setMigrationPairs([]);
+    setMigrationCollisions([]);
+    setMigrationResult(null);
+    setMigrationOldTemplate('');
+  };
+
   const handleChooseFolder = async () => {
     const sel = await openDialog({ directory: true, multiple: false, title: t('deviceSync.chooseFolder') });
     if (sel) {
@@ -388,13 +570,12 @@ export default function DeviceSync() {
       // If the device has a psysonic-sync.json, always import it — replacing any
       // sources from a previous device so switching sticks works correctly.
       try {
-        const manifest = await invoke<{ version: number; sources: DeviceSyncSource[]; filenameTemplate?: string } | null>(
+        const manifest = await invoke<{ version: number; sources: DeviceSyncSource[] } | null>(
           'read_device_manifest', { destDir: dir }
         );
         if (manifest?.sources?.length) {
           useDeviceSyncStore.getState().clearSources();
           manifest.sources.forEach(s => useDeviceSyncStore.getState().addSource(s));
-          setDeviceManifestTemplate(manifest.filenameTemplate ?? null);
           showToast(t('deviceSync.manifestImported', { count: manifest.sources.length }), 4000, 'info');
         }
       } catch { /* no manifest, that's fine */ }
@@ -422,7 +603,6 @@ export default function DeviceSync() {
         deletionIds: pendingDeletion,
         auth: { baseUrl, ...params },
         targetDir,
-        template: filenameTemplate,
       });
 
       setSyncDelta(payload);
@@ -442,16 +622,20 @@ export default function DeviceSync() {
     if (deletionSources.length > 0) {
       try {
         const allPaths: string[] = [];
-        const trackArrays = await Promise.all(deletionSources.map(s => fetchTracksForSource(s)));
-        const deletionTracks = trackArrays.flat();
-        
-        const paths = await invoke<string[]>('compute_sync_paths', {
-          tracks: deletionTracks.map(t => trackToSyncInfo(t, '')),
-          destDir: targetDir,
-          template: filenameTemplate,
-        });
-        allPaths.push(...paths);
-        
+        // Compute paths per source so playlist sources delete from their own
+        // folder (Playlists/{Name}/…) rather than from the album tree.
+        for (const source of deletionSources) {
+          const tracks = await fetchTracksForSource(source);
+          const paths = await invoke<string[]>('compute_sync_paths', {
+            tracks: tracks.map((tr, idx) => trackToSyncInfo(
+              tr, '',
+              source.type === 'playlist' ? { name: source.name, index: idx + 1 } : undefined,
+            )),
+            destDir: targetDir,
+          });
+          allPaths.push(...paths);
+        }
+
         await invoke<number>('delete_device_files', { paths: allPaths });
         removeSources(deletionSources.map(s => s.id));
         // Update manifest so it stays in sync after deletions
@@ -468,6 +652,21 @@ export default function DeviceSync() {
 
     const allTracks = syncDelta.tracks;
     if (allTracks.length === 0) {
+      // No new downloads needed, but the user may still have added a
+      // playlist source — (re)write its .m3u8 against the existing files.
+      if (targetDir) {
+        const playlistSources = sources.filter(s => s.type === 'playlist');
+        playlistSources.forEach(async playlist => {
+          try {
+            const tracks = await fetchTracksForSource(playlist);
+            await invoke('write_playlist_m3u8', {
+              destDir: targetDir,
+              playlistName: playlist.name,
+              tracks: tracks.map((tr, idx) => trackToSyncInfo(tr, '', { name: playlist.name, index: idx + 1 })),
+            });
+          } catch { /* non-fatal */ }
+        });
+      }
       scanDevice();
       return;
     }
@@ -480,7 +679,6 @@ export default function DeviceSync() {
     invoke('sync_batch_to_device', {
       tracks: allTracks.map(track => trackToSyncInfo(track, buildDownloadUrl(track.id))),
       destDir: targetDir,
-      template: filenameTemplate,
       jobId,
       expectedBytes: syncDelta.addBytes,
     }).catch((err: string) => {
@@ -524,63 +722,6 @@ export default function DeviceSync() {
     (!driveDetected && !!targetDir) ||
     (pendingCount === 0 && deletionCount === 0);
 
-  // ─── Template presets & token insertion ────────────────────────────────
-  const TEMPLATE_PRESETS = useMemo(() => [
-    { key: 'standard',  value: '{artist}/{album}/{track_number} - {title}',              label: t('deviceSync.templatePresetStandard') },
-    { key: 'multidisc', value: '{artist}/{album}/{disc_number}-{track_number} - {title}', label: t('deviceSync.templatePresetMultiDisc') },
-    { key: 'altfolder', value: '{artist} - {album}/{track_number} - {title}',             label: t('deviceSync.templatePresetAltFolder') },
-  ], [t]);
-
-  const TEMPLATE_TOKENS = ['{artist}', '{album}', '{title}', '{track_number}', '{disc_number}', '{year}', '/', '-'];
-
-  const activePreset = TEMPLATE_PRESETS.find(p => p.value === filenameTemplate)?.key ?? null;
-
-  const templateInputRef = useRef<HTMLInputElement>(null);
-  const cursorPosRef = useRef<number>(filenameTemplate.length);
-
-  const insertToken = useCallback((token: string) => {
-    const input = templateInputRef.current;
-    const pos = cursorPosRef.current;
-    const next = filenameTemplate.slice(0, pos) + token + filenameTemplate.slice(pos);
-    setFilenameTemplate(next);
-    requestAnimationFrame(() => {
-      if (!input) return;
-      input.focus();
-      const newPos = pos + token.length;
-      input.setSelectionRange(newPos, newPos);
-      cursorPosRef.current = newPos;
-    });
-  }, [filenameTemplate, setFilenameTemplate]);
-
-  const trackCursor = useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
-    cursorPosRef.current = (e.currentTarget.selectionStart ?? filenameTemplate.length);
-  }, [filenameTemplate.length]);
-
-  // ─── Template preview (dummy track) ─────────────────────────────────────
-  const PREVIEW_TRACK = {
-    artist: 'Artist Name',
-    album: 'Album Title',
-    title: 'Track Title',
-    track_number: '01',
-    disc_number: '1',
-    year: '2024',
-  } as const;
-
-  const templatePreviewText = useMemo(() => {
-    try {
-      const result = filenameTemplate
-        .replace(/\{artist\}/g,       PREVIEW_TRACK.artist)
-        .replace(/\{album\}/g,        PREVIEW_TRACK.album)
-        .replace(/\{title\}/g,        PREVIEW_TRACK.title)
-        .replace(/\{track_number\}/g, PREVIEW_TRACK.track_number)
-        .replace(/\{disc_number\}/g,  PREVIEW_TRACK.disc_number)
-        .replace(/\{year\}/g,         PREVIEW_TRACK.year);
-      return `${result}.mp3`;
-    } catch {
-      return '';
-    }
-  }, [filenameTemplate]);
-
   const tabs: { key: SourceTab; icon: React.ReactNode; label: string }[] = [
     { key: 'playlists', icon: <ListMusic size={14} />, label: t('deviceSync.tabPlaylists') },
     { key: 'albums',    icon: <Disc3 size={14} />,     label: t('deviceSync.tabAlbums') },
@@ -598,63 +739,30 @@ export default function DeviceSync() {
         </div>
 
         <div className="device-sync-config-row">
-          
-          {/* ── Left: Template ── */}
-          <div className="device-sync-template-section">
-            <span className="device-sync-label-inline">{t('deviceSync.filenameTemplate')}</span>
-            <div className="device-sync-template-presets">
-              {TEMPLATE_PRESETS.map(p => (
-                <button
-                  key={p.key}
-                  className={`device-sync-template-preset-btn${activePreset === p.key ? ' active' : ''}`}
-                  onClick={() => setFilenameTemplate(p.value)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            <div className="device-sync-template-input-wrap">
-              <div className="device-sync-template-input-row">
-                <input
-                  ref={templateInputRef}
-                  className="input device-sync-template-input"
-                  value={filenameTemplate}
-                  onChange={e => { setFilenameTemplate(e.target.value); trackCursor(e); }}
-                  onSelect={trackCursor}
-                  onKeyUp={trackCursor}
-                  onClick={trackCursor}
-                  spellCheck={false}
-                />
-                {filenameTemplate && (
-                  <button
-                    className="device-sync-template-clear"
-                    onClick={() => { setFilenameTemplate(''); cursorPosRef.current = 0; templateInputRef.current?.focus(); }}
-                    data-tooltip={t('common.clear')}
-                    data-tooltip-pos="bottom"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-              <div className="device-sync-template-tokens">
-                {TEMPLATE_TOKENS.map(tok => (
-                  <button
-                    key={tok}
-                    className="device-sync-template-token"
-                    onClick={() => insertToken(tok)}
-                    data-tooltip={tok === '/' ? t('deviceSync.tokenSlashHint') : undefined}
-                    data-tooltip-pos="bottom"
-                  >
-                    {tok}
-                  </button>
-                ))}
-              </div>
-              {templatePreviewText && (
-                <span className="device-sync-template-preview">
-                  {t('deviceSync.templatePreview')}: {templatePreviewText}
-                </span>
-              )}
-            </div>
+
+          {/* ── Left: Fixed schema info ── */}
+          <div className="device-sync-schema-section">
+            <span className="device-sync-label-inline">{t('deviceSync.schemaLabel', { defaultValue: 'Naming scheme' })}</span>
+            <code className="device-sync-schema-code">
+              {'{AlbumArtist}/{Album}/{TrackNum} - {Title}.{ext}'}
+            </code>
+            <span className="device-sync-schema-hint">
+              {t('deviceSync.schemaHint', {
+                defaultValue: 'Fixed scheme for reliable cross-OS sync. Playlists are written as .m3u8 that reference the album tracks — no duplicates on the device.',
+              })}
+            </span>
+            {targetDir && sources.length > 0 && (
+              <button
+                className="btn btn-ghost device-sync-migrate-btn"
+                onClick={startMigrationPreview}
+                data-tooltip={t('deviceSync.migrateTooltip', {
+                  defaultValue: 'Rename existing files on the device into the new scheme (from the old filename template).',
+                })}
+                data-tooltip-pos="bottom"
+              >
+                {t('deviceSync.migrateButton', { defaultValue: 'Reorganize existing files…' })}
+              </button>
+            )}
           </div>
 
           {/* ── Right: Drive config ── */}
@@ -1036,6 +1144,117 @@ export default function DeviceSync() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Migration modal (rename existing files into the fixed scheme) ── */}
+      {migrationPhase !== 'closed' && (
+        <div className="modal-overlay" onClick={migrationPhase === 'executing' ? undefined : closeMigration}>
+          <div className="modal-content device-sync-migrate-modal" onClick={e => e.stopPropagation()}>
+            <h2 className="modal-title">{t('deviceSync.migrateTitle', { defaultValue: 'Reorganize existing files' })}</h2>
+            <div className="device-sync-migrate-body">
+              {migrationPhase === 'loading' && (
+                <div className="device-sync-migrate-loading">
+                  <Loader2 size={18} className="spin" />
+                  <span>{t('deviceSync.migrateLoading', { defaultValue: 'Analyzing existing files…' })}</span>
+                </div>
+              )}
+              {migrationPhase === 'nothing' && (
+                <div className="device-sync-migrate-nothing">
+                  {migrationOldTemplate ? (
+                    t('deviceSync.migrateNothingToDo', { defaultValue: 'All existing files already match the new scheme — nothing to do.' })
+                  ) : (
+                    t('deviceSync.migrateNoTemplate', { defaultValue: 'No legacy filename template found on the device. Migration only applies when the stick was synced with a Psysonic version that supported custom templates.' })
+                  )}
+                </div>
+              )}
+              {migrationPhase === 'preview' && (
+                <>
+                  <div className="device-sync-migrate-summary">
+                    <div>
+                      <strong>{migrationPairs.length}</strong>{' '}
+                      {t('deviceSync.migrateFilesToRename', { defaultValue: 'files will be renamed' })}
+                    </div>
+                    {migrationUnchanged > 0 && (
+                      <div className="muted">
+                        {t('deviceSync.migrateUnchanged', {
+                          defaultValue: '{{n}} files are already at the correct path',
+                          n: migrationUnchanged,
+                        })}
+                      </div>
+                    )}
+                    {migrationCollisions.length > 0 && (
+                      <div className="device-sync-migrate-warning">
+                        <AlertCircle size={14} />
+                        {t('deviceSync.migrateCollisions', {
+                          defaultValue: '{{n}} files cannot be renamed automatically (multiple tracks map to the same target). They will be left untouched — the next sync re-downloads them into the correct location.',
+                          n: migrationCollisions.length,
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <div className="device-sync-migrate-preview-note">
+                    {t('deviceSync.migratePreviewNote', {
+                      defaultValue: 'Old template: {{tpl}}',
+                      tpl: migrationOldTemplate,
+                    })}
+                  </div>
+                </>
+              )}
+              {migrationPhase === 'executing' && (
+                <div className="device-sync-migrate-loading">
+                  <Loader2 size={18} className="spin" />
+                  <span>{t('deviceSync.migrateExecuting', { defaultValue: 'Renaming files…' })}</span>
+                </div>
+              )}
+              {migrationPhase === 'done' && migrationResult && (
+                <div className="device-sync-migrate-result">
+                  <div className="device-sync-migrate-result-line">
+                    <CheckCircle2 size={14} className="positive" />
+                    {t('deviceSync.migrateSuccess', {
+                      defaultValue: '{{n}} files renamed successfully',
+                      n: migrationResult.ok,
+                    })}
+                  </div>
+                  {migrationResult.failed > 0 && (
+                    <div className="device-sync-migrate-result-line">
+                      <AlertCircle size={14} className="danger" />
+                      {t('deviceSync.migrateFailed', {
+                        defaultValue: '{{n}} renames failed',
+                        n: migrationResult.failed,
+                      })}
+                    </div>
+                  )}
+                  {migrationResult.errors.length > 0 && (
+                    <details className="device-sync-migrate-errors">
+                      <summary>{t('deviceSync.migrateShowErrors', { defaultValue: 'Show errors' })}</summary>
+                      <ul>
+                        {migrationResult.errors.slice(0, 50).map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                        {migrationResult.errors.length > 50 && (
+                          <li>… {migrationResult.errors.length - 50} more</li>
+                        )}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="device-sync-migrate-footer">
+              {migrationPhase === 'preview' && (
+                <>
+                  <button className="btn btn-ghost" onClick={closeMigration}>{t('common.cancel')}</button>
+                  <button className="btn btn-primary" onClick={executeMigration} disabled={migrationPairs.length === 0}>
+                    {t('deviceSync.migrateStart', { defaultValue: 'Start renaming' })}
+                  </button>
+                </>
+              )}
+              {(migrationPhase === 'done' || migrationPhase === 'nothing') && (
+                <button className="btn btn-primary" onClick={closeMigration}>{t('common.close')}</button>
+              )}
+            </div>
           </div>
         </div>
       )}

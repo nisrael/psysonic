@@ -9,7 +9,6 @@ export interface DeviceSyncSource {
 
 interface DeviceSyncState {
   targetDir: string | null;
-  filenameTemplate: string;
   sources: DeviceSyncSource[];        // persistent device content list
   checkedIds: string[];               // currently checked for bulk actions (not persisted)
   pendingDeletion: string[];          // source IDs marked for deletion (not persisted)
@@ -17,7 +16,6 @@ interface DeviceSyncState {
   scanning: boolean;                   // true while scanning the device
 
   setTargetDir: (dir: string | null) => void;
-  setFilenameTemplate: (t: string) => void;
   addSource: (source: DeviceSyncSource) => void;
   removeSource: (id: string) => void;
   clearSources: () => void;
@@ -35,7 +33,6 @@ export const useDeviceSyncStore = create<DeviceSyncState>()(
   persist(
     (set) => ({
       targetDir: null,
-      filenameTemplate: '{artist}/{album}/{track_number} - {title}',
       sources: [],
       checkedIds: [],
       pendingDeletion: [],
@@ -43,7 +40,6 @@ export const useDeviceSyncStore = create<DeviceSyncState>()(
       scanning: false,
 
       setTargetDir: (dir) => set({ targetDir: dir }),
-      setFilenameTemplate: (t) => set({ filenameTemplate: t }),
 
       addSource: (source) =>
         set((s) => ({
@@ -97,7 +93,6 @@ export const useDeviceSyncStore = create<DeviceSyncState>()(
       name: 'psysonic_device_sync',
       partialize: (s) => ({
         targetDir: s.targetDir,
-        filenameTemplate: s.filenameTemplate,
         sources: s.sources,
       }),
     }
