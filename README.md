@@ -76,6 +76,7 @@ curl -fsSL https://raw.githubusercontent.com/Psychotoxical/psysonic/main/scripts
 **Manual Installation:**
 - **Ubuntu / Debian**: `.deb` from GitHub Releases
 - **Fedora / RHEL**: `.rpm` from GitHub Releases
+- **Any distro (portable)**: `.AppImage` from GitHub Releases — `chmod +x` and run, no install required
 
 **❄️ NixOS (flakes):**
 - `nix run github:Psychotoxical/psysonic` — one-shot launch
