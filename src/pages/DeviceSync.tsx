@@ -872,7 +872,7 @@ export default function DeviceSync() {
               {activeTab === 'albums' && (search.trim() ? albumSearchResults : randomAlbums).map(al => (
                 <BrowserRow key={al.id} name={al.name} meta={al.artist}
                   selected={sources.some(s => s.id === al.id) && !pendingDeletion.includes(al.id)}
-                  onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name })} />
+                  onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name, artist: al.artist })} />
               ))}
               {activeTab === 'artists' && filteredArtists.map(ar => (
                 <React.Fragment key={ar.id}>
@@ -896,7 +896,7 @@ export default function DeviceSync() {
                       <BrowserRow key={al.id} name={al.name} meta={al.year?.toString()}
                         selected={sources.some(s => s.id === al.id) && !pendingDeletion.includes(al.id)}
                         indent
-                        onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name })} />
+                        onToggle={() => handleToggleSource({ type: 'album', id: al.id, name: al.name, artist: al.artist || ar.name })} />
                     ))
                   }
                 </React.Fragment>
@@ -990,7 +990,10 @@ export default function DeviceSync() {
                         onChange={() => toggleChecked(s.id)}
                         disabled={status === 'deletion'}
                       />
-                      <span className="device-sync-row-name">{s.name}</span>
+                      <span className="device-sync-row-name">
+                        {s.name}
+                        {s.artist && <span className="device-sync-row-artist"> · {s.artist}</span>}
+                      </span>
                       <span className="device-sync-source-type">{s.type}</span>
                       <span className={`device-sync-status-icon ${status}`}>
                         {status === 'synced'   && <CheckCircle2 size={13} />}
@@ -1272,8 +1275,10 @@ function BrowserRow({ name, meta, selected, onToggle, indent }: {
       <span className="device-sync-row-check">
         {selected ? <CheckCircle2 size={14} /> : <span className="device-sync-row-circle" />}
       </span>
-      <span className="device-sync-row-name">{name}</span>
-      {meta && <span className="device-sync-row-meta">{meta}</span>}
+      <span className="device-sync-row-name">
+        {name}
+        {meta && <span className="device-sync-row-artist"> · {meta}</span>}
+      </span>
     </button>
   );
 }

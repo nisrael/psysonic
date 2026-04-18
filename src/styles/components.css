@@ -8478,6 +8478,16 @@ html.no-compositing .fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
 
 .device-sync-row-name {
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-sync-row-artist {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 0.2em;
 }
 
 .device-sync-device-row.checked { background: var(--accent-dim); }

@@ -5,6 +5,8 @@ export interface DeviceSyncSource {
   type: 'album' | 'playlist' | 'artist';
   id: string;
   name: string;
+  /** Album artist — only set when type === 'album'. Shown as a subtitle in the device list. */
+  artist?: string;
 }
 
 interface DeviceSyncState {
