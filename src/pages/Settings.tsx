@@ -121,6 +121,8 @@ const CONTRIBUTORS = [
       'ReplayGain values in Queue tech strip (PR #196)',
       'Playback source badge (offline / cache / stream) in Queue tech strip (PR #201)',
       'WebKitGTK wheel scroll mode: smooth (kinetic) default with optional linear toggle (PR #207)',
+      'ArtistCardLocal i18n: use plural-aware artists.albumCount key instead of hardcoded German',
+      'NixOS / flake install guide with Cachix setup (PR #209)',
     ],
   },
   {
