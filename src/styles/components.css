@@ -8804,3 +8804,15 @@ html.no-compositing .fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
 
 .device-sync-row-name { flex: 1; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .device-sync-row-meta { font-size: 0.75rem; color: var(--text-secondary); flex-shrink: 0; }
+
+/* ── Pause CSS animations when the window is hidden / minimized ────────────
+   Set via App.tsx on `visibilitychange`. WebView2 on Windows keeps compositing
+   infinite CSS animations (mesh-aura, portrait-drift, eq-bounce, track-pulse,
+   led-pulse, …) even when the app is minimized, causing constant GPU use.
+   Pausing them cuts that to near zero while hidden without touching the
+   running Rust/audio threads. */
+html[data-app-hidden="true"] *,
+html[data-app-hidden="true"] *::before,
+html[data-app-hidden="true"] *::after {
+  animation-play-state: paused !important;
+}

@@ -2432,11 +2432,26 @@ fn build_tray_icon(app: &tauri::AppHandle) -> tauri::Result<TrayIcon> {
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
-                ..
-            } = event {
+            // Windows fires a Click on *every* half of a double-click, so a
+            // double-click would toggle the window visibility twice and end up
+            // back where it started (the bug #cucadmuh reported). Switch to the
+            // Windows-only DoubleClick event there and ignore single clicks;
+            // that matches the standard Windows tray convention (Discord, etc).
+            #[cfg(target_os = "windows")]
+            let should_toggle = matches!(
+                event,
+                TrayIconEvent::DoubleClick { button: MouseButton::Left, .. }
+            );
+            #[cfg(not(target_os = "windows"))]
+            let should_toggle = matches!(
+                event,
+                TrayIconEvent::Click {
+                    button: MouseButton::Left,
+                    button_state: MouseButtonState::Up,
+                    ..
+                }
+            );
+            if should_toggle {
                 let app = tray.app_handle();
                 if let Some(win) = app.get_webview_window("main") {
                     if win.is_visible().unwrap_or(false) {

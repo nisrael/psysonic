@@ -325,6 +325,20 @@ function AppShell() {
     };
   }, []);
 
+  // Pause CSS animations when the window is minimized / hidden.
+  // WebView2 on Windows keeps compositing infinite-loop animations (mesh-aura,
+  // portrait-drift, eq-bounce, …) even when the app is minimized, which shows
+  // up as steady GPU usage. The CSS rule `html[data-app-hidden="true"]` in
+  // components.css pauses all running animations while this flag is set.
+  useEffect(() => {
+    const update = () => {
+      document.documentElement.dataset.appHidden = document.hidden ? 'true' : 'false';
+    };
+    document.addEventListener('visibilitychange', update);
+    update();
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
+
   const isMobilePlayer = isMobile && location.pathname === '/now-playing';
 
   return (
