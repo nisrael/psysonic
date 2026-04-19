@@ -1244,6 +1244,21 @@
   gap: 8px;
 }
 
+/* Liquid-glass floating bar — macOS + Windows only.
+   Inspired by PR #211 (kveld9), adapted to theme tokens and reduced
+   blur so it stays within WebView2 / WKWebView GPU budgets. Linux
+   always keeps the solid look from PR #216, regardless of compositor. */
+html[data-platform="macos"] .player-bar.floating,
+html[data-platform="windows"] .player-bar.floating {
+  background: color-mix(in srgb, var(--bg-player) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 12%, transparent);
+}
+
 .player-track-info {
   display: flex;
   align-items: center;

@@ -56,7 +56,7 @@ import GenreDetail from './pages/GenreDetail';
 import ExportPickerModal from './components/ExportPickerModal';
 import AppUpdater from './components/AppUpdater';
 import TitleBar from './components/TitleBar';
-import { IS_LINUX, IS_WINDOWS } from './utils/platform';
+import { IS_LINUX, IS_MACOS, IS_WINDOWS } from './utils/platform';
 import { version } from '../package.json';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 import { useAuthStore } from './store/authStore';
@@ -110,6 +110,11 @@ function AppShell() {
     invoke<boolean>('no_compositing_mode').then(noComp => {
       if (noComp) document.documentElement.classList.add('no-compositing');
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const platform = IS_LINUX ? 'linux' : IS_MACOS ? 'macos' : IS_WINDOWS ? 'windows' : 'unknown';
+    document.documentElement.setAttribute('data-platform', platform);
   }, []);
 
   useEffect(() => {
