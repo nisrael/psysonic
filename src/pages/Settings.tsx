@@ -2445,6 +2445,18 @@ export default function Settings() {
                   <span style={{ color: 'var(--text-muted)', minWidth: 56 }}>AI</span>
                   <span style={{ color: 'var(--text-secondary)' }}>{t('settings.aboutAiCredit')}</span>
                 </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)', minWidth: 56 }}>{t('settings.aboutReleaseNotesLabel')}</span>
+                  <button
+                    onClick={() => {
+                      useAuthStore.getState().setLastSeenChangelogVersion('');
+                      navigate('/whats-new');
+                    }}
+                    style={{ color: 'var(--accent)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    {t('settings.aboutReleaseNotesLink')}
+                  </button>
+                </div>
                 <div>
                   <button
                     style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}

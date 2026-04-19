@@ -38,6 +38,7 @@ import InternetRadio from './pages/InternetRadio';
 import FolderBrowser from './pages/FolderBrowser';
 import DeviceSync from './pages/DeviceSync';
 import NowPlayingPage from './pages/NowPlaying';
+import WhatsNew from './pages/WhatsNew';
 import MiniPlayer from './components/MiniPlayer';
 import { initMiniPlayerBridgeOnMain } from './utils/miniPlayerBridge';
 import FullscreenPlayer from './components/FullscreenPlayer';
@@ -53,7 +54,6 @@ import OfflineLibrary from './pages/OfflineLibrary';
 import Genres from './pages/Genres';
 import GenreDetail from './pages/GenreDetail';
 import ExportPickerModal from './components/ExportPickerModal';
-import ChangelogModal from './components/ChangelogModal';
 import AppUpdater from './components/AppUpdater';
 import TitleBar from './components/TitleBar';
 import { IS_LINUX } from './utils/platform';
@@ -229,14 +229,9 @@ function AppShell() {
     fn();
   }, [currentTrack, isPlaying]);
 
-  const [changelogModalOpen, setChangelogModalOpen] = useState(false);
-
-  useEffect(() => {
-    const { showChangelogOnUpdate, lastSeenChangelogVersion } = useAuthStore.getState();
-    if (showChangelogOnUpdate && lastSeenChangelogVersion !== version) {
-      setChangelogModalOpen(true);
-    }
-  }, []);
+  // Post-update changelog is now surfaced via a dismissible banner in the
+  // sidebar (WhatsNewBanner) that links to the /whats-new page — no auto
+  // modal takeover on startup.
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     return localStorage.getItem('psysonic_sidebar_collapsed') === 'true';
@@ -402,6 +397,7 @@ function AppShell() {
             <Route path="/most-played" element={<MostPlayed />} />
             <Route path="/now-playing" element={isMobile ? <MobilePlayerView /> : <NowPlayingPage />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/whats-new" element={<WhatsNew />} />
             <Route path="/help" element={<Help />} />
             <Route path="/offline" element={<OfflineLibrary />} />
             <Route path="/genres" element={<Genres />} />
@@ -436,7 +432,6 @@ function AppShell() {
       <DownloadFolderModal />
       <TooltipPortal />
       <AppUpdater />
-      {changelogModalOpen && <ChangelogModal onClose={() => setChangelogModalOpen(false)} />}
     </div>
   );
 }

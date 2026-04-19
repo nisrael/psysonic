@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import PsysonicLogo from './PsysonicLogo';
 import PSmallLogo from './PSmallLogo';
+import WhatsNewBanner from './WhatsNewBanner';
 import { getPlaylists } from '../api/subsonic';
 import { usePlaylistStore } from '../store/playlistStore';
 import { ALL_NAV_ITEMS } from '../config/navItems';
@@ -294,13 +295,18 @@ export default function Sidebar({
           )
         ))}
 
+        {/* Spacer: everything from here onward sticks to the bottom of the sidebar. */}
+        <div className="sidebar-bottom-spacer" />
+
+        {/* What's New banner — only visible while the current release hasn't been seen. */}
+        <WhatsNewBanner collapsed={isCollapsed} />
+
         {/* Now Playing — fixed, always visible */}
         <NavLink
           to="/now-playing"
           className={({ isActive }) => `nav-link nav-link-nowplaying ${isActive ? 'active' : ''}`}
           data-tooltip={isCollapsed ? t('sidebar.nowPlaying') : undefined}
           data-tooltip-pos="bottom"
-          style={{ marginTop: 'auto' }}
         >
           <span className="nav-np-icon-wrap">
             <AudioLines size={isCollapsed ? 22 : 18} />
