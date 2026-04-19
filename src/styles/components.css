@@ -9069,7 +9069,10 @@ html.no-compositing .fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
   box-sizing: border-box;
 }
 
-/* ── Custom in-page titlebar (Linux + Windows; macOS keeps the native one) ── */
+/* ── Custom in-page titlebar.
+   Win/Linux: full bar with drag region, track title, and action buttons.
+   macOS:     slim transparent bar holding only the action buttons; the
+              native titlebar above already shows title + close. ── */
 .mini-player__titlebar {
   flex-shrink: 0;
   height: 26px;
@@ -9080,6 +9083,13 @@ html.no-compositing .fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
   background: color-mix(in srgb, var(--bg-app) 85%, var(--bg-card) 15%);
   border-bottom: 1px solid var(--border-subtle);
 }
+.mini-player__titlebar--mac {
+  height: 22px;
+  padding: 0 6px;
+  background: transparent;
+  border-bottom: none;
+  justify-content: flex-end;
+}
 .mini-player__titlebar-title {
   flex: 1;
   font-size: 11px;
@@ -9089,6 +9099,9 @@ html.no-compositing .fsr-lyric-line.fsrl-active .fsr-lyric-word.active {
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.02em;
+}
+.mini-player__titlebar-spacer {
+  flex: 1;
 }
 .mini-player__titlebar-btn {
   width: 22px;

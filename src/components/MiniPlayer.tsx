@@ -326,41 +326,52 @@ export default function MiniPlayer() {
 
   return (
     <div className="mini-player-shell">
-      {!IS_MACOS && (
-        <div className="mini-player__titlebar" data-tauri-drag-region>
+      <div
+        className={`mini-player__titlebar${IS_MACOS ? ' mini-player__titlebar--mac' : ''}`}
+        {...(IS_MACOS ? {} : { 'data-tauri-drag-region': true })}
+      >
+        {!IS_MACOS ? (
           <span className="mini-player__titlebar-title" data-tauri-drag-region>
             {track?.title ?? 'Psysonic Mini'}
           </span>
-          <button
-            type="button"
-            className={`mini-player__titlebar-btn${queueOpen ? ' mini-player__titlebar-btn--active' : ''}`}
-            onClick={toggleQueue}
-            data-tauri-drag-region="false"
-            data-tooltip={queueOpen ? t('miniPlayer.hideQueue') : t('miniPlayer.showQueue')}
-            aria-label={queueOpen ? t('miniPlayer.hideQueue') : t('miniPlayer.showQueue')}
-          >
-            <ListMusic size={13} />
-          </button>
-          <button
-            type="button"
-            className={`mini-player__titlebar-btn${alwaysOnTop ? ' mini-player__titlebar-btn--active' : ''}`}
-            onClick={toggleOnTop}
-            data-tauri-drag-region="false"
-            data-tooltip={alwaysOnTop ? t('miniPlayer.pinOff') : t('miniPlayer.pinOnTop')}
-            aria-label={alwaysOnTop ? t('miniPlayer.pinOff') : t('miniPlayer.pinOnTop')}
-          >
-            {alwaysOnTop ? <Pin size={13} /> : <PinOff size={13} />}
-          </button>
-          <button
-            type="button"
-            className="mini-player__titlebar-btn"
-            onClick={showMain}
-            data-tauri-drag-region="false"
-            data-tooltip={t('miniPlayer.openMainWindow')}
-            aria-label={t('miniPlayer.openMainWindow')}
-          >
-            <Maximize2 size={13} />
-          </button>
+        ) : (
+          // macOS already shows the track title in the native titlebar; we
+          // just need a flexible spacer so the action buttons sit right.
+          <span className="mini-player__titlebar-spacer" />
+        )}
+        <button
+          type="button"
+          className={`mini-player__titlebar-btn${queueOpen ? ' mini-player__titlebar-btn--active' : ''}`}
+          onClick={toggleQueue}
+          data-tauri-drag-region="false"
+          data-tooltip={queueOpen ? t('miniPlayer.hideQueue') : t('miniPlayer.showQueue')}
+          aria-label={queueOpen ? t('miniPlayer.hideQueue') : t('miniPlayer.showQueue')}
+        >
+          <ListMusic size={13} />
+        </button>
+        <button
+          type="button"
+          className={`mini-player__titlebar-btn${alwaysOnTop ? ' mini-player__titlebar-btn--active' : ''}`}
+          onClick={toggleOnTop}
+          data-tauri-drag-region="false"
+          data-tooltip={alwaysOnTop ? t('miniPlayer.pinOff') : t('miniPlayer.pinOnTop')}
+          aria-label={alwaysOnTop ? t('miniPlayer.pinOff') : t('miniPlayer.pinOnTop')}
+        >
+          {alwaysOnTop ? <Pin size={13} /> : <PinOff size={13} />}
+        </button>
+        <button
+          type="button"
+          className="mini-player__titlebar-btn"
+          onClick={showMain}
+          data-tauri-drag-region="false"
+          data-tooltip={t('miniPlayer.openMainWindow')}
+          aria-label={t('miniPlayer.openMainWindow')}
+        >
+          <Maximize2 size={13} />
+        </button>
+        {/* macOS already provides Close via the red traffic light — skip
+            the duplicate so the in-app titlebar stays minimal. */}
+        {!IS_MACOS && (
           <button
             type="button"
             className="mini-player__titlebar-btn mini-player__titlebar-btn--close"
@@ -371,8 +382,8 @@ export default function MiniPlayer() {
           >
             <X size={13} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className={`mini-player${queueOpen ? ' mini-player--queue-open' : ''}`}>
         <div className="mini-player__art">
