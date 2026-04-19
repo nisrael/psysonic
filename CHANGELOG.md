@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 >
 > **📦 Version jump 1.34.x → 1.40.0:** The 1.34.x patch series was bumped a lot as each small feature landed. 1.40.0 consolidates the last few weeks of work — macOS signing + auto-updater, the Device-Sync overhaul, theme work and contrast audits — into a single coherent release. The next major bump (2.0.0) is planned once Windows code-signing + Windows auto-updater are active as well.
 
+## [1.42.1] - 2026-04-19
+
+> **🚨 Critical bug fix for Windows users.** On 1.42.0, opening the mini player on Windows could stall Tauri's event loop: the mini would appear as a blank white window, neither the main window nor the mini could be closed, and the only way out was killing the process via Task Manager. **Please update immediately if you're on Windows 1.42.0.** macOS and Linux were not affected.
+
+### Fixed
+
+- **Mini player no longer hangs the app on Windows** *([@Psychotoxical](https://github.com/Psychotoxical))*: Creating the second WebView2 webview lazily from the `open_mini_player` invoke handler reliably froze the app on Windows — the mini opened blank, both windows became unresponsive, and the user had to kill the process from Task Manager. The builder + `main.minimize()` combo racing against WebView2's first paint was the trigger. The mini webview is now pre-built hidden in Tauri's `.setup()` on Windows, so the first open is a pure show/hide instead of creation + minimize. `open_mini_player` is simpler on all platforms, the minimize-main dance around show/hide is skipped on Windows, and Windows also goes back to the native window decorations (the earlier `decorations: false` mini titlebar was part of the hang surface).
+- **Mini player syncs immediately on first open** *([@Psychotoxical](https://github.com/Psychotoxical))*: With the mini pre-created on Windows, the mount-time `mini:ready` event could race past the main window's bridge listener and leave the mini without a snapshot when the user actually opened it. The mini now also re-emits `mini:ready` on every window focus, so opening the mini always triggers a fresh sync regardless of startup ordering.
+
+### Added
+
+- **Optional “Preload mini player” setting on Linux + macOS** *([@Psychotoxical](https://github.com/Psychotoxical))*: Settings → General → App behaviour. Off by default. When enabled, the mini player window is built hidden at app start so the first open is instant instead of waiting a few seconds for WebKit to boot + React to hydrate + the bridge snapshot to arrive. Costs one extra WebKit process in the background permanently (~50–100 MB RAM). Windows always preloads regardless of this toggle — it's how we work around the hang above, not an opt-in feature there.
+
 ## [1.42.0] - 2026-04-19
 
 > **🛠️ Note on the 1.41.0 jump:** The 1.41.0 tag exists as an internal Draft release on GitHub — it was used to wire up and verify the Cachix substituter pipeline and never went public. **1.42.0 is the first public release after 1.40.0** and consolidates everything that was prepared for 1.41.0 plus the work landed on top in the days since.
