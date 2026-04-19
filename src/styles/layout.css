@@ -1725,15 +1725,54 @@
   text-overflow: ellipsis;
 }
 
-/* Two-line layout: base info on top, ReplayGain underneath. The stack
-   wraps both spans so the source icon stays vertically centered next to
-   the whole text block. */
+/* Two-line layout: base info + RG badge on top, optional ReplayGain
+   values underneath when the badge is expanded. The stack wraps both
+   rows so the source icon stays vertically centered next to the whole
+   text block. */
 .queue-current-tech-stack {
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1px;
+}
+
+.queue-current-tech-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Pill-shaped toggle that signals "this track has ReplayGain metadata"
+   without committing screen space to the numbers — values appear in the
+   tooltip and on the second line when expanded. */
+.queue-current-tech-rg-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+}
+.queue-current-tech-rg-badge:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.queue-current-tech-rg-badge svg {
+  transition: transform 0.18s ease;
+}
+.queue-current-tech-rg-badge--open svg {
+  transform: rotate(180deg);
 }
 
 .queue-current-tech-rg {

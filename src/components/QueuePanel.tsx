@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Track, usePlayerStore, songToTrack } from '../store/playerStore';
-import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio, HardDrive } from 'lucide-react';
+import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio, HardDrive, ChevronDown } from 'lucide-react';
 import { buildCoverArtUrl, coverArtCacheKey, getAlbum, getPlaylists, getPlaylist, updatePlaylist, deletePlaylist, SubsonicPlaylist } from '../api/subsonic';
 import { usePlaylistStore } from '../store/playlistStore';
 import { useCachedUrl } from './CachedImage';
@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { useLyricsStore } from '../store/lyricsStore';
 import { useDragDrop } from '../contexts/DragDropContext';
 import LyricsPane from './LyricsPane';
@@ -267,6 +268,8 @@ export default function QueuePanel() {
 
   const [showRemainingTime, setShowRemainingTime] = useState(false);
   const [showCrossfadePopover, setShowCrossfadePopover] = useState(false);
+  const expandReplayGain = useThemeStore(s => s.expandReplayGain);
+  const setExpandReplayGain = useThemeStore(s => s.setExpandReplayGain);
   const crossfadeBtnRef = useRef<HTMLButtonElement>(null);
   const crossfadePopoverRef = useRef<HTMLDivElement>(null);
 
@@ -454,28 +457,44 @@ export default function QueuePanel() {
             const baseLine = baseParts.join(' · ');
             const rgLine = rgParts.join(' · ');
             if (!baseLine && !rgLine && !playbackSource) return null;
+            const showRgLine = expandReplayGain && !!rgLine;
             return (
-              <div className={`queue-current-tech${rgLine ? ' queue-current-tech--two-line' : ''}`}>
-                {playbackSource && (
-                  <span
-                    className="queue-current-tech-source"
-                    data-tooltip={
-                      playbackSource === 'offline'
-                        ? t('queue.sourceOffline')
-                        : playbackSource === 'hot'
-                          ? t('queue.sourceHot')
-                          : t('queue.sourceStream')
-                    }
-                    aria-hidden
-                  >
-                    {playbackSource === 'offline' && <FolderOpen size={11} strokeWidth={2.25} />}
-                    {playbackSource === 'hot' && <HardDrive size={11} strokeWidth={2.25} />}
-                    {playbackSource === 'stream' && <Waves size={11} strokeWidth={2.25} />}
-                  </span>
-                )}
+              <div className={`queue-current-tech${showRgLine ? ' queue-current-tech--two-line' : ''}`}>
                 <div className="queue-current-tech-stack">
-                  {baseLine && <span className="queue-current-tech-main">{baseLine}</span>}
-                  {rgLine && (
+                  <div className="queue-current-tech-row">
+                    {playbackSource && (
+                      <span
+                        className="queue-current-tech-source"
+                        data-tooltip={
+                          playbackSource === 'offline'
+                            ? t('queue.sourceOffline')
+                            : playbackSource === 'hot'
+                              ? t('queue.sourceHot')
+                              : t('queue.sourceStream')
+                        }
+                        aria-hidden
+                      >
+                        {playbackSource === 'offline' && <FolderOpen size={11} strokeWidth={2.25} />}
+                        {playbackSource === 'hot' && <HardDrive size={11} strokeWidth={2.25} />}
+                        {playbackSource === 'stream' && <Waves size={11} strokeWidth={2.25} />}
+                      </span>
+                    )}
+                    {baseLine && <span className="queue-current-tech-main">{baseLine}</span>}
+                    {rgLine && (
+                      <button
+                        type="button"
+                        className={`queue-current-tech-rg-badge${showRgLine ? ' queue-current-tech-rg-badge--open' : ''}`}
+                        data-tooltip={`${t('queue.replayGain')} · ${rgLine}`}
+                        aria-expanded={showRgLine}
+                        aria-label={t('queue.replayGain')}
+                        onClick={() => setExpandReplayGain(!expandReplayGain)}
+                      >
+                        RG
+                        <ChevronDown size={9} strokeWidth={2.5} />
+                      </button>
+                    )}
+                  </div>
+                  {showRgLine && (
                     <span className="queue-current-tech-rg">
                       <span className="queue-current-tech-rg-label">{t('queue.replayGain')}</span>
                       {' · '}{rgLine}

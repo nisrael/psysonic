@@ -24,6 +24,8 @@ interface ThemeState {
   setShowBitrate: (v: boolean) => void;
   showRemainingTime: boolean;
   setShowRemainingTime: (v: boolean) => void;
+  expandReplayGain: boolean;
+  setExpandReplayGain: (v: boolean) => void;
 }
 
 export function getScheduledTheme(state: Pick<ThemeState, 'enableThemeScheduler' | 'theme' | 'themeDay' | 'themeNight' | 'timeDayStart' | 'timeNightStart'>): string {
@@ -63,6 +65,8 @@ export const useThemeStore = create<ThemeState>()(
       setShowBitrate: (v) => set({ showBitrate: v }),
       showRemainingTime: false,
       setShowRemainingTime: (v) => set({ showRemainingTime: v }),
+      expandReplayGain: false,
+      setExpandReplayGain: (v) => set({ expandReplayGain: v }),
     }),
     {
       name: 'psysonic_theme',
