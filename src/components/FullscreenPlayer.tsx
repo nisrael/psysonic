@@ -13,7 +13,7 @@ import { useLyrics, type WordLyricsLine } from '../hooks/useLyrics';
 import { useAuthStore } from '../store/authStore';
 import type { LrcLine } from '../api/lrclib';
 import type { Track } from '../store/playerStore';
-import { EaseScroller, targetForFraction } from '../utils/springScroll';
+import { EaseScroller, targetForFraction } from '../utils/easeScroll';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';

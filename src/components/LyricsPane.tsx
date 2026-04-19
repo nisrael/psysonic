@@ -6,7 +6,7 @@ import { useLyrics, type WordLyricsLine } from '../hooks/useLyrics';
 import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
 import type { Track } from '../store/playerStore';
-import { EaseScroller, targetForFraction } from '../utils/springScroll';
+import { EaseScroller, targetForFraction } from '../utils/easeScroll';
 
 interface Props {
   currentTrack: Track | null;
