@@ -344,6 +344,33 @@ export default function ArtistDetail() {
     }
   };
 
+  const playTopSongWithContinuation = async (startIndex: number) => {
+    if (!artist || albums.length === 0) return;
+    setPlayAllLoading(true);
+    try {
+      // Get all artist tracks ordered by album and track number
+      const allTracks = await fetchAllTracks();
+
+      // Top songs from clicked index onward
+      const topTracksFromIndex = topSongs.slice(startIndex).map(songToTrack);
+
+      // Track IDs for deduplication
+      const topSongIds = new Set(topSongs.map(s => s.id));
+
+      // Filter remaining tracks to exclude top songs (prevent duplicates)
+      const remainingTracks = allTracks.filter(t => !topSongIds.has(t.id));
+
+      // Build queue: remaining top songs + rest of artist catalog
+      const queue = [...topTracksFromIndex, ...remainingTracks];
+      
+      if (queue.length > 0) {
+        playTrack(queue[0], queue);
+      }
+    } finally {
+      setPlayAllLoading(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -597,14 +624,14 @@ export default function ArtistDetail() {
                        style={{ gridTemplateColumns: '60px minmax(150px, 1fr) minmax(100px, 1fr) 65px' }}
                        onClick={e => {
                          if ((e.target as HTMLElement).closest('button, a, input')) return;
-                         playTrack(track, topSongs.map(songToTrack));
+                         playTopSongWithContinuation(idx);
                        }}
                        onContextMenu={(e) => {
                          e.preventDefault();
                          openContextMenu(e.clientX, e.clientY, track, 'song');
                        }}
                      >
-                <div className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(track, topSongs.map(songToTrack)); }}>
+                <div className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTopSongWithContinuation(idx); }}>
                   {currentTrack?.id === song.id && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                   <span className="track-num-play"><Play size={13} fill="currentColor" /></span>
                   <span className="track-num-number">{idx + 1}</span>
