@@ -1,5 +1,5 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock, TryLockError};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 #[cfg(unix)]
@@ -709,38 +709,13 @@ impl Read for RangedHttpSource {
         let target_end = self.pos + max_read as u64;
 
         let deadline = Instant::now() + Duration::from_secs(RADIO_READ_TIMEOUT_SECS);
-        #[cfg(debug_assertions)]
-        let block_started = Instant::now();
-        #[cfg(debug_assertions)]
-        let mut blocked = false;
         loop {
             if self.gen_arc.load(Ordering::SeqCst) != self.gen {
                 return Ok(0);
             }
             let dl = self.downloaded_to.load(Ordering::SeqCst) as u64;
             if dl >= target_end {
-                #[cfg(debug_assertions)]
-                if blocked {
-                    eprintln!(
-                        "[stream] read unblocked after {:.2}s — pos={} target_end={} dl={}",
-                        block_started.elapsed().as_secs_f64(),
-                        self.pos,
-                        target_end,
-                        dl
-                    );
-                }
                 break;
-            }
-            #[cfg(debug_assertions)]
-            if !blocked {
-                blocked = true;
-                eprintln!(
-                    "[stream] read blocking — pos={} need={} dl_to={} (waiting for {} more bytes)",
-                    self.pos,
-                    target_end,
-                    dl,
-                    target_end - dl
-                );
             }
             // Download finished but our cursor is past downloaded_to (e.g. seek
             // beyond a partial download that aborted). Return what we have.
@@ -2032,7 +2007,7 @@ pub struct AudioEngine {
     pub(crate) current_is_seekable: Arc<AtomicBool>,
     pub crossfade_enabled: Arc<AtomicBool>,
     pub crossfade_secs: Arc<AtomicU32>,
-    pub fading_out_sink: Arc<Mutex<Option<Sink>>>,
+    pub fading_out_sink: Arc<Mutex<Option<Arc<Sink>>>>,
     /// When true, audio_play chains sources to the existing Sink instead of
     /// creating a new one, achieving sample-accurate gapless transitions.
     pub gapless_enabled: Arc<AtomicBool>,
@@ -2055,7 +2030,7 @@ pub struct AudioEngine {
 }
 
 pub struct AudioCurrent {
-    pub sink: Option<Sink>,
+    pub sink: Option<Arc<Sink>>,
     pub duration_secs: f64,
     pub seek_offset: f64,
     pub play_started: Option<Instant>,
@@ -2885,7 +2860,7 @@ pub async fn audio_play(
         }
     }
 
-    let sink = Sink::try_new(&*state.stream_handle.lock().unwrap()).map_err(|e| e.to_string())?;
+    let sink = Arc::new(Sink::try_new(&*state.stream_handle.lock().unwrap()).map_err(|e| e.to_string())?);
     sink.set_volume(effective_volume);
 
     // ── Sink pre-fill for hi-res tracks ──────────────────────────────────────
@@ -3414,6 +3389,8 @@ pub fn audio_stop(state: State<'_, AudioEngine>) {
 
 #[tauri::command]
 pub fn audio_seek(seconds: f64, state: State<'_, AudioEngine>) -> Result<(), String> {
+    const AUDIO_SEEK_TIMEOUT_MS: u64 = 700;
+    const AUDIO_SEEK_LOCK_TIMEOUT_MS: u64 = 40;
     // Ghost-command guard: reject seeks within 500 ms of a gapless auto-advance.
     {
         let switch_ms = state.gapless_switch_at.load(Ordering::SeqCst);
@@ -3439,26 +3416,73 @@ pub fn audio_seek(seconds: f64, state: State<'_, AudioEngine>) -> Result<(), Str
     #[cfg(debug_assertions)]
     eprintln!("[seek] target={:.2}s", seconds);
 
+    let lock_current_with_timeout = |timeout_ms: u64| {
+        let deadline = Instant::now() + Duration::from_millis(timeout_ms);
+        loop {
+            match state.current.try_lock() {
+                Ok(guard) => break Ok(guard),
+                Err(TryLockError::WouldBlock) => {
+                    if Instant::now() >= deadline {
+                        break Err("audio seek busy".to_string());
+                    }
+                    std::thread::sleep(Duration::from_millis(2));
+                }
+                Err(TryLockError::Poisoned(_)) => {
+                    break Err("audio state lock poisoned".to_string());
+                }
+            }
+        }
+    };
+
     // Seeking back invalidates any pending gapless chain.
     let cur_pos = {
-        let cur = state.current.lock().unwrap();
+        let cur = lock_current_with_timeout(AUDIO_SEEK_LOCK_TIMEOUT_MS)?;
         cur.position()
     };
     if seconds < cur_pos - 1.0 {
         *state.chained_info.lock().unwrap() = None;
     }
 
-    let mut cur = state.current.lock().unwrap();
+    let seek_seconds = seconds.max(0.0);
+    let seek_duration = Duration::from_secs_f64(seek_seconds);
+    let seek_generation = state.generation.load(Ordering::SeqCst);
+    let sink = {
+        let cur = lock_current_with_timeout(AUDIO_SEEK_LOCK_TIMEOUT_MS)?;
+        match cur.sink.as_ref() {
+            Some(sink) => Arc::clone(sink),
+            None => return Ok(()),
+        }
+    };
+
+    let (tx, rx) = std::sync::mpsc::channel::<Result<(), String>>();
+    std::thread::spawn(move || {
+        let result = sink.try_seek(seek_duration).map_err(|e| e.to_string());
+        let _ = tx.send(result);
+    });
+
+    match rx.recv_timeout(Duration::from_millis(AUDIO_SEEK_TIMEOUT_MS)) {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => return Err(e),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            return Err("audio seek timeout".into());
+        }
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+            return Err("audio seek worker disconnected".into());
+        }
+    }
+
+    // If playback switched while seek was in flight, skip timestamp updates.
+    if state.generation.load(Ordering::SeqCst) != seek_generation {
+        return Ok(());
+    }
+
+    let mut cur = lock_current_with_timeout(AUDIO_SEEK_LOCK_TIMEOUT_MS)?;
     if cur.sink.is_none() { return Ok(()); }
 
-    cur.sink.as_ref().unwrap()
-        .try_seek(Duration::from_secs_f64(seconds.max(0.0)))
-        .map_err(|e| e.to_string())?;
-
     if cur.paused_at.is_some() {
-        cur.paused_at = Some(seconds);
+        cur.paused_at = Some(seek_seconds);
     } else {
-        cur.seek_offset = seconds;
+        cur.seek_offset = seek_seconds;
         cur.play_started = Some(Instant::now());
     }
     Ok(())
@@ -3704,7 +3728,7 @@ pub async fn audio_play_radio(
 
     if state.generation.load(Ordering::SeqCst) != gen { return Ok(()); }
 
-    let sink = Sink::try_new(&*state.stream_handle.lock().unwrap()).map_err(|e| e.to_string())?;
+    let sink = Arc::new(Sink::try_new(&*state.stream_handle.lock().unwrap()).map_err(|e| e.to_string())?);
     sink.set_volume((volume.clamp(0.0, 1.0) * MASTER_HEADROOM).clamp(0.0, 1.0));
     sink.append(counting);
 
