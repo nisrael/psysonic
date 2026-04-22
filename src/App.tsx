@@ -90,6 +90,7 @@ import { useKeybindingsStore, matchInAppBinding, buildInAppBinding } from './sto
 import { useGlobalShortcutsStore } from './store/globalShortcutsStore';
 import { useZipDownloadStore } from './store/zipDownloadStore';
 import ZipDownloadOverlay from './components/ZipDownloadOverlay';
+import PasteClipboardHandler from './components/PasteClipboardHandler';
 
 /** Volume before last `psysonic --player mute` (CLI only; in-memory). */
 let cliPremuteVolume: number | null = null;
@@ -1130,6 +1131,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <PasteClipboardHandler />
       <TauriEventBridge />
       <Routes>
         <Route path="/login" element={<Login />} />
