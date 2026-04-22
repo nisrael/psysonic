@@ -3,6 +3,7 @@ import {
   updatePlaylistMeta,
   deletePlaylist,
   getPlaylist,
+  getPlaylists,
 } from '../api/subsonic';
 import { useAuthStore } from '../store/authStore';
 import { useOrbitStore } from '../store/orbitStore';
@@ -229,4 +230,173 @@ export function patchOrbitState(patch: Partial<OrbitState>): OrbitState | null {
   const next: OrbitState = { ...current, ...patch };
   useOrbitStore.getState().setState(next);
   return next;
+}
+
+// ── Share link ──────────────────────────────────────────────────────────
+
+export const ORBIT_SHARE_SCHEME = 'psysonic2://orbit/';
+
+export interface OrbitShareLink {
+  /** Base URL of the Navidrome server (decoded). */
+  serverBase: string;
+  /** Session id (8 hex chars). */
+  sid: string;
+}
+
+/**
+ * Parse a `psysonic2://orbit/<server-b64>/<sid>` link. Returns null on any
+ * shape mismatch — the caller decides what to do (show error toast etc.).
+ * Accepts both the `psysonic2://` prefix and a bare string if the OS-level
+ * handler has already stripped the scheme.
+ */
+export function parseOrbitShareLink(url: string): OrbitShareLink | null {
+  if (!url) return null;
+  const stripped = url.startsWith(ORBIT_SHARE_SCHEME)
+    ? url.slice(ORBIT_SHARE_SCHEME.length)
+    : url.startsWith('orbit/') ? url.slice('orbit/'.length) : null;
+  if (stripped == null) return null;
+  const slash = stripped.indexOf('/');
+  if (slash <= 0) return null;
+  const serverB64 = stripped.slice(0, slash);
+  const sid       = stripped.slice(slash + 1).replace(/\/+$/, '');
+  if (!/^[0-9a-f]{8}$/i.test(sid)) return null;
+  let serverBase: string;
+  try {
+    serverBase = atob(serverB64);
+  } catch { return null; }
+  try { new URL(serverBase); } catch { return null; }
+  return { serverBase, sid };
+}
+
+/** Build a share link for a live session. */
+export function buildOrbitShareLink(serverBase: string, sid: string): string {
+  return `${ORBIT_SHARE_SCHEME}${btoa(serverBase)}/${sid}`;
+}
+
+// ── Playlist lookup ─────────────────────────────────────────────────────
+
+/**
+ * Find the Navidrome playlist id of a session given its session id.
+ * Scans the user's visible playlist list — Navidrome exposes public
+ * playlists from other users, so a guest can find the host's session.
+ */
+export async function findSessionPlaylistId(sid: string): Promise<string | null> {
+  const target = orbitSessionPlaylistName(sid);
+  try {
+    const all = await getPlaylists();
+    const hit = all.find(p => p.name === target);
+    return hit?.id ?? null;
+  } catch { return null; }
+}
+
+// ── Guest lifecycle ─────────────────────────────────────────────────────
+
+export class OrbitJoinError extends Error {
+  constructor(
+    public readonly reason: 'not-found' | 'ended' | 'full' | 'kicked' | 'no-user' | 'server-error',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'OrbitJoinError';
+  }
+}
+
+/**
+ * Guest: join an existing session by id.
+ *
+ * Assumes the user is already authenticated against the correct Navidrome
+ * server — the caller's UI layer handles the magic-sharing flow when the
+ * encoded server in the share link doesn't match the active one.
+ *
+ * Side effects on success:
+ *   - creates this user's outbox playlist and writes a first heartbeat
+ *   - binds `useOrbitStore` to the session (role = guest, phase = active)
+ *   - populates the store's `state` mirror with the last-known blob
+ *
+ * Throws `OrbitJoinError` on any gate failure; caller shows an error
+ * modal and does nothing else.
+ */
+export async function joinOrbitSession(sid: string): Promise<OrbitState> {
+  const server = useAuthStore.getState().getActiveServer();
+  const username = server?.username;
+  if (!username) throw new OrbitJoinError('no-user', 'No active Navidrome server / user');
+
+  const store = useOrbitStore.getState();
+  if (store.phase !== 'idle') {
+    throw new OrbitJoinError('server-error', `Cannot join while phase is ${store.phase}`);
+  }
+
+  store.setPhase('joining');
+
+  let outboxPlaylistId: string | null = null;
+  try {
+    // 1) Locate the session playlist and read its state blob.
+    const sessionPlaylistId = await findSessionPlaylistId(sid);
+    if (!sessionPlaylistId) throw new OrbitJoinError('not-found', `Session ${sid} not found on server`);
+
+    const state = await readOrbitState(sessionPlaylistId);
+    if (!state)         throw new OrbitJoinError('not-found', `Session ${sid} has no valid state`);
+    if (state.ended)    throw new OrbitJoinError('ended',     `Session ${sid} has ended`);
+
+    // 2) Gate: not kicked, not full. Note: host isn't in `participants` itself,
+    //    so `maxUsers` counts guests only.
+    if (state.kicked.includes(username)) {
+      throw new OrbitJoinError('kicked', `You were removed from session ${sid}`);
+    }
+    const alreadyInside = state.participants.some(p => p.user === username);
+    if (!alreadyInside && state.participants.length >= state.maxUsers) {
+      throw new OrbitJoinError('full', `Session ${sid} is full (${state.maxUsers}/${state.maxUsers})`);
+    }
+
+    // 3) Create our outbox + first heartbeat.
+    const outboxName = orbitOutboxPlaylistName(sid, username);
+    // Guard against a stale outbox from a previous abandoned join attempt —
+    // if one exists under the same name, reuse its id instead of creating
+    // a duplicate (Navidrome allows duplicate names but it'd leak).
+    const existing = (await getPlaylists().catch(() => [])).find(p => p.name === outboxName);
+    if (existing) {
+      outboxPlaylistId = existing.id;
+    } else {
+      const outbox = await createPlaylist(outboxName);
+      outboxPlaylistId = outbox.id;
+    }
+    await writeOrbitHeartbeat(outboxPlaylistId, outboxName);
+
+    // 4) Bind the local store. The host's next poll will register us in
+    //    `participants` — we don't self-mutate the canonical state.
+    useOrbitStore.setState({
+      role: 'guest',
+      sessionId: sid,
+      sessionPlaylistId,
+      outboxPlaylistId,
+      phase: 'active',
+      state,
+      errorMessage: null,
+    });
+
+    return state;
+  } catch (err) {
+    // Best-effort cleanup.
+    if (outboxPlaylistId) { try { await deletePlaylist(outboxPlaylistId); } catch { /* ignore */ } }
+    useOrbitStore.getState().setPhase('idle');
+    throw err;
+  }
+}
+
+/**
+ * Guest: leave a session voluntarily.
+ *
+ * Deletes our outbox (so the host stops counting us after its next sweep)
+ * and resets the local store. Best-effort on each step. Does NOT touch the
+ * canonical session playlist — that's the host's property.
+ */
+export async function leaveOrbitSession(): Promise<void> {
+  const { role, outboxPlaylistId } = useOrbitStore.getState();
+  if (role !== 'guest') return;
+
+  if (outboxPlaylistId) {
+    try { await deletePlaylist(outboxPlaylistId); } catch { /* best-effort */ }
+  }
+
+  useOrbitStore.getState().reset();
 }
