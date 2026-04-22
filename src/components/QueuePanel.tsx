@@ -1,6 +1,8 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Track, usePlayerStore, songToTrack } from '../store/playerStore';
-import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio, HardDrive, ChevronDown, Info, Share2 } from 'lucide-react';
+import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, ArrowUpToLine, Radio, HardDrive, ChevronDown, Info, Share2, Orbit as OrbitIcon } from 'lucide-react';
+import OrbitStartModal from './OrbitStartModal';
+import { useOrbitStore } from '../store/orbitStore';
 import { buildCoverArtUrl, coverArtCacheKey, getAlbum, getPlaylists, getPlaylist, updatePlaylist, deletePlaylist, SubsonicPlaylist } from '../api/subsonic';
 import { usePlaylistStore } from '../store/playlistStore';
 import { useCachedUrl } from './CachedImage';
@@ -199,6 +201,9 @@ function QueueHeader({ queue, queueIndex, showRemainingTime, setShowRemainingTim
 
   const dur = showRemainingTime ? `-${fmt(Math.floor(remainingSecs))}` : fmt(Math.floor(totalSecs));
 
+  const orbitRole = useOrbitStore(s => s.role);
+  const [startOpen, setStartOpen] = useState(false);
+
   return (
     <div className="queue-header">
       <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
@@ -225,6 +230,18 @@ function QueueHeader({ queue, queueIndex, showRemainingTime, setShowRemainingTim
           </div>
         )}
       </div>
+      {orbitRole === null && (
+        <button
+          type="button"
+          className="queue-header-orbit-btn"
+          onClick={() => setStartOpen(true)}
+          data-tooltip="Start a session"
+          aria-label="Start a session"
+        >
+          <OrbitIcon size={14} />
+        </button>
+      )}
+      {startOpen && <OrbitStartModal onClose={() => setStartOpen(false)} />}
     </div>
   );
 }

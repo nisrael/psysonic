@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack, Share2 } from 'lucide-react';
+import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack, Share2, Orbit as OrbitIcon } from 'lucide-react';
+import { useOrbitStore } from '../store/orbitStore';
+import { suggestOrbitTrack } from '../utils/orbit';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
@@ -962,6 +964,7 @@ function MultiPlaylistToPlaylistSubmenu({ playlists, onDone, triggerId }: { play
 
 export default function ContextMenu() {
   const { t } = useTranslation();
+  const orbitRole = useOrbitStore(s => s.role);
   const { contextMenu, closeContextMenu, playTrack, enqueue, queue, currentTrack, removeTrack, lastfmLovedCache, setLastfmLovedForSong, starredOverrides, setStarredOverride, openSongInfo, userRatingOverrides, setUserRatingOverride } = usePlayerStore(
     useShallow(s => ({
       contextMenu: s.contextMenu,
@@ -1443,6 +1446,15 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => enqueue([song]))}>
                 <ListPlus size={14} /> {t('contextMenu.addToQueue')}
               </div>
+              {orbitRole === 'guest' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  suggestOrbitTrack(song.id)
+                    .then(() => showToast('Suggested to session', 2200, 'info'))
+                    .catch(() => showToast('Couldn\'t suggest — not joined', 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> Add to session
+                </div>
+              )}
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
                 data-playlist-trigger-id={song.id}
@@ -1575,6 +1587,15 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => enqueue([song]))}>
                 <ListPlus size={14} /> {t('contextMenu.addToQueue')}
               </div>
+              {orbitRole === 'guest' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  suggestOrbitTrack(song.id)
+                    .then(() => showToast('Suggested to session', 2200, 'info'))
+                    .catch(() => showToast('Couldn\'t suggest — not joined', 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> Add to session
+                </div>
+              )}
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
                 data-playlist-trigger-id={song.id}

@@ -6,6 +6,7 @@ import { decodeSharePayloadFromText } from '../utils/shareLink';
 import { decodeServerMagicStringFromText } from '../utils/serverMagicString';
 import { applySharePastePayload } from '../utils/applySharePaste';
 import { showToast } from '../utils/toast';
+import { parseOrbitShareLink, joinOrbitSession, OrbitJoinError } from '../utils/orbit';
 
 /**
  * Global paste: library share links (`psysonic2-`) and server invites (`psysonic1-`)
@@ -30,6 +31,43 @@ export default function PasteClipboardHandler() {
         return;
       }
       const text = e.clipboardData?.getData('text/plain') ?? '';
+
+      // Orbit share link — handled before library shares.
+      const orbit = parseOrbitShareLink(text.trim());
+      if (orbit) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isLoggedIn) { showToast('Log in before joining a session', 4000, 'info'); return; }
+        const active = useAuthStore.getState().getActiveServer();
+        const activeUrl = (active?.url ?? '').replace(/\/+$/, '');
+        const wantUrl   = orbit.serverBase.replace(/\/+$/, '');
+        if (activeUrl !== wantUrl) {
+          showToast(`Switch to ${wantUrl} first, then paste again`, 5000, 'info');
+          return;
+        }
+        if (busy.current) return;
+        busy.current = true;
+        joinOrbitSession(orbit.sid)
+          .then(() => showToast('Joined session', 2500, 'info'))
+          .catch(err => {
+            if (err instanceof OrbitJoinError) {
+              const msg: Record<string, string> = {
+                'not-found': 'Session not found',
+                'ended':     'Session has ended',
+                'full':      'Session is full',
+                'kicked':    'You can\'t rejoin this session',
+                'no-user':   'No active server',
+                'server-error': 'Couldn\'t join',
+              };
+              showToast(msg[err.reason] ?? err.message, 4000, 'error');
+            } else {
+              showToast('Couldn\'t join session', 4000, 'error');
+            }
+          })
+          .finally(() => { busy.current = false; });
+        return;
+      }
+
       const share = decodeSharePayloadFromText(text);
       if (share) {
         if (!isLoggedIn) {
