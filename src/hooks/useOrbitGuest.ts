@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useOrbitStore } from '../store/orbitStore';
 import { useAuthStore } from '../store/authStore';
+import { usePlayerStore, songToTrack } from '../store/playerStore';
+import { getSong } from '../api/subsonic';
 import {
   readOrbitState,
   writeOrbitHeartbeat,
   leaveOrbitSession,
 } from '../utils/orbit';
-import { orbitOutboxPlaylistName } from '../api/orbit';
+import { orbitOutboxPlaylistName, estimateLivePosition, type OrbitState } from '../api/orbit';
 
 /**
  * Orbit — guest-side tick hook.
@@ -37,11 +39,54 @@ export function useOrbitGuest(): void {
 
   const active = role === 'guest' && phase === 'active' && !!sessionPlaylistId;
 
-  // ── State read + end/kick detection ──────────────────────────────────
+  /**
+   * Last host playback state we *applied* to the local player. Compared
+   * against the new tick to detect host-side flips (track change /
+   * play-pause toggle) and against the local player's current state to
+   * detect guest-side divergence (the guest paused or skipped on their own).
+   *
+   * Reset to null on (re-)activation so a fresh session re-syncs from scratch.
+   */
+  const lastAppliedRef = useRef<{ trackId: string | null; isPlaying: boolean } | null>(null);
+
+  // ── State read + end/kick detection + auto-sync to host ──────────────
   useEffect(() => {
     if (!active || !sessionPlaylistId) return;
 
     let cancelled = false;
+    lastAppliedRef.current = null;
+
+    /**
+     * Load `trackId` into the local player and seek to the host's live
+     * position. Mirrors the host's `isPlaying` (so a guest joining a paused
+     * host doesn't auto-start the music). Best-effort; silent on miss.
+     */
+    const syncToHost = async (trackId: string, hostState: OrbitState) => {
+      try {
+        const song = await getSong(trackId);
+        if (!song || cancelled) return;
+        const track = songToTrack(song);
+        const targetMs  = estimateLivePosition(hostState, Date.now());
+        const targetSec = Math.max(0, targetMs / 1000);
+        const player = usePlayerStore.getState();
+        const fraction = targetSec / Math.max(1, track.duration);
+        if (player.currentTrack?.id === trackId) {
+          player.seek(fraction);
+          if (hostState.isPlaying && !player.isPlaying) player.resume();
+          else if (!hostState.isPlaying && player.isPlaying) player.pause();
+        } else {
+          player.playTrack(track, [track]);
+          // Defer seek + state-match until the engine has actually loaded.
+          window.setTimeout(() => {
+            if (cancelled) return;
+            const p = usePlayerStore.getState();
+            if (p.currentTrack?.id !== trackId) return;
+            p.seek(fraction);
+            if (!hostState.isPlaying && p.isPlaying) p.pause();
+          }, 400);
+        }
+      } catch { /* silent */ }
+    };
 
     const pull = async () => {
       const state = await readOrbitState(sessionPlaylistId);
@@ -78,7 +123,43 @@ export function useOrbitGuest(): void {
         const hit = state.removed.find(r => r.user === me && r.at > joinedAt);
         if (hit) {
           useOrbitStore.getState().setError('removed');
+          return;
         }
+      }
+
+      // ── Auto-sync host playback into local player ──
+      // Rules:
+      //   1. First tick after activation → mirror host (initial join sync,
+      //      no need for the guest to click catch-up to get started).
+      //   2. Track changed at host → guest follows. Track-change is the
+      //      "session sync point"; it overrides any local divergence.
+      //   3. Same track, host flipped play/pause → mirror only if the local
+      //      player still matches our last-applied host state. If the guest
+      //      paused/resumed locally, we leave them alone — they have to
+      //      click catch-up to opt back in.
+      const player = usePlayerStore.getState();
+      const hostTrackId  = state.currentTrack?.trackId ?? null;
+      const hostPlaying  = state.isPlaying;
+      const last = lastAppliedRef.current;
+
+      if (!last) {
+        if (hostTrackId) void syncToHost(hostTrackId, state);
+        lastAppliedRef.current = { trackId: hostTrackId, isPlaying: hostPlaying };
+      } else if (last.trackId !== hostTrackId) {
+        if (hostTrackId) void syncToHost(hostTrackId, state);
+        else if (player.isPlaying) player.pause();
+        lastAppliedRef.current = { trackId: hostTrackId, isPlaying: hostPlaying };
+      } else if (last.isPlaying !== hostPlaying) {
+        // Only mirror when the guest hasn't diverged. We compare against the
+        // *last applied* host state, not the new one — divergence means the
+        // local player no longer matches what we last pushed in.
+        if (player.isPlaying === last.isPlaying) {
+          if (hostPlaying) player.resume();
+          else             player.pause();
+        }
+        // Either way, advance the anchor so we don't keep retrying the same
+        // flip every tick.
+        lastAppliedRef.current = { trackId: last.trackId, isPlaying: hostPlaying };
       }
     };
 

@@ -11290,22 +11290,39 @@ html[data-app-hidden="true"] *::after {
 .orbit-bar__catchup {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 6px 14px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 600;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+  transition: filter 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: orbit-catchup-pulse 1.8s ease-in-out infinite;
 }
 .orbit-bar__catchup:hover {
-  background: color-mix(in srgb, var(--accent) 26%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  filter: brightness(1.08);
   transform: translateY(-1px);
+}
+.orbit-bar__catchup svg {
+  animation: orbit-catchup-spin 2.4s linear infinite;
+}
+
+@keyframes orbit-catchup-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+@keyframes orbit-catchup-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .orbit-bar__settings {

@@ -108,24 +108,25 @@ export default function OrbitSessionBar() {
     const trackId = state.currentTrack.trackId;
     const targetMs = estimateLivePosition(state, Date.now());
     const targetSec = Math.max(0, targetMs / 1000);
+    const hostPlaying = state.isPlaying;
     try {
       const song = await getSong(trackId);
       if (!song) return;
       const track = songToTrack(song);
       const player = usePlayerStore.getState();
+      const fraction = targetSec / Math.max(1, track.duration);
       if (player.currentTrack?.id === trackId) {
-        // Same track: just seek + resume.
-        player.seek(targetSec / Math.max(1, track.duration));
-        if (!player.isPlaying) player.resume();
+        player.seek(fraction);
+        if (hostPlaying && !player.isPlaying) player.resume();
+        else if (!hostPlaying && player.isPlaying) player.pause();
       } else {
         // Different track: play + seek on next tick once engine is ready.
         player.playTrack(track, [track]);
-        // Best-effort: seek to the host's position a beat later.
         window.setTimeout(() => {
           const p = usePlayerStore.getState();
-          if (p.currentTrack?.id === trackId) {
-            p.seek(targetSec / Math.max(1, track.duration));
-          }
+          if (p.currentTrack?.id !== trackId) return;
+          p.seek(fraction);
+          if (!hostPlaying && p.isPlaying) p.pause();
         }, 400);
       }
     } catch {
