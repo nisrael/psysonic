@@ -22,10 +22,15 @@ export default function OrbitHelpModal() {
   useEffect(() => {
     if (!isOpen) return;
     // Focus the first accordion summary so arrow keys work immediately.
-    queueMicrotask(() => {
+    // Uses a short setTimeout because the browser re-focuses the clicked
+    // trigger button after the click handler returns — our focus call has
+    // to happen *after* that, otherwise the browser silently overrides it
+    // and the user only gets keyboard nav after pressing Tab first.
+    const id = window.setTimeout(() => {
       const first = bodyRef.current?.querySelector<HTMLElement>('summary');
       first?.focus();
-    });
+    }, 60);
+    return () => window.clearTimeout(id);
   }, [isOpen]);
 
   useEffect(() => {

@@ -11955,6 +11955,15 @@ html[data-psy-native-hidden="true"] *::after {
   color: var(--text-secondary, var(--text-primary));
 }
 .orbit-help-modal__body p:last-child { margin-bottom: 0; }
+
+/* Keyboard focus indicator for accordion summaries — the default outline
+   is too subtle against the modal's dark background. Uses focus-visible
+   so mouse clicks don't leave a lingering ring. */
+.orbit-help-modal__body summary:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 .orbit-help-modal__warn {
   display: flex;
   flex-direction: column;
