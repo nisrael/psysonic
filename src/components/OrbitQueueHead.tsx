@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, WifiOff } from 'lucide-react';
+import { Users, Wifi, WifiOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useOrbitStore } from '../store/orbitStore';
 import type { OrbitState } from '../api/orbit';
@@ -34,18 +34,20 @@ export default function OrbitQueueHead({ state }: Props) {
   }, [role]);
 
   const names = [state.host, ...state.participants.map(p => p.user)];
-  const hostAway = role === 'guest'
-    && state.positionAt > 0
-    && (nowMs - state.positionAt) > HOST_AWAY_THRESHOLD_MS;
+  const showPresence = role === 'guest' && state.positionAt > 0;
+  const hostAway = showPresence && (nowMs - state.positionAt) > HOST_AWAY_THRESHOLD_MS;
 
   return (
     <div className="orbit-queue-head">
       <div className="orbit-queue-head__title-row">
         <h2 className="orbit-queue-head__title">{state.name}</h2>
-        {hostAway && (
-          <span className="orbit-queue-head__presence" role="status">
-            <WifiOff size={11} />
-            <span>{t('orbit.hostAway')}</span>
+        {showPresence && (
+          <span
+            className={`orbit-queue-head__presence orbit-queue-head__presence--${hostAway ? 'away' : 'online'}`}
+            role="status"
+          >
+            {hostAway ? <WifiOff size={11} /> : <Wifi size={11} />}
+            <span>{t(hostAway ? 'orbit.hostAway' : 'orbit.hostOnline')}</span>
           </span>
         )}
       </div>

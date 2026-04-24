@@ -1488,6 +1488,7 @@ export const enTranslation = {
     catchUpLabel: 'catch up',
     catchUpTooltip: "Jump to the host's current position",
     hostAway: 'Host offline',
+    hostOnline: 'Host online',
     endTooltip: 'End session',
     leaveTooltip: 'Leave session',
     participantsInviteLabel: 'Invite link',

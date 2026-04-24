@@ -12299,12 +12299,24 @@ html[data-psy-native-hidden="true"] *::after {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
+  border-radius: 999px;
+  border-width: 1px;
+  border-style: solid;
+}
+.orbit-queue-head__presence--online {
+  color: var(--ctp-green, #a6e3a1);
+  background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ctp-green, #a6e3a1) 40%, transparent);
+}
+.orbit-queue-head__presence--online svg {
+  color: var(--ctp-green, #a6e3a1);
+}
+.orbit-queue-head__presence--away {
   color: var(--ctp-yellow, #f9e2af);
   background: color-mix(in srgb, var(--ctp-yellow, #f9e2af) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--ctp-yellow, #f9e2af) 40%, transparent);
-  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--ctp-yellow, #f9e2af) 40%, transparent);
 }
-.orbit-queue-head__presence svg {
+.orbit-queue-head__presence--away svg {
   color: var(--ctp-yellow, #f9e2af);
 }
 .orbit-queue-head__meta {

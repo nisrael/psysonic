@@ -1485,6 +1485,7 @@ export const deTranslation = {
     catchUpLabel: 'aufholen',
     catchUpTooltip: 'Zur aktuellen Host-Position springen',
     hostAway: 'Host offline',
+    hostOnline: 'Host online',
     endTooltip: 'Session beenden',
     leaveTooltip: 'Session verlassen',
     participantsInviteLabel: 'Einladungslink',
