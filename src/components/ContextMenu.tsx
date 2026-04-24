@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack, Share2, Orbit as OrbitIcon } from 'lucide-react';
 import { useOrbitStore } from '../store/orbitStore';
-import { suggestOrbitTrack } from '../utils/orbit';
+import { suggestOrbitTrack, hostEnqueueToOrbit } from '../utils/orbit';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
@@ -1455,6 +1455,15 @@ export default function ContextMenu() {
                   <OrbitIcon size={14} /> {t('orbit.ctxAddToSession')}
                 </div>
               )}
+              {orbitRole === 'host' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  hostEnqueueToOrbit(song.id)
+                    .then(() => showToast(t('orbit.ctxAddedHostToast'), 2200, 'info'))
+                    .catch(() => showToast(t('orbit.ctxAddHostFailed'), 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> {t('orbit.ctxAddToSessionHost')}
+                </div>
+              )}
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
                 data-playlist-trigger-id={song.id}
@@ -1594,6 +1603,15 @@ export default function ContextMenu() {
                     .catch(() => showToast(t('orbit.ctxSuggestFailed'), 3000, 'error'));
                 })}>
                   <OrbitIcon size={14} /> {t('orbit.ctxAddToSession')}
+                </div>
+              )}
+              {orbitRole === 'host' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  hostEnqueueToOrbit(song.id)
+                    .then(() => showToast(t('orbit.ctxAddedHostToast'), 2200, 'info'))
+                    .catch(() => showToast(t('orbit.ctxAddHostFailed'), 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> {t('orbit.ctxAddToSessionHost')}
                 </div>
               )}
               <div

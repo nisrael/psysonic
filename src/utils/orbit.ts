@@ -5,10 +5,11 @@ import {
   deletePlaylist,
   getPlaylist,
   getPlaylists,
+  getSong,
 } from '../api/subsonic';
 import { useAuthStore } from '../store/authStore';
 import { useOrbitStore } from '../store/orbitStore';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, songToTrack } from '../store/playerStore';
 import {
   makeInitialOrbitState,
   orbitOutboxPlaylistName,
@@ -503,6 +504,33 @@ export async function suggestOrbitTrack(trackId: string): Promise<void> {
   const { songs } = await getPlaylist(outboxPlaylistId);
   const nextIds = [...songs.map(s => s.id), trackId];
   await updatePlaylist(outboxPlaylistId, nextIds, songs.length);
+}
+
+/**
+ * Host: add a track to the active Orbit session directly, skipping the
+ * outbox/approval loop guests go through. The track lands in the host's
+ * own play queue immediately and is attributed to the host in the
+ * session's suggestion history. Host-authored queue items are filtered
+ * out of the tick-merge pipeline so the host-tick doesn't re-insert the
+ * same track once it notices the new entry in `OrbitState.queue`.
+ */
+export async function hostEnqueueToOrbit(trackId: string): Promise<void> {
+  const store = useOrbitStore.getState();
+  if (store.role !== 'host' || !store.state || !store.sessionPlaylistId) {
+    throw new Error('Not hosting an active Orbit session');
+  }
+
+  const song = await getSong(trackId);
+  if (!song) throw new Error('Track not found');
+  const track = songToTrack(song);
+
+  usePlayerStore.getState().enqueue([track]);
+
+  const item: OrbitQueueItem = { trackId, addedBy: store.state.host, addedAt: Date.now() };
+  const next: OrbitState = { ...store.state, queue: [...store.state.queue, item] };
+  store.setState(next);
+  try { await writeOrbitState(store.sessionPlaylistId, next); }
+  catch { /* best-effort; next host-tick will push the merged state anyway */ }
 }
 
 // ── Host-side outbox sweep ──────────────────────────────────────────────

@@ -165,8 +165,12 @@ export function useOrbitHost(): void {
       const settings = useOrbitStore.getState().state?.settings;
       if (settings && settings.autoApprove === false) return;
 
+      // Host-authored items are enqueued directly by `hostEnqueueToOrbit` and
+      // must not flow through the merge pipeline again — otherwise the tick
+      // would duplicate the track into the upcoming queue.
+      const hostUser = useOrbitStore.getState().state?.host;
       const merged = mergedSuggestionsRef.current;
-      const pending = items.filter(q => !merged.has(suggestionKey(q)));
+      const pending = items.filter(q => q.addedBy !== hostUser && !merged.has(suggestionKey(q)));
       if (pending.length === 0) return;
 
       // Resolve in parallel — Navidrome is fine with concurrent getSong calls.

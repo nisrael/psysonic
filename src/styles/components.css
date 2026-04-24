@@ -12015,6 +12015,23 @@ html[data-psy-native-hidden="true"] *::after {
   line-height: 1.4;
 }
 
+.orbit-start-modal__toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+.orbit-start-modal__toggle-text {
+  flex: 1;
+  min-width: 0;
+}
+.orbit-start-modal__toggle-row .orbit-start-modal__label {
+  margin-bottom: 2px;
+}
+.orbit-start-modal__toggle-row .orbit-start-modal__helper {
+  margin-top: 0;
+}
+
 .orbit-start-modal__note {
   display: grid;
   grid-template-columns: 18px 1fr;

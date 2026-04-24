@@ -13,6 +13,7 @@ import {
 } from '../utils/orbit';
 import { randomOrbitSessionName } from '../utils/orbitNames';
 import { useAuthStore } from '../store/authStore';
+import { usePlayerStore } from '../store/playerStore';
 import { isLanUrl } from '../hooks/useConnectionStatus';
 import { ORBIT_DEFAULT_MAX_USERS } from '../api/orbit';
 
@@ -35,6 +36,7 @@ export default function OrbitStartModal({ onClose }: Props) {
   const [error, setError]         = useState<string | null>(null);
   const [copied, setCopied]       = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
+  const [clearQueue, setClearQueue] = useState(false);
 
   const server     = useAuthStore.getState().getActiveServer();
   const serverBase = server?.url ?? '';
@@ -76,6 +78,7 @@ export default function OrbitStartModal({ onClose }: Props) {
 
     setBusy(true);
     try {
+      if (clearQueue) usePlayerStore.getState().clearQueue();
       await startOrbitSession({ name: trimmed, maxUsers, sid });
       onClose();
     } catch (e) {
@@ -180,6 +183,23 @@ export default function OrbitStartModal({ onClose }: Props) {
             className="orbit-start-modal__range"
           />
           <div className="orbit-start-modal__helper">{t('orbit.helperMax')}</div>
+        </div>
+
+        <div className="orbit-start-modal__field">
+          <label className="orbit-start-modal__toggle-row">
+            <div className="orbit-start-modal__toggle-text">
+              <div className="orbit-start-modal__label">{t('orbit.labelClearQueue')}</div>
+              <div className="orbit-start-modal__helper">{t('orbit.helperClearQueue')}</div>
+            </div>
+            <span className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={clearQueue}
+                onChange={e => setClearQueue(e.target.checked)}
+              />
+              <span className="toggle-track" />
+            </span>
+          </label>
         </div>
 
         <div className="orbit-start-modal__field">
