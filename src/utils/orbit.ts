@@ -365,7 +365,7 @@ export function buildOrbitShareLink(serverBase: string, sid: string, slug?: stri
 export async function findSessionPlaylistId(sid: string): Promise<string | null> {
   const target = orbitSessionPlaylistName(sid);
   try {
-    const all = await getPlaylists();
+    const all = await getPlaylists(true);
     const hit = all.find(p => p.name === target);
     return hit?.id ?? null;
   } catch { return null; }
@@ -435,7 +435,7 @@ export async function joinOrbitSession(sid: string): Promise<OrbitState> {
     // Guard against a stale outbox from a previous abandoned join attempt —
     // if one exists under the same name, reuse its id instead of creating
     // a duplicate (Navidrome allows duplicate names but it'd leak).
-    const existing = (await getPlaylists().catch(() => [])).find(p => p.name === outboxName);
+    const existing = (await getPlaylists(true).catch(() => [])).find(p => p.name === outboxName);
     if (existing) {
       outboxPlaylistId = existing.id;
     } else {
@@ -514,6 +514,78 @@ export async function suggestOrbitTrack(trackId: string): Promise<void> {
  * out of the tick-merge pipeline so the host-tick doesn't re-insert the
  * same track once it notices the new entry in `OrbitState.queue`.
  */
+/**
+ * App-start sweep: delete our own __psyorbit_* playlists that no longer
+ * belong to a live session. "Live" means either this device's current
+ * session (never touch) or one whose heartbeat is less than
+ * `ORBIT_ORPHAN_TTL_MS` old (could be a session on another device of
+ * ours). Anything older — including unparseable / comment-less entries —
+ * is a leftover from a crash / force-close / network blip and gets
+ * removed so it doesn't clutter the Navidrome playlist view.
+ *
+ * Runs best-effort; individual failures are swallowed. Returns the count
+ * of playlists actually deleted, for logging.
+ */
+export async function cleanupOrphanedOrbitPlaylists(): Promise<number> {
+  const username = useAuthStore.getState().getActiveServer()?.username;
+  if (!username) return 0;
+
+  const all = await getPlaylists(true).catch(() => [] as Awaited<ReturnType<typeof getPlaylists>>);
+  const now = Date.now();
+  const TTL = ORBIT_ORPHAN_TTL_MS;
+  const currentSid = useOrbitStore.getState().sessionId;
+
+  const nameRe = new RegExp(`^${ORBIT_PLAYLIST_PREFIX}([a-f0-9]+)(_from_.+__)?$`);
+  let deleted = 0;
+
+  for (const p of all) {
+    if (!p.name.startsWith(ORBIT_PLAYLIST_PREFIX)) continue;
+    // Only touch our own — Navidrome rejects deletes on foreign playlists anyway.
+    if (p.owner && p.owner !== username) continue;
+
+    const match = p.name.match(nameRe);
+    // Not one we recognise — assume corrupt, prune.
+    if (!match) {
+      try { await deletePlaylist(p.id); deleted++; } catch { /* best-effort */ }
+      continue;
+    }
+    const sid = match[1];
+    const isOutbox = !!match[2];
+    if (sid === currentSid) continue;
+
+    let timestamp = 0;
+    let ended = false;
+    if (p.comment) {
+      try {
+        const parsed = JSON.parse(p.comment);
+        if (isOutbox) {
+          if (parsed && typeof parsed.ts === 'number') timestamp = parsed.ts;
+        } else {
+          const state = parseOrbitState(parsed);
+          if (state) {
+            timestamp = state.positionAt ?? 0;
+            ended = state.ended === true;
+          }
+        }
+      } catch { /* unparseable → treat as dead */ }
+    }
+
+    // Fall back to Navidrome's `changed` timestamp when there's no
+    // orbit-authored heartbeat in the comment — saves us from deleting a
+    // playlist that was just created seconds ago.
+    if (timestamp === 0 && p.changed) {
+      const parsed = Date.parse(p.changed);
+      if (!isNaN(parsed)) timestamp = parsed;
+    }
+
+    const stale = timestamp === 0 || (now - timestamp > TTL);
+    if (ended || stale) {
+      try { await deletePlaylist(p.id); deleted++; } catch { /* best-effort */ }
+    }
+  }
+  return deleted;
+}
+
 export async function hostEnqueueToOrbit(trackId: string): Promise<void> {
   const store = useOrbitStore.getState();
   if (store.role !== 'host' || !store.state || !store.sessionPlaylistId) {
@@ -557,7 +629,7 @@ function parseOutboxPlaylistName(name: string, sid: string): string | null {
  * Skips the host's own outbox — that's heartbeat-only, not a suggestion channel.
  */
 async function listGuestOutboxes(sid: string, hostUsername: string): Promise<Array<{ id: string; name: string; user: string }>> {
-  const all = await getPlaylists().catch(() => []);
+  const all = await getPlaylists(true).catch(() => []);
   const result: Array<{ id: string; name: string; user: string }> = [];
   for (const p of all) {
     const user = parseOutboxPlaylistName(p.name, sid);
@@ -618,6 +690,15 @@ export async function sweepGuestOutboxes(sid: string, hostUsername: string): Pro
 
 /** How long we consider a heartbeat still fresh. Longer than the guest tick so a single missed beat is tolerated. */
 export const ORBIT_HEARTBEAT_ALIVE_MS = 30_000;
+
+/**
+ * Grace window for the app-start orphan sweep. Has to be comfortably
+ * larger than the outbox heartbeat interval (10 s) and the session state
+ * tick (2.5 s) so a session running on the user's other device doesn't
+ * get deleted on a transient slow tick. 2× ALIVE window is the minimum
+ * sane value.
+ */
+export const ORBIT_ORPHAN_TTL_MS = 60_000;
 
 /** Shuffle cadence — queue is reshuffled once every interval. */
 export const ORBIT_SHUFFLE_INTERVAL_MS = 15 * 60_000;
@@ -684,7 +765,7 @@ export async function kickOrbitParticipant(username: string): Promise<void> {
   // carrying outbox ids in the state blob just for this operation.
   const outboxName = orbitOutboxPlaylistName(sid, username);
   try {
-    const all = await getPlaylists();
+    const all = await getPlaylists(true);
     const hit = all.find(p => p.name === outboxName);
     if (hit) await deletePlaylist(hit.id);
   } catch { /* best-effort */ }
@@ -731,7 +812,7 @@ export async function removeOrbitParticipant(username: string): Promise<void> {
   // playlist (they'll create a new one on rejoin via joinOrbitSession).
   const outboxName = orbitOutboxPlaylistName(sid, username);
   try {
-    const all = await getPlaylists();
+    const all = await getPlaylists(true);
     const hit = all.find(p => p.name === outboxName);
     if (hit) await deletePlaylist(hit.id);
   } catch { /* best-effort */ }

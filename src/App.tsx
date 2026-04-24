@@ -69,6 +69,8 @@ import OrbitSessionBar from './components/OrbitSessionBar';
 import OrbitStartTrigger from './components/OrbitStartTrigger';
 import { useOrbitHost } from './hooks/useOrbitHost';
 import { useOrbitGuest } from './hooks/useOrbitGuest';
+import { cleanupOrphanedOrbitPlaylists, endOrbitSession, leaveOrbitSession } from './utils/orbit';
+import { useOrbitStore } from './store/orbitStore';
 import { IS_LINUX, IS_MACOS, IS_WINDOWS } from './utils/platform';
 import { version } from '../package.json';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
@@ -244,6 +246,14 @@ function AppShell() {
       cancelled = true;
     };
   }, [isLoggedIn, activeServerId, setMusicFolders, setEntityRatingSupport]);
+
+  // Orbit orphan sweep — delete our own leftover session / outbox playlists
+  // from crashed or force-closed sessions so they don't clutter the ND
+  // playlist view. Runs once per login; safe and best-effort.
+  useEffect(() => {
+    if (!isLoggedIn || !activeServerId) return;
+    void cleanupOrphanedOrbitPlaylists();
+  }, [isLoggedIn, activeServerId]);
 
   // Reset scroll position on route change (main viewport is overlay scroll)
   useEffect(() => {
@@ -952,6 +962,19 @@ function TauriEventBridge() {
           await invoke('pause_rendering').catch(() => {});
           await getCurrentWindow().hide();
         } else {
+          // Clean up an active Orbit session before we go down — leaving
+          // the session playlists behind would litter the server. Capped at
+          // 1500 ms so a slow server can't keep the app hanging on quit; the
+          // next launch's orphan sweep is the safety net for anything that
+          // didn't make it out in time.
+          const role = useOrbitStore.getState().role;
+          if (role === 'host' || role === 'guest') {
+            const teardown = role === 'host' ? endOrbitSession() : leaveOrbitSession();
+            await Promise.race([
+              teardown.catch(() => {}),
+              new Promise(r => setTimeout(r, 1500)),
+            ]);
+          }
           await invoke('exit_app');
         }
       });
