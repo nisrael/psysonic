@@ -28,6 +28,13 @@ import { orbitOutboxPlaylistName, estimateLivePosition, type OrbitState } from '
 
 const STATE_READ_TICK_MS = 2_500;
 const HEARTBEAT_TICK_MS  = 10_000;
+/**
+ * Host must be quiet (no state writes) for this long before we treat the
+ * session as dead and auto-leave. Well above any normal network blip —
+ * reconnects inside this window are silent. Tuned per user decision:
+ * manual exits have priority, short reconnects never trigger auto-close.
+ */
+const HOST_TIMEOUT_MS = 5 * 60_000;
 
 export function useOrbitGuest(): void {
   const role              = useOrbitStore(s => s.role);
@@ -128,6 +135,16 @@ export function useOrbitGuest(): void {
       }
 
       useOrbitStore.getState().setState(state);
+
+      // Auto-leave after prolonged host silence. We keep polling as long as
+      // state reads succeed (short reconnects are silent), but if the host
+      // hasn't written a fresh state blob for > HOST_TIMEOUT_MS we treat the
+      // session as effectively dead and surface the exit modal. Manual exit
+      // still works instantly — the bar's X button short-circuits this path.
+      if (state.positionAt > 0 && (Date.now() - state.positionAt) > HOST_TIMEOUT_MS) {
+        useOrbitStore.getState().setError('host-timeout');
+        return;
+      }
 
       // Reconcile pending guest suggestions against the host's *playable*
       // queue — NOT `state.queue`, which is the suggestion history (every

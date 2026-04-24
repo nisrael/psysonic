@@ -1569,6 +1569,8 @@ export const enTranslation = {
     exitKickedTitle: 'You were banned from the session',
     exitRemovedTitle: 'You were removed from the session',
     exitEndedTitle: 'The host ended the session',
+    exitHostTimeoutTitle: 'Host went silent',
+    exitHostTimeoutBody: "{{host}} hasn't sent an update for a while, so \"{{name}}\" was closed on your end. You can re-join any time with the invite link.",
     exitKickedBody: '{{host}} banned you from "{{name}}". You can\'t re-join.',
     exitRemovedBody: '{{host}} removed you from "{{name}}". You can re-join any time via the invite link.',
     exitEndedBody: '"{{name}}" has ended. Hope you had fun.',

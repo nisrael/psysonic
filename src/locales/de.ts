@@ -1566,6 +1566,8 @@ export const deTranslation = {
     exitKickedTitle: 'Du wurdest aus der Session gebannt',
     exitRemovedTitle: 'Du wurdest aus der Session entfernt',
     exitEndedTitle: 'Der Gastgeber hat die Session beendet',
+    exitHostTimeoutTitle: 'Host nicht mehr erreichbar',
+    exitHostTimeoutBody: '{{host}} hat sich länger nicht mehr gemeldet — „{{name}}" wurde auf deiner Seite beendet. Über den Einladungslink kannst du jederzeit wieder beitreten.',
     exitKickedBody: '{{host}} hat dich aus „{{name}}" gebannt. Beitritt nicht mehr möglich.',
     exitRemovedBody: '{{host}} hat dich aus „{{name}}" entfernt. Du kannst jederzeit über den Einladungslink wieder beitreten.',
     exitEndedBody: '„{{name}}" ist zu Ende. Hoffentlich war\'s schön.',

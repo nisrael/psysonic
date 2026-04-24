@@ -22,21 +22,26 @@ export default function OrbitExitModal() {
   const sessionName  = useOrbitStore(s => s.state?.name);
   const hostName     = useOrbitStore(s => s.state?.host);
 
-  const isEnded   = phase === 'ended';
-  const isKicked  = phase === 'error' && errorMessage === 'kicked';
-  const isRemoved = phase === 'error' && errorMessage === 'removed';
-  if (!isEnded && !isKicked && !isRemoved) return null;
+  const isEnded       = phase === 'ended';
+  const isKicked      = phase === 'error' && errorMessage === 'kicked';
+  const isRemoved     = phase === 'error' && errorMessage === 'removed';
+  const isHostTimeout = phase === 'error' && errorMessage === 'host-timeout';
+  if (!isEnded && !isKicked && !isRemoved && !isHostTimeout) return null;
 
   const title = isKicked
     ? t('orbit.exitKickedTitle')
     : isRemoved
       ? t('orbit.exitRemovedTitle')
-      : t('orbit.exitEndedTitle');
+      : isHostTimeout
+        ? t('orbit.exitHostTimeoutTitle')
+        : t('orbit.exitEndedTitle');
   const body = isKicked
     ? t('orbit.exitKickedBody',  { host: hostName ?? '', name: sessionName ?? '' })
     : isRemoved
       ? t('orbit.exitRemovedBody', { host: hostName ?? '', name: sessionName ?? '' })
-      : t('orbit.exitEndedBody',   { name: sessionName ?? '' });
+      : isHostTimeout
+        ? t('orbit.exitHostTimeoutBody', { host: hostName ?? '', name: sessionName ?? '' })
+        : t('orbit.exitEndedBody',   { name: sessionName ?? '' });
 
   const onOk = async () => {
     try {
