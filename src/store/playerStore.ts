@@ -11,6 +11,7 @@ import { useAuthStore } from './authStore';
 import { useOfflineStore } from './offlineStore';
 import { useHotCacheStore } from './hotCacheStore';
 import { orbitBulkGuard } from '../utils/orbitBulkGuard';
+import { useOrbitStore } from './orbitStore';
 
 export interface Track {
   id: string;
@@ -1222,7 +1223,17 @@ export const usePlayerStore = create<PlayerState>()(
             && queue.every((t, i) => current[i]?.id === t.id);
           if (!sameAsCurrent) {
             void orbitBulkGuard(queue.length).then(ok => {
-              if (ok) get().playTrack(track, queue, manual, true);
+              if (!ok) return;
+              // Inside an Orbit session a bulk replace would discard guest
+              // suggestions mid-listen. Append instead — the dialog's
+              // "Add them all" copy already matches that semantic. Outside
+              // Orbit, proceed as a normal replace.
+              const role = useOrbitStore.getState().role;
+              if (role === 'host' || role === 'guest') {
+                get().enqueue(queue, true);
+              } else {
+                get().playTrack(track, queue, manual, true);
+              }
             });
             return;
           }
