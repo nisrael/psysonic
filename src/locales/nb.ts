@@ -1269,6 +1269,7 @@ export const nbTranslation = {
     deleteSuccess: '{{count}} spillelister slettet',
     deleteFailed: 'Feil ved sletting av {{name}}',
     deleteSelected: 'Slett valgte',
+    deleteSelectedPartial: 'Bare {{n}} av {{total}} valgte spillelister kan slettes (de andre tilhører noen andre).',
     mergeSuccess: '{{count}} sanger slått sammen i {{playlist}}',
     mergeNoNewSongs: 'Ingen nye sanger å legge til',
     mergeError: 'Feil ved sammenslåing av spillelister',
