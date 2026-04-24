@@ -53,6 +53,15 @@ interface OrbitStore {
    * entries from a fresh re-join after a remove. Null when idle.
    */
   joinedAt: number | null;
+  /**
+   * Guest-only: track ids the local client has suggested but the host
+   * hasn't yet merged into the shared queue. Filled by
+   * `suggestOrbitTrack`, drained by the guest tick once the id appears
+   * in `state.queue` / `state.currentTrack`. In-memory only — a rejoin
+   * starts empty, any still-pending ids either land or get dropped by
+   * the host's next sweep anyway.
+   */
+  pendingSuggestions: string[];
 
   // ── Setters (Phase 1 scaffolding; later phases add real actions) ────────
   setPhase: (phase: OrbitPhase) => void;
@@ -64,6 +73,9 @@ interface OrbitStore {
   }) => void;
   setState: (state: OrbitState | null) => void;
   setError: (message: string | null) => void;
+  addPendingSuggestion: (trackId: string) => void;
+  /** Keep only the pending ids that are NOT yet observable in the shared queue. */
+  reconcilePendingSuggestions: (landedTrackIds: Set<string>) => void;
   /** Tear down the session locally. Does NOT clean up remote playlists. */
   reset: () => void;
 }
@@ -77,7 +89,11 @@ const initialState = {
   state: null,
   errorMessage: null,
   joinedAt: null,
-} satisfies Omit<OrbitStore, 'setPhase' | 'setRole' | 'setSessionBinding' | 'setState' | 'setError' | 'reset'>;
+  pendingSuggestions: [] as string[],
+} satisfies Omit<OrbitStore,
+  | 'setPhase' | 'setRole' | 'setSessionBinding' | 'setState' | 'setError'
+  | 'addPendingSuggestion' | 'reconcilePendingSuggestions' | 'reset'
+>;
 
 export const useOrbitStore = create<OrbitStore>()((set) => ({
   ...initialState,
@@ -88,5 +104,14 @@ export const useOrbitStore = create<OrbitStore>()((set) => ({
     set({ sessionId, sessionPlaylistId, outboxPlaylistId }),
   setState: (state) => set({ state }),
   setError: (message) => set({ phase: message ? 'error' : 'idle', errorMessage: message }),
+  addPendingSuggestion: (trackId) => set(s => (
+    s.pendingSuggestions.includes(trackId)
+      ? s
+      : { pendingSuggestions: [...s.pendingSuggestions, trackId] }
+  )),
+  reconcilePendingSuggestions: (landedTrackIds) => set(s => {
+    const next = s.pendingSuggestions.filter(id => !landedTrackIds.has(id));
+    return next.length === s.pendingSuggestions.length ? s : { pendingSuggestions: next };
+  }),
   reset: () => set({ ...initialState }),
 }));

@@ -504,6 +504,11 @@ export async function suggestOrbitTrack(trackId: string): Promise<void> {
   const { songs } = await getPlaylist(outboxPlaylistId);
   const nextIds = [...songs.map(s => s.id), trackId];
   await updatePlaylist(outboxPlaylistId, nextIds, songs.length);
+
+  // Record the suggestion locally so the UI can surface it as "waiting on
+  // host" until the host's next sweep merges it into the shared queue.
+  // Drained by the guest tick's reconcilePendingSuggestions call.
+  useOrbitStore.getState().addPendingSuggestion(trackId);
 }
 
 /**

@@ -129,6 +129,16 @@ export function useOrbitGuest(): void {
 
       useOrbitStore.getState().setState(state);
 
+      // Reconcile pending guest suggestions against the host's shared state.
+      // Once a suggested trackId shows up in state.queue or state.currentTrack,
+      // the host has merged it and we can drop it from the "pending" list.
+      if (useOrbitStore.getState().pendingSuggestions.length > 0) {
+        const landed = new Set<string>();
+        for (const q of state.queue) landed.add(q.trackId);
+        if (state.currentTrack) landed.add(state.currentTrack.trackId);
+        useOrbitStore.getState().reconcilePendingSuggestions(landed);
+      }
+
       // Host signalled session end: surface via `phase`, let the UI handle
       // the modal. Outbox cleanup still happens via leaveOrbitSession().
       if (state.ended) {

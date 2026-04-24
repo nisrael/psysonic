@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Radio } from 'lucide-react';
+import { Radio, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useOrbitStore } from '../store/orbitStore';
 import {
@@ -25,6 +25,7 @@ import OrbitQueueHead from './OrbitQueueHead';
 export default function OrbitGuestQueue() {
   const { t } = useTranslation();
   const state        = useOrbitStore(s => s.state);
+  const pending      = useOrbitStore(s => s.pendingSuggestions);
   const queueItems   = state?.playQueue ?? [];
   const totalUpcoming = state?.playQueueTotal ?? queueItems.length;
   const truncatedBy  = Math.max(0, totalUpcoming - queueItems.length);
@@ -41,8 +42,9 @@ export default function OrbitGuestQueue() {
     const ids: string[] = [];
     if (currentTrack) ids.push(currentTrack.trackId);
     queueItems.forEach(q => ids.push(q.trackId));
+    pending.forEach(id => ids.push(id));
     return Array.from(new Set(ids)).sort().join('|');
-  }, [currentTrack, queueItems]);
+  }, [currentTrack, queueItems, pending]);
 
   useEffect(() => {
     const wanted = wantedKey ? wantedKey.split('|') : [];
@@ -98,6 +100,38 @@ export default function OrbitGuestQueue() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {pending.length > 0 && (
+        <div className="orbit-guest-queue__pending">
+          <div className="orbit-guest-queue__section-head orbit-guest-queue__section-head--pending">
+            <Clock size={11} />
+            <span>{t('orbit.guestPendingTitle')}</span>
+            <span className="orbit-guest-queue__count">{pending.length}</span>
+          </div>
+          {pending.map(trackId => {
+            const song = songs[trackId];
+            return (
+              <div key={trackId} className="orbit-guest-queue__item orbit-guest-queue__item--pending">
+                {song?.coverArt ? (
+                  <CachedImage
+                    src={buildCoverArtUrl(song.coverArt, 48)}
+                    cacheKey={coverArtCacheKey(song.coverArt, 48)}
+                    alt=""
+                    className="orbit-guest-queue__cover"
+                  />
+                ) : (
+                  <div className="orbit-guest-queue__cover orbit-guest-queue__cover--ph" />
+                )}
+                <div className="orbit-guest-queue__info">
+                  <div className="orbit-guest-queue__track-title">{song?.title ?? '…'}</div>
+                  <div className="orbit-guest-queue__track-artist">{song?.artist ?? ''}</div>
+                  <div className="orbit-guest-queue__pending-hint">{t('orbit.guestPendingHint')}</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

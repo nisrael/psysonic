@@ -1556,6 +1556,8 @@ export const enTranslation = {
     guestSuggestions: 'Suggestions',
     guestUpNext: 'Up next',
     guestUpNextEmpty: 'Nothing queued. Open a track\'s context menu and pick "Add to Orbit session" to suggest one.',
+    guestPendingTitle: 'Waiting for host',
+    guestPendingHint: 'Suggested — will appear in the queue when the host picks it up.',
     guestUpNextMore: '+ {{count}} more in the host\'s queue',
     guestSubmitter: 'by {{user}}',
     guestEmpty: 'No suggestions yet. Open a track\'s context menu and pick "Add to Orbit session".',

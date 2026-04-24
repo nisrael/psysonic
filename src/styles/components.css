@@ -12465,6 +12465,31 @@ html[data-psy-native-hidden="true"] *::after {
   font-weight: 600;
 }
 
+/* Pending suggestions — tracks the guest has submitted but the host
+   hasn't merged yet. Looks like the regular queue section, with a subtle
+   yellow accent and a clock icon in the heading. */
+.orbit-guest-queue__pending {
+  padding: 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 6px;
+}
+.orbit-guest-queue__section-head--pending {
+  color: var(--ctp-yellow, #f9e2af);
+}
+.orbit-guest-queue__section-head--pending svg {
+  color: var(--ctp-yellow, #f9e2af);
+}
+.orbit-guest-queue__item--pending {
+  opacity: 0.85;
+}
+.orbit-guest-queue__pending-hint {
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .orbit-guest-queue__empty {
   padding: 18px 16px;
   font-size: 11.5px;

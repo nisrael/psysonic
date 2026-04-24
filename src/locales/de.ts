@@ -1553,6 +1553,8 @@ export const deTranslation = {
     guestSuggestions: 'Vorschläge',
     guestUpNext: 'Als Nächstes',
     guestUpNextEmpty: 'Nichts in der Warteschlange. Öffne bei einem Song das Kontextmenü und wähle „Zur Orbit-Session hinzufügen", um etwas vorzuschlagen.',
+    guestPendingTitle: 'Wartet auf Host',
+    guestPendingHint: 'Vorgeschlagen — taucht in der Warteschlange auf, sobald der Host sie übernimmt.',
     guestUpNextMore: '+ {{count}} weitere in der Host-Warteschlange',
     guestSubmitter: 'von {{user}}',
     guestEmpty: 'Noch keine Vorschläge. Öffne bei einem Song das Kontextmenü und wähle „Zur Orbit-Session hinzufügen".',
