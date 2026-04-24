@@ -17,6 +17,7 @@ import { useOfflineJobStore } from '../store/offlineJobStore';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useDownloadModalStore } from '../store/downloadModalStore';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { invoke } from '@tauri-apps/api/core';
 import { join } from '@tauri-apps/api/path';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
@@ -237,6 +238,7 @@ export default function PlaylistDetail() {
       userRatingOverrides: s.userRatingOverrides,
     }))
   );
+  const { orbitActive, queueHint, addTrackToOrbit } = useOrbitSongRowBehavior();
   const touchPlaylist = usePlaylistStore((s) => s.touchPlaylist);
   const { startDrag, isDragging } = useDragDrop();
   const downloadPlaylist = useOfflineStore(s => s.downloadPlaylist);
@@ -1611,10 +1613,17 @@ export default function PlaylistDetail() {
                   toggleSelect(song.id, i, false);
                 } else if (selectedIds.size > 0) {
                   toggleSelect(song.id, i, e.shiftKey);
+                } else if (orbitActive) {
+                  queueHint();
                 } else {
                   playTrack(displayedTracks[i], displayedTracks);
                 }
               }}
+              onDoubleClick={orbitActive ? e => {
+                if ((e.target as HTMLElement).closest('button, a, input')) return;
+                if (e.ctrlKey || e.metaKey || selectedIds.size > 0) return;
+                addTrackToOrbit(song.id);
+              } : undefined}
               onContextMenu={e => {
                 e.preventDefault();
                 setContextMenuSongId(song.id);
@@ -1625,7 +1634,7 @@ export default function PlaylistDetail() {
                 const inSelectMode = selectedIds.size > 0;
                 switch (colDef.key) {
                   case 'num': return (
-                    <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(displayedTracks[i], displayedTracks); }}>
+                    <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); if (orbitActive) { queueHint(); return; } playTrack(displayedTracks[i], displayedTracks); }}>
                       <span className={`bulk-check${selectedIds.has(song.id) ? ' checked' : ''}${inSelectMode ? ' bulk-check-visible' : ''}`} onClick={e => { e.stopPropagation(); toggleSelect(song.id, i, e.shiftKey); }} />
                       {currentTrack?.id === song.id && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                       <span className="track-num-play"><Play size={13} fill="currentColor" /></span>

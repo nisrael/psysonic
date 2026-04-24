@@ -17,6 +17,7 @@ import { unstar } from '../api/subsonic';
 import { useDragDrop } from '../contexts/DragDropContext';
 import { useAuthStore } from '../store/authStore';
 import { useSelectionStore } from '../store/selectionStore';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { AddToPlaylistSubmenu } from '../components/ContextMenu';
 import GenreFilterBar from '../components/GenreFilterBar';
 
@@ -78,6 +79,7 @@ export default function Favorites() {
 
   const playTrack = usePlayerStore(s => s.playTrack);
   const enqueue = usePlayerStore(s => s.enqueue);
+  const { orbitActive, queueHint, addTrackToOrbit } = useOrbitSongRowBehavior();
   const playRadio = usePlayerStore(s => s.playRadio);
   const stop = usePlayerStore(s => s.stop);
   const currentTrack = usePlayerStore(s => s.currentTrack);
@@ -629,10 +631,17 @@ export default function Favorites() {
                           toggleSelect(song.id, i, false);
                         } else if (inSelectMode) {
                           toggleSelect(song.id, i, e.shiftKey);
+                        } else if (orbitActive) {
+                          queueHint();
                         } else {
                           playTrack(track, visibleSongs.map(songToTrack));
                         }
                       }}
+                      onDoubleClick={orbitActive ? e => {
+                        if ((e.target as HTMLElement).closest('button, a, input')) return;
+                        if (e.ctrlKey || e.metaKey || inSelectMode) return;
+                        addTrackToOrbit(song.id);
+                      } : undefined}
                       onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, track, 'favorite-song'); }}
                       role="row"
                       onMouseDown={e => {
@@ -660,7 +669,7 @@ export default function Favorites() {
                       {visibleCols.map(colDef => {
                         switch (colDef.key) {
                           case 'num': return (
-                            <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(track, visibleSongs.map(songToTrack)); }}>
+                            <div key="num" className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}${currentTrack?.id === song.id && !isPlaying ? ' track-num-paused' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); if (orbitActive) { queueHint(); return; } playTrack(track, visibleSongs.map(songToTrack)); }}>
                               <span className={`bulk-check${isSelected ? ' checked' : ''}${inSelectMode ? ' bulk-check-visible' : ''}`} onClick={e => { e.stopPropagation(); toggleSelect(song.id, i, e.shiftKey); }} />
                               {currentTrack?.id === song.id && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                               <span className="track-num-play"><Play size={13} fill="currentColor" /></span>

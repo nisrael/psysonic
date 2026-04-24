@@ -6,6 +6,7 @@ import { Play, RefreshCw, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDragDrop } from '../contexts/DragDropContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import {
   fetchRandomMixSongsUntilFull,
   getMixMinRatingsConfigFromAuth,
@@ -32,6 +33,7 @@ export default function RandomMix() {
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [loading, setLoading] = useState(true);
   const playTrack = usePlayerStore(s => s.playTrack);
+  const { orbitActive, queueHint, addTrackToOrbit } = useOrbitSongRowBehavior();
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const contextMenuOpen = usePlayerStore(s => s.contextMenu.isOpen);
   const currentTrack = usePlayerStore(s => s.currentTrack);
@@ -427,7 +429,8 @@ export default function RandomMix() {
                     key={song.id}
                     className={`track-row${isCurrentTrack ? ' active' : ''}${contextMenuSongId === song.id ? ' context-active' : ''}`}
                     style={{ gridTemplateColumns: '60px minmax(150px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) 70px 65px' }}
-                    onClick={e => { if ((e.target as HTMLElement).closest('button, a, input')) return; playTrack(track, queueSongs); }}
+                    onClick={e => { if ((e.target as HTMLElement).closest('button, a, input')) return; if (orbitActive) { queueHint(); return; } playTrack(track, queueSongs); }}
+                    onDoubleClick={orbitActive ? e => { if ((e.target as HTMLElement).closest('button, a, input')) return; addTrackToOrbit(song.id); } : undefined}
                     role="row"
                     onContextMenu={e => { e.preventDefault(); setContextMenuSongId(song.id); openContextMenu(e.clientX, e.clientY, track, 'song'); }}
                     onMouseDown={e => {
@@ -446,7 +449,7 @@ export default function RandomMix() {
                       document.addEventListener('mouseup', onUp);
                     }}
                   >
-                    <div className={`track-num${isCurrentTrack ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(track, queueSongs); }}>
+                    <div className={`track-num${isCurrentTrack ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); if (orbitActive) { queueHint(); return; } playTrack(track, queueSongs); }}>
                       {isCurrentTrack && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                       <span className="track-num-play"><Play size={13} fill="currentColor" /></span>
                       <span className="track-num-number">{idx + 1}</span>
@@ -526,7 +529,8 @@ export default function RandomMix() {
                 key={song.id}
                 className={`track-row${isCurrentTrack ? ' active' : ''}${contextMenuSongId === song.id ? ' context-active' : ''}`}
                 style={{ gridTemplateColumns: '60px minmax(150px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) 120px 70px 65px' }}
-                onClick={e => { if ((e.target as HTMLElement).closest('button, a, input')) return; playTrack(track, queueSongs); }}
+                onClick={e => { if ((e.target as HTMLElement).closest('button, a, input')) return; if (orbitActive) { queueHint(); return; } playTrack(track, queueSongs); }}
+                onDoubleClick={orbitActive ? e => { if ((e.target as HTMLElement).closest('button, a, input')) return; addTrackToOrbit(song.id); } : undefined}
                 role="row"
                 onContextMenu={e => {
                   e.preventDefault();
@@ -549,7 +553,7 @@ export default function RandomMix() {
                   document.addEventListener('mouseup', onUp);
                 }}
               >
-                <div className={`track-num${isCurrentTrack ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTrack(track, queueSongs); }}>
+                <div className={`track-num${isCurrentTrack ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); if (orbitActive) { queueHint(); return; } playTrack(track, queueSongs); }}>
                   {isCurrentTrack && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                   <span className="track-num-play"><Play size={13} fill="currentColor" /></span>
                   <span className="track-num-number">{idx + 1}</span>

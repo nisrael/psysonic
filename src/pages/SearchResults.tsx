@@ -8,6 +8,7 @@ import ArtistRow from '../components/ArtistRow';
 import { useTranslation } from 'react-i18next';
 import { useDragDrop } from '../contexts/DragDropContext';
 import { useAuthStore } from '../store/authStore';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { useThemeStore } from '../store/themeStore';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -51,7 +52,10 @@ export default function SearchResults() {
 
   const hasResults = results && (results.artists.length || results.albums.length || results.songs.length);
 
+  const { orbitActive, addTrackToOrbit } = useOrbitSongRowBehavior();
+
   const playSong = (song: SubsonicSong, list: SubsonicSong[]) => {
+    if (orbitActive) { addTrackToOrbit(song.id); return; }
     playTrack(songToTrack(song), list.map(songToTrack));
   };
 

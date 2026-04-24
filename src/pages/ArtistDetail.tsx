@@ -6,6 +6,7 @@ import CachedImage from '../components/CachedImage';
 import CoverLightbox from '../components/CoverLightbox';
 import { ArrowLeft, Users, ExternalLink, Heart, Play, Shuffle, Radio, HardDriveDownload, Check, Camera, Loader2, ChevronDown, ChevronUp, Share2 } from 'lucide-react';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { open } from '@tauri-apps/plugin-shell';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { useOfflineStore } from '../store/offlineStore';
@@ -74,6 +75,7 @@ export default function ArtistDetail() {
 
   const playTrack = usePlayerStore(state => state.playTrack);
   const enqueue = usePlayerStore(state => state.enqueue);
+  const { orbitActive, queueHint, addTrackToOrbit } = useOrbitSongRowBehavior();
   const clearQueue = usePlayerStore(state => state.clearQueue);
   const openContextMenu = usePlayerStore(state => state.openContextMenu);
   const currentTrack = usePlayerStore(state => state.currentTrack);
@@ -702,14 +704,19 @@ export default function ArtistDetail() {
                        style={{ gridTemplateColumns: '60px minmax(150px, 1fr) minmax(100px, 1fr) 65px' }}
                        onClick={e => {
                          if ((e.target as HTMLElement).closest('button, a, input')) return;
+                         if (orbitActive) { queueHint(); return; }
                          playTopSongWithContinuation(idx);
                        }}
+                       onDoubleClick={orbitActive ? e => {
+                         if ((e.target as HTMLElement).closest('button, a, input')) return;
+                         addTrackToOrbit(song.id);
+                       } : undefined}
                        onContextMenu={(e) => {
                          e.preventDefault();
                          openContextMenu(e.clientX, e.clientY, track, 'song');
                        }}
                      >
-                <div className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); playTopSongWithContinuation(idx); }}>
+                <div className={`track-num${currentTrack?.id === song.id ? ' track-num-active' : ''}`} style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); if (orbitActive) { queueHint(); return; } playTopSongWithContinuation(idx); }}>
                   {currentTrack?.id === song.id && isPlaying && <span className="track-num-eq"><div className="eq-bars"><span className="eq-bar" /><span className="eq-bar" /><span className="eq-bar" /></div></span>}
                   <span className="track-num-play"><Play size={13} fill="currentColor" /></span>
                   <span className="track-num-number">{idx + 1}</span>

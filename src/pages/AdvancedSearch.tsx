@@ -11,6 +11,7 @@ import AlbumRow from '../components/AlbumRow';
 import ArtistRow from '../components/ArtistRow';
 import CustomSelect from '../components/CustomSelect';
 import { useDragDrop } from '../contexts/DragDropContext';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { useAuthStore } from '../store/authStore';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -43,6 +44,8 @@ export default function AdvancedSearch() {
       openContextMenu: s.openContextMenu,
     }))
   );
+
+  const { orbitActive, addTrackToOrbit } = useOrbitSongRowBehavior();
 
   const [contextMenuSongId, setContextMenuSongId] = useState<string | null>(null);
   const contextMenuOpen = usePlayerStore(s => s.contextMenu.isOpen);
@@ -302,7 +305,7 @@ export default function AdvancedSearch() {
                       key={song.id}
                       className={`track-row${contextMenuSongId === song.id ? ' context-active' : ''}`}
                       style={{ gridTemplateColumns: '60px minmax(150px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) 90px 65px' }}
-                      onDoubleClick={() => playTrack(track, results.songs.map(songToTrack))}
+                      onDoubleClick={() => orbitActive ? addTrackToOrbit(song.id) : playTrack(track, results.songs.map(songToTrack))}
                       role="row"
                       onContextMenu={e => {
                         e.preventDefault();
@@ -328,7 +331,7 @@ export default function AdvancedSearch() {
                       <button
                         className="btn btn-ghost"
                         style={{ padding: 4 }}
-                        onClick={e => { e.stopPropagation(); playTrack(track, results.songs.map(songToTrack)); }}
+                        onClick={e => { e.stopPropagation(); if (orbitActive) { addTrackToOrbit(song.id); return; } playTrack(track, results.songs.map(songToTrack)); }}
                       >
                         <Play size={13} fill="currentColor" />
                       </button>
