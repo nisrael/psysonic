@@ -10,6 +10,9 @@ import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTr
 import { useAuthStore } from './authStore';
 import { useOfflineStore } from './offlineStore';
 import { useHotCacheStore } from './hotCacheStore';
+import { orbitBulkGuard } from '../utils/orbitBulkGuard';
+import { useOrbitStore } from './orbitStore';
+import { estimateLivePosition } from '../api/orbit';
 
 export interface Track {
   id: string;
@@ -168,7 +171,9 @@ interface PlayerState {
   setUserRatingOverride: (id: string, rating: number) => void;
 
   playRadio: (station: InternetRadioStation) => void;
-  playTrack: (track: Track, queue?: Track[], manual?: boolean) => void;
+  /** `_orbitConfirmed` is an internal bypass flag — callers outside the
+   *  orbit bulk-gate should leave it `undefined`. */
+  playTrack: (track: Track, queue?: Track[], manual?: boolean, _orbitConfirmed?: boolean) => void;
   /** Queue becomes `[track]` only; if already on this track, does not restart `audio_play`. */
   reseedQueueForInstantMix: (track: Track) => void;
   pause: () => void;
@@ -193,8 +198,8 @@ interface PlayerState {
   setVolume: (v: number) => void;
    updateReplayGainForCurrentTrack: () => void;
    setProgress: (t: number, duration: number) => void;
-  enqueue: (tracks: Track[]) => void;
-  enqueueAt: (tracks: Track[], insertIndex: number) => void;
+  enqueue: (tracks: Track[], _orbitConfirmed?: boolean) => void;
+  enqueueAt: (tracks: Track[], insertIndex: number, _orbitConfirmed?: boolean) => void;
   enqueueRadio: (tracks: Track[], artistId?: string) => void;
   setRadioArtistId: (artistId: string) => void;
   /** For Lucky Mix: drop upcoming tail; keep the currently playing item only. */
@@ -214,6 +219,8 @@ interface PlayerState {
   reorderQueue: (startIndex: number, endIndex: number) => void;
   removeTrack: (index: number) => void;
   shuffleQueue: () => void;
+  /** Shuffle only the tracks after the current one — leaves played history intact. */
+  shuffleUpcomingQueue: () => void;
 
   toggleLastfmLove: () => void;
   setLastfmLoved: (v: boolean) => void;
@@ -1204,7 +1211,35 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       // ── playTrack ────────────────────────────────────────────────────────────
-      playTrack: (track, queue, manual = true) => {
+      playTrack: (track, queue, manual = true, _orbitConfirmed = false) => {
+        // Orbit bulk-gate: only gate when the `queue` argument *replaces*
+        // the current queue (Play All / Play Album / Play Playlist / Hero
+        // play buttons). Navigation calls — queue-row click, next(),
+        // previous() — pass the existing queue back through playTrack just
+        // to move the index; they are not bulk operations and must not
+        // trigger the confirm dialog (#234 regression).
+        if (!_orbitConfirmed && queue && queue.length > 1) {
+          const current = get().queue;
+          const sameAsCurrent = queue.length === current.length
+            && queue.every((t, i) => current[i]?.id === t.id);
+          if (!sameAsCurrent) {
+            void orbitBulkGuard(queue.length).then(ok => {
+              if (!ok) return;
+              // Inside an Orbit session a bulk replace would discard guest
+              // suggestions mid-listen. Append instead — the dialog's
+              // "Add them all" copy already matches that semantic. Outside
+              // Orbit, proceed as a normal replace.
+              const role = useOrbitStore.getState().role;
+              if (role === 'host' || role === 'guest') {
+                get().enqueue(queue, true);
+              } else {
+                get().playTrack(track, queue, manual, true);
+              }
+            });
+            return;
+          }
+        }
+
         // Ghost-command guard: if a gapless switch happened within 500 ms,
         // this playTrack call is likely a stale IPC echo — suppress it.
         if (Date.now() - lastGaplessSwitchTime < 500) {
@@ -1402,6 +1437,50 @@ export const usePlayerStore = create<PlayerState>()(
       resume: () => {
         clearAllPlaybackScheduleTimers();
         set({ scheduledPauseAtMs: null, scheduledPauseStartMs: null, scheduledResumeAtMs: null, scheduledResumeStartMs: null });
+
+        // Orbit guest: resume means "catch up to the host's live stream".
+        // The user hit pause at some earlier point; resuming shouldn't drop
+        // them back at the stale local position while the host is already
+        // two songs ahead. Covers PlayerBar, media keys, MPRIS — everything
+        // that funnels through resume().
+        const orbit = useOrbitStore.getState();
+        const hostState = orbit.state;
+        if (orbit.role === 'guest' && hostState?.isPlaying && hostState.currentTrack) {
+          const trackId = hostState.currentTrack.trackId;
+          const targetMs = estimateLivePosition(hostState, Date.now());
+          const targetSec = Math.max(0, targetMs / 1000);
+          const localTrackId = get().currentTrack?.id;
+          void (async () => {
+            try {
+              const song = await getSong(trackId);
+              if (!song) return;
+              const track = songToTrack(song);
+              const fraction = Math.max(0, Math.min(0.99, targetSec / Math.max(1, track.duration)));
+              if (localTrackId === trackId) {
+                // Same track: seek + un-pause via the Rust engine directly.
+                // Bypasses this resume() branch re-entry via the early return below.
+                get().seek(fraction);
+                if (isAudioPaused) {
+                  invoke('audio_resume').catch(console.error);
+                  isAudioPaused = false;
+                  set({ isPlaying: true });
+                } else {
+                  set({ isPlaying: true });
+                }
+              } else {
+                // Host has a different track — load it (`_orbitConfirmed=true`
+                // skips the bulk gate; single-track play isn't a bulk replace
+                // anyway). Seek after a short defer once the engine loads.
+                get().playTrack(track, [track], false, true);
+                window.setTimeout(() => {
+                  if (get().currentTrack?.id === trackId) get().seek(fraction);
+                }, 400);
+              }
+            } catch { /* silent */ }
+          })();
+          return;
+        }
+
         if (get().currentRadio) {
           radioAudio.play().catch(console.error);
           set({ isPlaying: true });
@@ -1751,7 +1830,13 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       // ── queue management ─────────────────────────────────────────────────────
-      enqueue: (tracks) => {
+      enqueue: (tracks, _orbitConfirmed = false) => {
+        if (!_orbitConfirmed && tracks.length > 1) {
+          void orbitBulkGuard(tracks.length).then(ok => {
+            if (ok) get().enqueue(tracks, true);
+          });
+          return;
+        }
         set(state => {
           // Insert before the first upcoming auto-added track so the
           // "Added automatically" separator always stays at the boundary.
@@ -1794,7 +1879,13 @@ export const usePlayerStore = create<PlayerState>()(
         });
       },
 
-      enqueueAt: (tracks, insertIndex) => {
+      enqueueAt: (tracks, insertIndex, _orbitConfirmed = false) => {
+        if (!_orbitConfirmed && tracks.length > 1) {
+          void orbitBulkGuard(tracks.length).then(ok => {
+            if (ok) get().enqueueAt(tracks, insertIndex, true);
+          });
+          return;
+        }
         set(state => {
           const idx = Math.max(0, Math.min(insertIndex, state.queue.length));
           const newQueue = [
@@ -1844,6 +1935,22 @@ export const usePlayerStore = create<PlayerState>()(
           : others;
         const newIndex = currentIdx >= 0 ? 0 : -1;
         set({ queue: result, queueIndex: Math.max(0, newIndex) });
+        syncQueueToServer(result, currentTrack, get().currentTime);
+      },
+
+      shuffleUpcomingQueue: () => {
+        const { queue, queueIndex, currentTrack } = get();
+        const upcomingStart = queueIndex + 1;
+        const upcomingCount = queue.length - upcomingStart;
+        if (upcomingCount < 2) return;
+        const head     = queue.slice(0, upcomingStart);
+        const upcoming = queue.slice(upcomingStart);
+        for (let i = upcoming.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [upcoming[i], upcoming[j]] = [upcoming[j], upcoming[i]];
+        }
+        const result = [...head, ...upcoming];
+        set({ queue: result });
         syncQueueToServer(result, currentTrack, get().currentTime);
       },
 

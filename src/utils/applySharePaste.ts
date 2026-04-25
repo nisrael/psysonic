@@ -3,7 +3,7 @@ import type { TFunction } from 'i18next';
 import { getAlbum, getArtist, getSong, type SubsonicSong } from '../api/subsonic';
 import { useAuthStore } from '../store/authStore';
 import { songToTrack, usePlayerStore } from '../store/playerStore';
-import { findServerIdForShareUrl, type SharePayloadV1 } from './shareLink';
+import { findServerIdForShareUrl, type EntitySharePayloadV1 } from './shareLink';
 import { showToast } from './toast';
 
 const RESOLVE_QUEUE_CHUNK = 12;
@@ -14,7 +14,7 @@ const RESOLVE_QUEUE_CHUNK = 12;
  * the payload was already decoded successfully.
  */
 export async function applySharePastePayload(
-  payload: SharePayloadV1,
+  payload: EntitySharePayloadV1,
   navigate: NavigateFunction,
   t: TFunction,
 ): Promise<void> {

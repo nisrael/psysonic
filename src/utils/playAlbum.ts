@@ -1,6 +1,7 @@
 import { getAlbum } from '../api/subsonic';
 import { usePlayerStore } from '../store/playerStore';
 import { songToTrack } from '../store/playerStore';
+import { useOrbitStore } from '../store/orbitStore';
 
 function fadeOut(setVolume: (v: number) => void, from: number, durationMs: number): Promise<void> {
   return new Promise(resolve => {
@@ -27,6 +28,16 @@ export async function playAlbum(albumId: string): Promise<void> {
     return track;
   });
   if (!tracks.length) return;
+
+  // In Orbit sessions, playAlbum is effectively an append operation (the
+  // playerStore bulk-gate also routes replaces into enqueue). Skip the
+  // fadeOut entirely — the current track keeps playing, the album goes
+  // onto the end of the queue after the user confirms the bulk dialog.
+  const orbitRole = useOrbitStore.getState().role;
+  if (orbitRole === 'host' || orbitRole === 'guest') {
+    usePlayerStore.getState().enqueue(tracks);
+    return;
+  }
 
   const store = usePlayerStore.getState();
   const { isPlaying, volume } = store;

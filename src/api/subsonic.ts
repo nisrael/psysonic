@@ -1035,9 +1035,14 @@ export function buildDownloadUrl(id: string): string {
 }
 
 // ─── Playlists ────────────────────────────────────────────────
-export async function getPlaylists(): Promise<SubsonicPlaylist[]> {
+export async function getPlaylists(includeOrbit = false): Promise<SubsonicPlaylist[]> {
   const data = await api<{ playlists: { playlist: SubsonicPlaylist[] } }>('getPlaylists.view', { _t: Date.now() });
-  return data.playlists?.playlist ?? [];
+  const all = data.playlists?.playlist ?? [];
+  // Orbit session + outbox playlists are technical internals. They're `public`
+  // so guests can reach them, which means they leak into every UI picker and
+  // even into the Navidrome web client. Filter them out of every UI call;
+  // orbit's own sweep passes `includeOrbit=true`.
+  return includeOrbit ? all : all.filter(p => !p.name.startsWith('__psyorbit_'));
 }
 
 export async function getPlaylist(id: string): Promise<{ playlist: SubsonicPlaylist; songs: SubsonicSong[] }> {

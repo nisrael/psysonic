@@ -57,6 +57,8 @@ interface AlbumTrackListProps {
   userRatingOverrides: Record<string, number>;
   starredSongs: Set<string>;
   onPlaySong: (song: SubsonicSong) => void;
+  /** Optional dbl-click handler — currently set only in Orbit mode so the list knows to bind it. */
+  onDoubleClickSong?: (song: SubsonicSong) => void;
   onRate: (songId: string, rating: number) => void;
   onToggleSongStar: (song: SubsonicSong, e: React.MouseEvent) => void;
   onContextMenu: (x: number, y: number, track: Track, type: 'song' | 'album' | 'artist' | 'queue-item' | 'album-song') => void;
@@ -80,6 +82,7 @@ interface TrackRowProps {
   inSelectMode: boolean;
   isContextMenuSong: boolean;
   onPlaySong: (song: SubsonicSong) => void;
+  onDoubleClickSong?: (song: SubsonicSong) => void;
   onRate: (songId: string, rating: number) => void;
   onToggleSongStar: (song: SubsonicSong, e: React.MouseEvent) => void;
   onContextMenu: AlbumTrackListProps['onContextMenu'];
@@ -100,6 +103,7 @@ const TrackRow = React.memo(function TrackRow({
   inSelectMode,
   isContextMenuSong,
   onPlaySong,
+  onDoubleClickSong,
   onRate,
   onToggleSongStar,
   onContextMenu,
@@ -224,6 +228,11 @@ const TrackRow = React.memo(function TrackRow({
           onPlaySong(song);
         }
       }}
+      onDoubleClick={onDoubleClickSong ? e => {
+        if ((e.target as HTMLElement).closest('button, a, input')) return;
+        if (e.ctrlKey || e.metaKey || inSelectMode) return;
+        onDoubleClickSong(song);
+      } : undefined}
       onContextMenu={e => {
         e.preventDefault();
         setContextMenuSongId(song.id);
@@ -266,6 +275,7 @@ export default function AlbumTrackList({
   userRatingOverrides,
   starredSongs,
   onPlaySong,
+  onDoubleClickSong,
   onRate,
   onToggleSongStar,
   onContextMenu,
@@ -644,6 +654,7 @@ export default function AlbumTrackList({
                 inSelectMode={inSelectMode}
                 isContextMenuSong={contextMenuSongId === song.id}
                 onPlaySong={onPlaySong}
+                onDoubleClickSong={onDoubleClickSong}
                 onRate={onRate}
                 onToggleSongStar={onToggleSongStar}
                 onContextMenu={onContextMenu}

@@ -3326,6 +3326,17 @@ export default function Settings() {
                   <span className="toggle-track" />
                 </label>
               </div>
+              <div className="settings-section-divider" />
+              <div className="settings-toggle-row">
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('settings.showOrbitTrigger')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.showOrbitTriggerDesc')}</div>
+                </div>
+                <label className="toggle-switch" aria-label={t('settings.showOrbitTrigger')}>
+                  <input type="checkbox" checked={auth.showOrbitTrigger} onChange={e => auth.setShowOrbitTrigger(e.target.checked)} />
+                  <span className="toggle-track" />
+                </label>
+              </div>
               {!IS_WINDOWS && (
                 <>
                   <div className="settings-section-divider" />

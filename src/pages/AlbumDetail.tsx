@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { getAlbum, getArtist, getArtistInfo, setRating, buildCoverArtUrl, coverArtCacheKey, buildDownloadUrl, star, unstar, SubsonicSong, SubsonicAlbum } from '../api/subsonic';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 import { useDownloadModalStore } from '../store/downloadModalStore';
 import { useOfflineStore } from '../store/offlineStore';
 import { useOfflineJobStore } from '../store/offlineJobStore';
@@ -153,7 +154,10 @@ const handleShuffleAll = () => {
      if (shuffled[0]) playTrack(shuffled[0], shuffled);
    };
 
+   const { orbitActive, queueHint, addTrackToOrbit } = useOrbitSongRowBehavior();
+
    const handlePlaySong = (song: SubsonicSong) => {
+     if (orbitActive) { queueHint(); return; }
      if (!album) return;
      const albumGenre = album.album.genre;
      const tracks = album.songs.map(s => {
@@ -164,6 +168,8 @@ const handleShuffleAll = () => {
      const track = tracks.find(t => t.id === song.id) || songToTrack(song);
      playTrack(track, tracks);
    };
+
+   const handleDoubleClickSong = (song: SubsonicSong) => addTrackToOrbit(song.id);
 
   const handleRate = async (songId: string, rating: number) => {
     setRatings(r => ({ ...r, [songId]: rating }));
@@ -427,6 +433,7 @@ const handleShuffleAll = () => {
         userRatingOverrides={userRatingOverrides}
         starredSongs={mergedStarredSongs}
         onPlaySong={handlePlaySong}
+        onDoubleClickSong={orbitActive ? handleDoubleClickSong : undefined}
         onRate={handleRate}
         onToggleSongStar={toggleSongStar}
         onContextMenu={openContextMenu}

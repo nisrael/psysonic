@@ -7,6 +7,7 @@ import { usePlayerStore, songToTrack } from '../store/playerStore';
 import CachedImage from './CachedImage';
 import { enqueueAndPlay } from '../utils/playSong';
 import { useDragDrop } from '../contexts/DragDropContext';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 
 interface SongCardProps {
   song: SubsonicSong;
@@ -19,8 +20,19 @@ function SongCard({ song }: SongCardProps) {
   const enqueue = usePlayerStore(s => s.enqueue);
   const coverUrl = song.coverArt ? buildCoverArtUrl(song.coverArt, 200) : '';
   const psyDrag = useDragDrop();
+  const { orbitActive, addTrackToOrbit } = useOrbitSongRowBehavior();
 
-  const handleClick = () => enqueueAndPlay(song);
+  const handlePlay = () => {
+    if (orbitActive) { addTrackToOrbit(song.id); return; }
+    enqueueAndPlay(song);
+  };
+
+  const handleEnqueue = () => {
+    if (orbitActive) { addTrackToOrbit(song.id); return; }
+    enqueue([songToTrack(song)]);
+  };
+
+  const handleClick = handlePlay;
 
   const handleArtistClick = (e: React.MouseEvent) => {
     if (!song.artistId) return;
@@ -80,7 +92,7 @@ function SongCard({ song }: SongCardProps) {
         <div className="song-card-play-overlay">
           <button
             className="song-card-action-btn"
-            onClick={e => { e.stopPropagation(); enqueueAndPlay(song); }}
+            onClick={e => { e.stopPropagation(); handlePlay(); }}
             aria-label={t('tracks.playSong')}
             data-tooltip={t('tracks.playSong')}
             data-tooltip-pos="top"
@@ -89,7 +101,7 @@ function SongCard({ song }: SongCardProps) {
           </button>
           <button
             className="song-card-action-btn"
-            onClick={e => { e.stopPropagation(); enqueue([songToTrack(song)]); }}
+            onClick={e => { e.stopPropagation(); handleEnqueue(); }}
             aria-label={t('tracks.enqueueSong')}
             data-tooltip={t('tracks.enqueueSong')}
             data-tooltip-pos="top"

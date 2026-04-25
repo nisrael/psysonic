@@ -1,5 +1,9 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Track, usePlayerStore, songToTrack } from '../store/playerStore';
+import { useOrbitStore } from '../store/orbitStore';
+import OrbitGuestQueue from './OrbitGuestQueue';
+import OrbitQueueHead from './OrbitQueueHead';
+import HostApprovalQueue from './HostApprovalQueue';
 import { Play, Music, Star, X, Trash2, Save, FolderOpen, Shuffle, Infinity, Waves, MicVocal, ListMusic, Check, ListPlus, MoveRight, Radio, HardDrive, ChevronDown, Info, Share2 } from 'lucide-react';
 import { buildCoverArtUrl, coverArtCacheKey, getAlbum, getPlaylists, getPlaylist, updatePlaylist, deletePlaylist, SubsonicPlaylist } from '../api/subsonic';
 import { usePlaylistStore } from '../store/playlistStore';
@@ -231,8 +235,44 @@ function QueueHeader({ queue, queueIndex, showRemainingTime, setShowRemainingTim
 }
 
 export default function QueuePanel() {
+  const orbitRole = useOrbitStore(s => s.role);
+  if (orbitRole === 'guest') {
+    return (
+      <aside className="queue-panel queue-panel--orbit-guest">
+        <OrbitGuestQueue />
+      </aside>
+    );
+  }
+  return <QueuePanelHostOrSolo />;
+}
+
+function QueuePanelHostOrSolo() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const orbitRole = useOrbitStore(s => s.role);
+  const orbitState = useOrbitStore(s => s.state);
+  /** trackId → addedBy (host username or guest username) — only populated while
+   *  hosting an Orbit session, so the queue rows can surface attribution. */
+  const orbitAddedByByTrack = useMemo(() => {
+    const map = new Map<string, string>();
+    if (orbitRole !== 'host' || !orbitState) return map;
+    if (orbitState.currentTrack) {
+      map.set(orbitState.currentTrack.trackId, orbitState.currentTrack.addedBy);
+    }
+    for (const q of orbitState.queue) map.set(q.trackId, q.addedBy);
+    return map;
+  }, [orbitRole, orbitState]);
+  const orbitHostUsername = orbitState?.host ?? '';
+  /** Attribution label for a queue row / current track while hosting. Null when
+   *  not in a hosted session. Bulk-adds (album / playlist enqueue) bypass
+   *  `hostEnqueueToOrbit` and therefore never land in `state.queue`, so we
+   *  default those to "Added by you" rather than showing nothing. */
+  const orbitAttributionLabel = (trackId: string): string | null => {
+    if (orbitRole !== 'host' || !orbitState) return null;
+    const addedBy = orbitAddedByByTrack.get(trackId);
+    if (!addedBy || addedBy === orbitHostUsername) return t('orbit.queueAddedByYou');
+    return t('orbit.queueAddedByUser', { user: addedBy });
+  };
   const queue = usePlayerStore(s => s.queue);
   const queueIndex = usePlayerStore(s => s.queueIndex);
   const currentTrack = usePlayerStore(s => s.currentTrack);
@@ -451,6 +491,12 @@ export default function QueuePanel() {
         borderLeftWidth: isQueueVisible ? 1 : 0,
       }}
     >
+      {orbitRole === 'host' && orbitState && (
+        <>
+          <OrbitQueueHead state={orbitState} />
+          <HostApprovalQueue />
+        </>
+      )}
       <QueueHeader
         queue={queue}
         queueIndex={queueIndex}
@@ -547,6 +593,10 @@ export default function QueuePanel() {
               {currentTrack.year && (
                 <div className="queue-current-sub">{currentTrack.year}</div>
               )}
+              {(() => {
+                const label = orbitAttributionLabel(currentTrack.id);
+                return label ? <div className="queue-current-sub queue-current-attribution">{label}</div> : null;
+              })()}
               {renderStars(userRatingOverrides[currentTrack.id] ?? currentTrack.userRating)}
             </div>
           </div>
@@ -724,6 +774,10 @@ export default function QueuePanel() {
                     <span className="truncate">{track.title}</span>
                   </div>
                   <div className="queue-item-artist truncate">{track.artist}</div>
+                  {(() => {
+                    const label = orbitAttributionLabel(track.id);
+                    return label ? <div className="queue-item-attribution truncate">{label}</div> : null;
+                  })()}
                 </div>
                 <div className="queue-item-duration">
                   {formatTime(track.duration)}

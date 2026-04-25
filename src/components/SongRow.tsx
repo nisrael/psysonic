@@ -6,6 +6,7 @@ import type { SubsonicSong } from '../api/subsonic';
 import { usePlayerStore, songToTrack } from '../store/playerStore';
 import { enqueueAndPlay } from '../utils/playSong';
 import { useDragDrop } from '../contexts/DragDropContext';
+import { useOrbitSongRowBehavior } from '../hooks/useOrbitSongRowBehavior';
 
 function fmtDuration(s: number): string {
   if (!s || !isFinite(s)) return '–';
@@ -24,11 +25,24 @@ function SongRow({ song }: Props) {
   const openContextMenu = usePlayerStore(s => s.openContextMenu);
   const isCurrent = usePlayerStore(s => s.currentTrack?.id === song.id);
   const psyDrag = useDragDrop();
+  const { orbitActive, addTrackToOrbit } = useOrbitSongRowBehavior();
+
+  // In an orbit session both buttons collapse into the orbit-suggest / host-enqueue
+  // path so we don't ship a queue replacement to every guest.
+  const handlePlay = () => {
+    if (orbitActive) { addTrackToOrbit(song.id); return; }
+    enqueueAndPlay(song);
+  };
+
+  const handleEnqueue = () => {
+    if (orbitActive) { addTrackToOrbit(song.id); return; }
+    enqueue([songToTrack(song)]);
+  };
 
   return (
     <div
       className={`song-list-row${isCurrent ? ' is-current' : ''}`}
-      onDoubleClick={() => enqueueAndPlay(song)}
+      onDoubleClick={handlePlay}
       onContextMenu={(e) => {
         e.preventDefault();
         openContextMenu(e.clientX, e.clientY, song, 'song');
@@ -58,14 +72,14 @@ function SongRow({ song }: Props) {
       <div className="song-list-row-cell song-list-row-actions">
         <button
           className="song-list-row-btn song-list-row-btn--play"
-          onClick={(e) => { e.stopPropagation(); enqueueAndPlay(song); }}
+          onClick={(e) => { e.stopPropagation(); handlePlay(); }}
           aria-label="Play"
         >
           <Play size={14} fill="currentColor" />
         </button>
         <button
           className="song-list-row-btn"
-          onClick={(e) => { e.stopPropagation(); enqueue([songToTrack(song)]); }}
+          onClick={(e) => { e.stopPropagation(); handleEnqueue(); }}
           aria-label="Enqueue"
         >
           <ListPlus size={14} />

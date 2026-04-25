@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack, Share2 } from 'lucide-react';
+import { Play, ListPlus, Radio, Heart, Download, ChevronRight, User, Disc3, ListMusic, Plus, Info, Sparkles, Star, Trash2, HeartCrack, Share2, Orbit as OrbitIcon } from 'lucide-react';
+import { useOrbitStore } from '../store/orbitStore';
+import {
+  suggestOrbitTrack,
+  hostEnqueueToOrbit,
+  evaluateOrbitSuggestGate,
+  OrbitSuggestBlockedError,
+} from '../utils/orbit';
 import LastfmIcon from './LastfmIcon';
 import StarRating from './StarRating';
 import { lastfmLoveTrack, lastfmUnloveTrack } from '../api/lastfm';
@@ -962,6 +969,7 @@ function MultiPlaylistToPlaylistSubmenu({ playlists, onDone, triggerId }: { play
 
 export default function ContextMenu() {
   const { t } = useTranslation();
+  const orbitRole = useOrbitStore(s => s.role);
   const { contextMenu, closeContextMenu, playTrack, enqueue, queue, currentTrack, removeTrack, lastfmLovedCache, setLastfmLovedForSong, starredOverrides, setStarredOverride, openSongInfo, userRatingOverrides, setUserRatingOverride } = usePlayerStore(
     useShallow(s => ({
       contextMenu: s.contextMenu,
@@ -1454,6 +1462,38 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => enqueue([song]))}>
                 <ListPlus size={14} /> {t('contextMenu.addToQueue')}
               </div>
+              {orbitRole === 'guest' && (() => {
+                const muted = evaluateOrbitSuggestGate().reason === 'muted';
+                return (
+                  <div
+                    className={`context-menu-item${muted ? ' is-disabled' : ''}`}
+                    {...(muted ? { 'data-tooltip': t('orbit.suggestBlockedMuted') } : {})}
+                    onClick={() => handleAction(() => {
+                      if (muted) { showToast(t('orbit.suggestBlockedMuted'), 3500, 'error'); return; }
+                      suggestOrbitTrack(song.id)
+                        .then(() => showToast(t('orbit.ctxSuggestedToast'), 2200, 'info'))
+                        .catch(err => {
+                          if (err instanceof OrbitSuggestBlockedError && err.reason === 'muted') {
+                            showToast(t('orbit.suggestBlockedMuted'), 3500, 'error');
+                          } else {
+                            showToast(t('orbit.ctxSuggestFailed'), 3000, 'error');
+                          }
+                        });
+                    })}
+                  >
+                    <OrbitIcon size={14} /> {t('orbit.ctxAddToSession')}
+                  </div>
+                );
+              })()}
+              {orbitRole === 'host' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  hostEnqueueToOrbit(song.id)
+                    .then(() => showToast(t('orbit.ctxAddedHostToast'), 2200, 'info'))
+                    .catch(() => showToast(t('orbit.ctxAddHostFailed'), 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> {t('orbit.ctxAddToSessionHost')}
+                </div>
+              )}
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
                 data-playlist-trigger-id={song.id}
@@ -1586,6 +1626,38 @@ export default function ContextMenu() {
               <div className="context-menu-item" onClick={() => handleAction(() => enqueue([song]))}>
                 <ListPlus size={14} /> {t('contextMenu.addToQueue')}
               </div>
+              {orbitRole === 'guest' && (() => {
+                const muted = evaluateOrbitSuggestGate().reason === 'muted';
+                return (
+                  <div
+                    className={`context-menu-item${muted ? ' is-disabled' : ''}`}
+                    {...(muted ? { 'data-tooltip': t('orbit.suggestBlockedMuted') } : {})}
+                    onClick={() => handleAction(() => {
+                      if (muted) { showToast(t('orbit.suggestBlockedMuted'), 3500, 'error'); return; }
+                      suggestOrbitTrack(song.id)
+                        .then(() => showToast(t('orbit.ctxSuggestedToast'), 2200, 'info'))
+                        .catch(err => {
+                          if (err instanceof OrbitSuggestBlockedError && err.reason === 'muted') {
+                            showToast(t('orbit.suggestBlockedMuted'), 3500, 'error');
+                          } else {
+                            showToast(t('orbit.ctxSuggestFailed'), 3000, 'error');
+                          }
+                        });
+                    })}
+                  >
+                    <OrbitIcon size={14} /> {t('orbit.ctxAddToSession')}
+                  </div>
+                );
+              })()}
+              {orbitRole === 'host' && (
+                <div className="context-menu-item" onClick={() => handleAction(() => {
+                  hostEnqueueToOrbit(song.id)
+                    .then(() => showToast(t('orbit.ctxAddedHostToast'), 2200, 'info'))
+                    .catch(() => showToast(t('orbit.ctxAddHostFailed'), 3000, 'error'));
+                })}>
+                  <OrbitIcon size={14} /> {t('orbit.ctxAddToSessionHost')}
+                </div>
+              )}
               <div
                 className={`context-menu-item context-menu-item--submenu ${playlistSubmenuOpen && playlistSongIds[0] === song.id ? 'active' : ''}`}
                 data-playlist-trigger-id={song.id}
