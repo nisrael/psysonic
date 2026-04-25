@@ -10,7 +10,7 @@ Built primarily for **Navidrome**. Also compatible with **Gonic**, **Airsonic**,
 
 <br>
 
-<a href="https://github.com/Psychotoxical/psysonic/releases/latest"><img src="https://img.shields.io/github/v/release/Psychotoxical/psysonic?style=for-the-badge&label=Latest%20Release&color=8b5cf6"></a> <a href="https://github.com/Psychotoxical/psysonic/stargazers"><img src="https://img.shields.io/github/stars/Psychotoxical/psysonic?style=for-the-badge&color=f59e0b"></a> <a href="https://github.com/Psychotoxical/psysonic/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-22c55e?style=for-the-badge"></a> <a href="https://tauri.app/"><img src="https://img.shields.io/badge/Tauri-v2-0f172a?style=for-the-badge&logo=tauri"></a> <a href="https://discord.gg/AMnDRErm4u"><img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a> <a href="https://aur.archlinux.org/packages/psysonic"><img src="https://img.shields.io/badge/AUR-Linux-1793d1?style=for-the-badge&logo=arch-linux&logoColor=white"></a>
+<a href="https://github.com/Psychotoxical/psysonic/releases/latest"><img src="https://img.shields.io/github/v/release/Psychotoxical/psysonic?style=for-the-badge&label=Latest%20Release&color=8b5cf6"></a> <a href="https://github.com/Psychotoxical/psysonic/stargazers"><img src="https://img.shields.io/github/stars/Psychotoxical/psysonic?style=for-the-badge&color=f59e0b"></a> <a href="https://github.com/Psychotoxical/psysonic/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-22c55e?style=for-the-badge"></a> <a href="https://tauri.app/"><img src="https://img.shields.io/badge/Tauri-v2-0f172a?style=for-the-badge&logo=tauri"></a> <a href="https://discord.gg/AMnDRErm4u"><img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a> <a href="https://aur.archlinux.org/packages/psysonic"><img src="https://img.shields.io/badge/AUR-psysonic-1793d1?style=for-the-badge&logo=arch-linux&logoColor=white"></a> <a href="https://aur.archlinux.org/packages/psysonic-bin"><img src="https://img.shields.io/badge/AUR-psysonic--bin-1793d1?style=for-the-badge&logo=arch-linux&logoColor=white"></a>
 
 <br><br>
 
@@ -119,11 +119,11 @@ Currently in final development and testing. Orbit will introduce synchronized sh
 
 # Platforms
 
-| OS      | Support                                  |
-| ------- | ---------------------------------------- |
-| Windows | Native Installer *(certificate pending)* |
-| macOS   | Signed DMG                               |
-| Linux   | AppImage / DEB / RPM / AUR / NixOS       |
+| OS      | Support                                                         |
+| ------- | --------------------------------------------------------------- |
+| Windows | Native Installer *(certificate pending)*                        |
+| macOS   | Signed DMG                                                      |
+| Linux   | AppImage / DEB / RPM / AUR (`psysonic`, `psysonic-bin`) / NixOS |
 
 Supports **8 languages** and growing.
 
