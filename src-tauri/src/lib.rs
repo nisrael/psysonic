@@ -3621,14 +3621,6 @@ pub fn run() {
                 }
             }
 
-            #[cfg(debug_assertions)]
-            {
-                use tauri::Manager;
-                if let Some(win) = app.get_webview_window("main") {
-                    win.open_devtools();
-                }
-            }
-
             // ── System tray ───────────────────────────────────────────────
             // Always build on startup when possible; the frontend calls toggle_tray_icon(false)
             // immediately after load if the user has disabled the tray icon.
