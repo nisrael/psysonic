@@ -20,6 +20,7 @@ export interface ServerProfile {
 
 export type SeekbarStyle = 'waveform' | 'linedot' | 'bar' | 'thick' | 'segmented' | 'neon' | 'pulsewave' | 'particletrail' | 'liquidfill' | 'retrotape';
 export type LoggingMode = 'off' | 'normal' | 'debug';
+export type NormalizationEngine = 'off' | 'replaygain' | 'loudness';
 
 export type LyricsSourceId = 'server' | 'lrclib' | 'netease';
 export interface LyricsSourceConfig { id: LyricsSourceId; enabled: boolean; }
@@ -49,6 +50,8 @@ interface AuthState {
   excludeAudiobooks: boolean;
   customGenreBlacklist: string[];
   replayGainEnabled: boolean;
+  normalizationEngine: NormalizationEngine;
+  loudnessTargetLufs: -16 | -14 | -12;
   replayGainMode: 'track' | 'album' | 'auto';
   replayGainPreGainDb: number;   // added to RG gain for tagged files (0…+6 dB)
   replayGainFallbackDb: number;  // gain for untagged files / radio (-6…0 dB)
@@ -205,6 +208,8 @@ interface AuthState {
   setExcludeAudiobooks: (v: boolean) => void;
   setCustomGenreBlacklist: (v: string[]) => void;
   setReplayGainEnabled: (v: boolean) => void;
+  setNormalizationEngine: (v: NormalizationEngine) => void;
+  setLoudnessTargetLufs: (v: -16 | -14 | -12) => void;
   setReplayGainMode: (v: 'track' | 'album' | 'auto') => void;
   setReplayGainPreGainDb: (v: number) => void;
   setReplayGainFallbackDb: (v: number) => void;
@@ -315,6 +320,8 @@ export const useAuthStore = create<AuthState>()(
       excludeAudiobooks: false,
       customGenreBlacklist: [],
       replayGainEnabled: false,
+      normalizationEngine: 'off',
+      loudnessTargetLufs: -14,
       replayGainMode: 'auto',
       replayGainPreGainDb: 0,
       replayGainFallbackDb: 0,
@@ -440,6 +447,14 @@ export const useAuthStore = create<AuthState>()(
       setCustomGenreBlacklist: (v) => set({ customGenreBlacklist: v }),
       setReplayGainEnabled: (v) => {
         set({ replayGainEnabled: v });
+        usePlayerStore.getState().updateReplayGainForCurrentTrack();
+      },
+      setNormalizationEngine: (v) => {
+        set({ normalizationEngine: v });
+        usePlayerStore.getState().updateReplayGainForCurrentTrack();
+      },
+      setLoudnessTargetLufs: (v) => {
+        set({ loudnessTargetLufs: v });
         usePlayerStore.getState().updateReplayGainForCurrentTrack();
       },
       setReplayGainMode: (v) => {

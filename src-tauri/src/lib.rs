@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod audio;
+mod analysis_cache;
 pub mod cli;
 mod discord;
 pub(crate) mod logging;
@@ -59,6 +60,12 @@ fn sync_cancel_flags() -> &'static Mutex<HashMap<String, Arc<AtomicBool>>> {
     FLAGS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// Tracks analysis backfill jobs already running per track_id.
+fn analysis_backfill_inflight() -> &'static Mutex<std::collections::HashSet<String>> {
+    static SET: OnceLock<Mutex<std::collections::HashSet<String>>> = OnceLock::new();
+    SET.get_or_init(|| Mutex::new(std::collections::HashSet::new()))
+}
+
 /// Holds the live system-tray icon handle.  `None` means the tray is currently hidden/removed.
 /// Dropping the inner `TrayIcon` fully removes it from the OS notification area on all platforms.
 type TrayState = Mutex<Option<TrayIcon>>;
@@ -66,6 +73,34 @@ type TrayState = Mutex<Option<TrayIcon>>;
 /// Shared handle to OS media controls (MPRIS2 on Linux, Now Playing on macOS, SMTC on Windows).
 /// `None` if souvlaki failed to initialize (e.g. no D-Bus session on Linux).
 type MprisControls = Mutex<Option<souvlaki::MediaControls>>;
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WaveformCachePayload {
+    bins: Vec<u8>,
+    bin_count: i64,
+    is_partial: bool,
+    known_until_sec: f64,
+    duration_sec: f64,
+    updated_at: i64,
+}
+
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WaveformUpdatedPayload {
+    track_id: String,
+    is_partial: bool,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LoudnessCachePayload {
+    integrated_lufs: f64,
+    true_peak: f64,
+    recommended_gain_db: f64,
+    target_lufs: f64,
+    updated_at: i64,
+}
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -1131,6 +1166,126 @@ fn check_dir_accessible(path: String) -> bool {
     std::path::Path::new(&path).is_dir()
 }
 
+#[tauri::command]
+fn analysis_get_waveform(
+    track_id: String,
+    md5_16kb: String,
+    cache: tauri::State<'_, analysis_cache::AnalysisCache>,
+) -> Result<Option<WaveformCachePayload>, String> {
+    let key = analysis_cache::TrackKey { track_id, md5_16kb };
+    let row = cache.get_waveform(&key)?;
+    Ok(row.map(|v| WaveformCachePayload {
+        bins: v.bins,
+        bin_count: v.bin_count,
+        is_partial: v.is_partial,
+        known_until_sec: v.known_until_sec,
+        duration_sec: v.duration_sec,
+        updated_at: v.updated_at,
+    }))
+}
+
+#[tauri::command]
+fn analysis_get_waveform_for_track(
+    track_id: String,
+    cache: tauri::State<'_, analysis_cache::AnalysisCache>,
+) -> Result<Option<WaveformCachePayload>, String> {
+    let row = cache.get_latest_waveform_for_track(&track_id)?;
+    Ok(row.map(|v| WaveformCachePayload {
+        bins: v.bins,
+        bin_count: v.bin_count,
+        is_partial: v.is_partial,
+        known_until_sec: v.known_until_sec,
+        duration_sec: v.duration_sec,
+        updated_at: v.updated_at,
+    }))
+}
+
+#[tauri::command]
+fn analysis_get_loudness_for_track(
+    track_id: String,
+    target_lufs: Option<f64>,
+    cache: tauri::State<'_, analysis_cache::AnalysisCache>,
+) -> Result<Option<LoudnessCachePayload>, String> {
+    let row = cache.get_latest_loudness_for_track(&track_id)?;
+    Ok(row.map(|v| {
+        let requested_target = target_lufs.unwrap_or(v.target_lufs).clamp(-30.0, -8.0);
+        let recommended_gain_db = analysis_cache::recommended_gain_for_target(
+            v.integrated_lufs,
+            v.true_peak,
+            requested_target,
+        );
+        LoudnessCachePayload {
+        integrated_lufs: v.integrated_lufs,
+        true_peak: v.true_peak,
+        recommended_gain_db,
+        target_lufs: requested_target,
+        updated_at: v.updated_at,
+    }}))
+}
+
+#[tauri::command]
+fn analysis_enqueue_seed_from_url(
+    track_id: String,
+    url: String,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    if track_id.trim().is_empty() || url.trim().is_empty() {
+        return Ok(());
+    }
+    if let Some(cache) = app.try_state::<analysis_cache::AnalysisCache>() {
+        if cache.get_latest_loudness_for_track(&track_id)?.is_some() {
+            crate::app_deprintln!(
+                "[analysis] backfill skip (already cached): {}",
+                track_id
+            );
+            return Ok(());
+        }
+    }
+    {
+        let mut inflight = analysis_backfill_inflight()
+            .lock()
+            .map_err(|_| "analysis backfill lock poisoned".to_string())?;
+        if inflight.contains(&track_id) {
+            return Ok(());
+        }
+        inflight.insert(track_id.clone());
+    }
+    let app_clone = app.clone();
+    tauri::async_runtime::spawn(async move {
+        crate::app_deprintln!("[analysis] backfill queued: {}", track_id);
+        let result = async {
+            let client = reqwest::Client::builder()
+                .user_agent(subsonic_wire_user_agent())
+                .timeout(std::time::Duration::from_secs(120))
+                .build()
+                .map_err(|e| e.to_string())?;
+            let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
+            if !response.status().is_success() {
+                return Err(format!("HTTP {}", response.status().as_u16()));
+            }
+            let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+            if bytes.is_empty() {
+                return Err("empty response".to_string());
+            }
+            let has_loudness = enqueue_analysis_seed(&app_clone, &track_id, &bytes)?;
+            Ok::<bool, String>(has_loudness)
+        }
+        .await;
+        match result {
+            Ok(has_loudness) => crate::app_deprintln!(
+                "[analysis] backfill ready: {} (has_loudness={})",
+                track_id,
+                has_loudness
+            ),
+            Err(e) => crate::app_eprintln!("[analysis] backfill failed for {}: {}", track_id, e),
+        }
+        if let Ok(mut inflight) = analysis_backfill_inflight().lock() {
+            inflight.remove(&track_id);
+        }
+    });
+    Ok(())
+}
+
 // ─── Offline Track Cache ──────────────────────────────────────────────────────
 
 /// Streams an HTTP response body directly to `dest_path` in small chunks.
@@ -1149,6 +1304,47 @@ async fn stream_to_file(response: reqwest::Response, dest_path: &std::path::Path
     }
     file.flush().await.map_err(|e| e.to_string())?;
     Ok(())
+}
+
+fn enqueue_analysis_seed(app: &tauri::AppHandle, track_id: &str, bytes: &[u8]) -> Result<bool, String> {
+    analysis_cache::seed_from_bytes(app, track_id, bytes)
+        .map_err(|e| {
+            crate::app_eprintln!("[analysis] failed to seed {}: {}", track_id, e);
+            e
+        })?;
+    let _ = app.emit(
+        "analysis:waveform-updated",
+        WaveformUpdatedPayload {
+            track_id: track_id.to_string(),
+            is_partial: false,
+        },
+    );
+    let has_loudness = app
+        .try_state::<analysis_cache::AnalysisCache>()
+        .and_then(|cache| cache.get_latest_loudness_for_track(track_id).ok().flatten())
+        .is_some();
+    crate::app_deprintln!(
+        "[analysis] seed result track_id={} bytes={} has_loudness={}",
+        track_id,
+        bytes.len(),
+        has_loudness
+    );
+    Ok(has_loudness)
+}
+
+async fn enqueue_analysis_seed_from_file(
+    app: &tauri::AppHandle,
+    track_id: &str,
+    file_path: &std::path::Path,
+) {
+    let bytes = match tokio::fs::read(file_path).await {
+        Ok(v) => v,
+        Err(_) => return,
+    };
+    if bytes.is_empty() {
+        return;
+    }
+    let _ = enqueue_analysis_seed(app, track_id, &bytes);
 }
 
 /// Downloads a single track to the app's offline cache directory.
@@ -1216,6 +1412,8 @@ async fn download_track_offline(
     tokio::fs::rename(&part_path, &file_path)
         .await
         .map_err(|e| e.to_string())?;
+
+    enqueue_analysis_seed_from_file(&app, &track_id, &file_path).await;
 
     Ok(path_str)
 }
@@ -1765,6 +1963,8 @@ async fn download_track_hot_cache(
         .await
         .map_err(|e| e.to_string())?;
 
+    enqueue_analysis_seed_from_file(&app, &track_id, &file_path).await;
+
     let size = tokio::fs::metadata(&file_path)
         .await
         .map(|m| m.len())
@@ -1817,6 +2017,8 @@ async fn promote_stream_cache_to_hot_cache(
     tokio::fs::rename(&part_path, &file_path)
         .await
         .map_err(|e| e.to_string())?;
+
+    let _ = enqueue_analysis_seed(&app, &track_id, &bytes);
 
     let size = tokio::fs::metadata(&file_path)
         .await
@@ -3582,6 +3784,13 @@ pub fn run() {
         }))
 
         .setup(|app| {
+            // ── Analysis cache (SQLite) ───────────────────────────────────
+            {
+                let cache = analysis_cache::AnalysisCache::init(&app.handle())
+                    .map_err(|e| format!("analysis cache init failed: {e}"))?;
+                app.manage(cache);
+            }
+
             // ── Custom title bar on Linux ─────────────────────────────────
             // Remove OS window decorations on all Linux so the React TitleBar
             // can take over.  The frontend checks is_tiling_wm() to decide
@@ -3820,6 +4029,7 @@ pub fn run() {
             audio::audio_play_radio,
             audio::audio_set_crossfade,
             audio::audio_set_gapless,
+            audio::audio_set_normalization,
             audio::audio_list_devices,
             audio::audio_canonicalize_selected_device,
             audio::audio_default_output_device_name,
@@ -3850,6 +4060,10 @@ pub fn run() {
             fetch_json_url,
             fetch_icy_metadata,
             resolve_stream_url,
+            analysis_get_waveform,
+            analysis_get_waveform_for_track,
+            analysis_get_loudness_for_track,
+            analysis_enqueue_seed_from_url,
             download_track_offline,
             delete_offline_track,
             get_offline_cache_size,

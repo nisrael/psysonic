@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
 import { isHotCachePreviousTrackUnderGrace } from '../utils/hotCacheGate';
 import type { Track } from './playerStore';
+import { emitAnalysisStorageChanged } from './analysisSync';
 
 /** How many queue slots after the current index are eviction-protected (1 = current + next only). */
 export const HOT_CACHE_PROTECT_AFTER_CURRENT = 1;
@@ -96,6 +97,7 @@ export const useHotCacheStore = create<HotCacheState>()(
           delete next[entryKey(serverId, trackId)];
           return { entries: next };
         });
+        emitAnalysisStorageChanged({ trackId, reason: 'hotcache-delete' });
       },
 
       totalBytes: () =>
@@ -167,6 +169,7 @@ export const useHotCacheStore = create<HotCacheState>()(
           }).catch(() => {});
           sum -= meta.sizeBytes || 0;
           delete entries[key];
+          emitAnalysisStorageChanged({ trackId: parsed.trackId, reason: 'hotcache-delete' });
         }
 
         set({ entries });
@@ -175,6 +178,7 @@ export const useHotCacheStore = create<HotCacheState>()(
       clearAllDisk: async (customDir: string | null) => {
         await invoke('purge_hot_cache', { customDir: customDir || null }).catch(() => {});
         set({ entries: {} });
+        emitAnalysisStorageChanged({ trackId: null, reason: 'hotcache-purge' });
       },
     }),
     {

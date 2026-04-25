@@ -6,6 +6,7 @@ import type { SubsonicSong } from '../api/subsonic';
 import { useAuthStore } from './authStore';
 import { showToast } from '../utils/toast';
 import { useOfflineJobStore, cancelledDownloads } from './offlineJobStore';
+import { emitAnalysisStorageChanged } from './analysisSync';
 
 export interface OfflineTrackMeta {
   id: string;
@@ -299,6 +300,9 @@ export const useOfflineStore = create<OfflineState>()(
             }).catch(() => {});
           }),
         );
+        for (const trackId of album.trackIds) {
+          emitAnalysisStorageChanged({ trackId, reason: 'offline-delete' });
+        }
 
         set(state => {
           const tracks = { ...state.tracks };

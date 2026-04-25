@@ -10,6 +10,7 @@ import { lastfmScrobble, lastfmUpdateNowPlaying, lastfmLoveTrack, lastfmUnloveTr
 import { useAuthStore } from './authStore';
 import { useOfflineStore } from './offlineStore';
 import { useHotCacheStore } from './hotCacheStore';
+import { onAnalysisStorageChanged } from './analysisSync';
 
 export interface Track {
   id: string;
@@ -143,6 +144,19 @@ async function buildInfiniteQueueCandidates(
 
 interface PlayerState {
   currentTrack: Track | null;
+  waveformBins: number[] | null;
+  waveformIsPartial: boolean;
+  waveformKnownUntilSec: number;
+  waveformDurationSec: number;
+  normalizationNowDb: number | null;
+  normalizationTargetLufs: number | null;
+  normalizationEngineLive: 'off' | 'replaygain' | 'loudness';
+  normalizationDbgSource: string | null;
+  normalizationDbgTrackId: string | null;
+  normalizationDbgCacheGainDb: number | null;
+  normalizationDbgCacheTargetLufs: number | null;
+  normalizationDbgCacheUpdatedAt: number | null;
+  normalizationDbgLastEventAt: number | null;
   currentRadio: InternetRadioStation | null;
   /** Latches the source used to start the currently playing track. */
   currentPlaybackSource: PlaybackSourceKind | null;
@@ -241,6 +255,29 @@ interface PlayerState {
   closeSongInfo: () => void;
 }
 
+type WaveformCachePayload = {
+  bins: number[];
+  binCount: number;
+  isPartial: boolean;
+  knownUntilSec: number;
+  durationSec: number;
+  updatedAt: number;
+};
+
+type LoudnessCachePayload = {
+  integratedLufs: number;
+  truePeak: number;
+  recommendedGainDb: number;
+  targetLufs: number;
+  updatedAt: number;
+};
+
+type NormalizationStatePayload = {
+  engine: 'off' | 'replaygain' | 'loudness' | string;
+  currentGainDb: number | null;
+  targetLufs: number;
+};
+
 // ─── Module-level playback primitives ─────────────────────────────────────────
 
 // isAudioPaused — true when the Rust audio engine has a loaded-but-paused track.
@@ -259,6 +296,66 @@ let radioFetching = false;
 // Artist ID used to start the current radio session — persists across track
 // advances so proactive loading works even when songs lack artistId.
 let currentRadioArtistId: string | null = null;
+let cachedLoudnessGainByTrackId: Record<string, number> = {};
+let stableLoudnessGainByTrackId: Record<string, true> = {};
+let lastNormalizationUiUpdateAtMs = 0;
+
+function emitNormalizationDebug(step: string, details?: Record<string, unknown>) {
+  if (useAuthStore.getState().loggingMode !== 'debug') return;
+  void invoke('frontend_debug_log', {
+    scope: 'normalization',
+    message: JSON.stringify({ step, details }),
+  }).catch(() => {});
+}
+
+function normalizeAnalysisTrackId(trackId?: string | null): string | null {
+  if (!trackId) return null;
+  if (trackId.startsWith('stream:')) return trackId.slice('stream:'.length);
+  return trackId;
+}
+
+function normalizationAlmostEqual(a: number | null, b: number | null, eps = 0.12): boolean {
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  return Math.abs(a - b) <= eps;
+}
+
+function deriveNormalizationSnapshot(
+  track: Track,
+  queue: Track[],
+  queueIndex: number,
+): Pick<
+  PlayerState,
+  'normalizationNowDb' | 'normalizationTargetLufs' | 'normalizationEngineLive'
+> {
+  const auth = useAuthStore.getState();
+  const engine = auth.normalizationEngine;
+  if (engine === 'loudness') {
+    const target = auth.loudnessTargetLufs;
+    return {
+      // Clears stale UI until `audio:normalization-state` / refresh catches up.
+      normalizationNowDb: null,
+      normalizationTargetLufs: target,
+      normalizationEngineLive: 'loudness',
+    };
+  }
+  if (engine === 'replaygain' && auth.replayGainEnabled) {
+    const prev = queueIndex > 0 ? queue[queueIndex - 1] : null;
+    const next = queueIndex + 1 < queue.length ? queue[queueIndex + 1] : null;
+    const resolved = resolveReplayGainDb(track, prev, next, true, auth.replayGainMode);
+    const nowDb = resolved != null ? (resolved + auth.replayGainPreGainDb) : auth.replayGainFallbackDb;
+    return {
+      normalizationNowDb: nowDb,
+      normalizationTargetLufs: null,
+      normalizationEngineLive: 'replaygain',
+    };
+  }
+  return {
+    normalizationNowDb: null,
+    normalizationTargetLufs: null,
+    normalizationEngineLive: 'off',
+  };
+}
 
 // Debounce timer for seek slider drags.
 let seekDebounce: ReturnType<typeof setTimeout> | null = null;
@@ -267,6 +364,9 @@ let seekDebounce: ReturnType<typeof setTimeout> | null = null;
 let seekTarget: number | null = null;
 let seekTargetSetAt = 0;
 const SEEK_TARGET_GUARD_TIMEOUT_MS = 5000;
+const analysisBackfillInFlightByTrackId: Record<string, true> = {};
+const analysisBackfillAttemptsByTrackId: Record<string, number> = {};
+const MAX_BACKFILL_ATTEMPTS_PER_TRACK = 2;
 // Streaming fallback seek guard: coalesce repeated "not seekable" recoveries.
 let seekFallbackRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let seekFallbackRetryStartedAt = 0;
@@ -481,6 +581,102 @@ function touchHotCacheOnPlayback(trackId: string, serverId: string) {
   useHotCacheStore.getState().touchPlayed(trackId, serverId);
 }
 
+function isReplayGainActive() {
+  const a = useAuthStore.getState();
+  return a.normalizationEngine === 'replaygain' && a.replayGainEnabled;
+}
+
+async function refreshWaveformForTrack(trackId: string) {
+  if (!trackId) return;
+  try {
+    const row = await invoke<WaveformCachePayload | null>('analysis_get_waveform_for_track', { trackId });
+    if (!row || !Array.isArray(row.bins) || row.bins.length === 0) {
+      usePlayerStore.setState({
+        waveformBins: null,
+        waveformIsPartial: false,
+        waveformKnownUntilSec: 0,
+        waveformDurationSec: 0,
+      });
+      return;
+    }
+    usePlayerStore.setState({
+      waveformBins: row.bins,
+      waveformIsPartial: !!row.isPartial,
+      waveformKnownUntilSec: Number.isFinite(row.knownUntilSec) ? row.knownUntilSec : 0,
+      waveformDurationSec: Number.isFinite(row.durationSec) ? row.durationSec : 0,
+    });
+  } catch {
+    // best-effort; seekbar falls back to placeholder waveform
+  }
+}
+
+/** When `syncPlayingEngine` is false, only update `cachedLoudnessGainByTrackId` (e.g. queue neighbour) — do not call `audio_update_replay_gain` for the already-playing track. */
+async function refreshLoudnessForTrack(
+  trackId: string,
+  opts?: { syncPlayingEngine?: boolean },
+) {
+  if (!trackId) return;
+  const syncEngine = opts?.syncPlayingEngine !== false;
+  emitNormalizationDebug('refresh:start', { trackId });
+  usePlayerStore.setState({ normalizationDbgSource: 'refresh:start', normalizationDbgTrackId: trackId });
+  try {
+    const row = await invoke<LoudnessCachePayload | null>('analysis_get_loudness_for_track', {
+      trackId,
+      targetLufs: useAuthStore.getState().loudnessTargetLufs,
+    });
+    if (!row || !Number.isFinite(row.recommendedGainDb)) {
+      delete cachedLoudnessGainByTrackId[trackId];
+      delete stableLoudnessGainByTrackId[trackId];
+      emitNormalizationDebug('refresh:miss', { trackId, row: row ?? null });
+      const auth = useAuthStore.getState();
+      const attempts = analysisBackfillAttemptsByTrackId[trackId] ?? 0;
+      if (auth.normalizationEngine === 'loudness'
+        && !analysisBackfillInFlightByTrackId[trackId]
+        && attempts < MAX_BACKFILL_ATTEMPTS_PER_TRACK) {
+        analysisBackfillInFlightByTrackId[trackId] = true;
+        analysisBackfillAttemptsByTrackId[trackId] = attempts + 1;
+        const url = buildStreamUrl(trackId);
+        emitNormalizationDebug('backfill:enqueue', { trackId, url, attempt: attempts + 1 });
+        void invoke('analysis_enqueue_seed_from_url', { trackId, url })
+          .then(() => emitNormalizationDebug('backfill:queued', { trackId, attempt: attempts + 1 }))
+          .catch((e) => emitNormalizationDebug('backfill:error', { trackId, error: String(e) }))
+          .finally(() => {
+            delete analysisBackfillInFlightByTrackId[trackId];
+          });
+      } else if (auth.normalizationEngine === 'loudness' && attempts >= MAX_BACKFILL_ATTEMPTS_PER_TRACK) {
+        emitNormalizationDebug('backfill:throttled', { trackId, attempts });
+      }
+      usePlayerStore.setState({
+        normalizationDbgSource: 'refresh:miss',
+        normalizationDbgTrackId: trackId,
+        normalizationDbgCacheGainDb: null,
+        normalizationDbgCacheTargetLufs: Number.isFinite(row?.targetLufs as number) ? (row?.targetLufs as number) : null,
+        normalizationDbgCacheUpdatedAt: Number.isFinite(row?.updatedAt as number) ? (row?.updatedAt as number) : null,
+      });
+      return;
+    }
+    cachedLoudnessGainByTrackId[trackId] = row.recommendedGainDb;
+    stableLoudnessGainByTrackId[trackId] = true;
+    analysisBackfillAttemptsByTrackId[trackId] = 0;
+    emitNormalizationDebug('refresh:hit', { trackId, row });
+    usePlayerStore.setState({
+      normalizationDbgSource: 'refresh:hit',
+      normalizationDbgTrackId: trackId,
+      normalizationDbgCacheGainDb: row.recommendedGainDb,
+      normalizationDbgCacheTargetLufs: Number.isFinite(row.targetLufs) ? row.targetLufs : null,
+      normalizationDbgCacheUpdatedAt: Number.isFinite(row.updatedAt) ? row.updatedAt : null,
+    });
+    if (syncEngine) {
+      usePlayerStore.getState().updateReplayGainForCurrentTrack();
+    }
+  } catch {
+    delete cachedLoudnessGainByTrackId[trackId];
+    delete stableLoudnessGainByTrackId[trackId];
+    emitNormalizationDebug('refresh:error', { trackId });
+    usePlayerStore.setState({ normalizationDbgSource: 'refresh:error', normalizationDbgTrackId: trackId });
+  }
+}
+
 async function promoteCompletedStreamToHotCache(track: Track, serverId: string, customDir: string | null) {
   try {
     const res = await invoke<{ path: string; size: number } | null>(
@@ -567,7 +763,19 @@ function handleAudioProgress(current_time: number, duration: number) {
   const dur = duration > 0 ? duration : track.duration;
   if (dur <= 0) return;
   const progress = displayTime / dur;
-  usePlayerStore.setState({ currentTime: displayTime, progress, buffered: 0 });
+  const stateNow = usePlayerStore.getState();
+  if (stateNow.waveformIsPartial) {
+    usePlayerStore.setState({
+      currentTime: displayTime,
+      progress,
+      buffered: 0,
+      // Keep known span aligned with playback position during partial stage:
+      // if playback moved forward, this part is definitely known already.
+      waveformKnownUntilSec: Math.max(stateNow.waveformKnownUntilSec || 0, displayTime),
+    });
+  } else {
+    usePlayerStore.setState({ currentTime: displayTime, progress, buffered: 0 });
+  }
 
   // Scrobble at 50%: Last.fm + Navidrome (updates play_date / recently played)
   if (progress >= 0.5 && !store.scrobbled) {
@@ -641,6 +849,9 @@ function handleAudioProgress(current_time: number, duration: number) {
     // Byte pre-download — runs early so bytes are cached by chain time.
     if ((shouldBytePreload || shouldBytePreloadForGaplessBackup) && nextTrack.id !== bytePreloadingId) {
       bytePreloadingId = nextTrack.id;
+      // Keep analysis context warm for the upcoming track before any source swap.
+      void refreshWaveformForTrack(nextTrack.id);
+      void refreshLoudnessForTrack(nextTrack.id, { syncPlayingEngine: false });
       if (import.meta.env.DEV) {
         console.info('[psysonic][preload-request]', {
           nextTrackId: nextTrack.id,
@@ -657,6 +868,8 @@ function handleAudioProgress(current_time: number, duration: number) {
     // Gapless chain — decode + chain into Sink 30s before track boundary.
     if (shouldChainGapless && nextTrack.id !== gaplessPreloadingId) {
       gaplessPreloadingId = nextTrack.id;
+      // Ensure loudness gain is already cached for the chained request payload.
+      void refreshLoudnessForTrack(nextTrack.id, { syncPlayingEngine: false });
       const authState = useAuthStore.getState();
       // Auto-mode neighbours for the *next* track: current track on its left,
       // queue[nextIdx+1] on its right.
@@ -665,9 +878,9 @@ function handleAudioProgress(current_time: number, duration: number) {
         : (repeatMode === 'all' && queue.length > 0 ? queue[0] : null);
       const replayGainDb = resolveReplayGainDb(
         nextTrack, track, nextNeighbour,
-        authState.replayGainEnabled, authState.replayGainMode,
+        isReplayGainActive(), authState.replayGainMode,
       );
-      const replayGainPeak = authState.replayGainEnabled
+      const replayGainPeak = isReplayGainActive()
         ? (nextTrack.replayGainPeak ?? null)
         : null;
       invoke('audio_chain_preload', {
@@ -676,6 +889,7 @@ function handleAudioProgress(current_time: number, duration: number) {
         durationHint: nextTrack.duration,
         replayGainDb,
         replayGainPeak,
+        loudnessGainDb: cachedLoudnessGainByTrackId[nextTrack.id] ?? null,
         preGainDb: authState.replayGainPreGainDb,
         fallbackDb: authState.replayGainFallbackDb,
         hiResEnabled: authState.enableHiRes,
@@ -700,7 +914,14 @@ function handleAudioEnded() {
 
   const { repeatMode, currentTrack, queue } = usePlayerStore.getState();
   isAudioPaused = false;
-  usePlayerStore.setState({ isPlaying: false, progress: 0, currentTime: 0, buffered: 0 });
+  usePlayerStore.setState({
+    isPlaying: false,
+    progress: 0,
+    currentTime: 0,
+    buffered: 0,
+    waveformIsPartial: false,
+    waveformKnownUntilSec: 0,
+  });
   setTimeout(() => {
     if (repeatMode === 'one' && currentTrack) {
       usePlayerStore.getState().playTrack(currentTrack, queue, false);
@@ -744,6 +965,13 @@ function handleAudioTrackSwitched(duration: number) {
 
   usePlayerStore.setState({
     currentTrack: nextTrack,
+    waveformBins: null,
+    waveformIsPartial: false,
+    waveformKnownUntilSec: 0,
+    waveformDurationSec: 0,
+    ...deriveNormalizationSnapshot(nextTrack, queue, newIndex),
+    normalizationDbgSource: 'track-switched',
+    normalizationDbgTrackId: nextTrack.id,
     queueIndex: newIndex,
     isPlaying: true,
     progress: 0,
@@ -752,6 +980,14 @@ function handleAudioTrackSwitched(duration: number) {
     scrobbled: false,
     lastfmLoved: false,
   });
+  emitNormalizationDebug('track-switched', {
+    trackId: nextTrack.id,
+    queueIndex: newIndex,
+    engineRequested: useAuthStore.getState().normalizationEngine,
+  });
+  void refreshWaveformForTrack(nextTrack.id);
+  void refreshLoudnessForTrack(nextTrack.id);
+  usePlayerStore.getState().updateReplayGainForCurrentTrack();
 
   // Report Now Playing to Navidrome + Last.fm
   const { nowPlayingEnabled, scrobblingEnabled, lastfmSessionKey } = useAuthStore.getState();
@@ -817,6 +1053,90 @@ export function initAudioListeners(): () => void {
     listen<void>('audio:ended', () => handleAudioEnded()),
     listen<string>('audio:error', ({ payload }) => handleAudioError(payload)),
     listen<number>('audio:track_switched', ({ payload }) => handleAudioTrackSwitched(payload)),
+    listen<{ trackId?: string | null; bins: number[]; knownUntilSec: number; durationSec: number; isPartial: boolean }>('analysis:waveform-partial', ({ payload }) => {
+      const current = usePlayerStore.getState().currentTrack;
+      if (!current || !payload) return;
+      const payloadTrackId = normalizeAnalysisTrackId(payload.trackId);
+      if (payloadTrackId && payloadTrackId !== current.id) return;
+      if (!payload.isPartial || !payload?.bins?.length) {
+        usePlayerStore.setState({ waveformIsPartial: false, waveformKnownUntilSec: 0 });
+        return;
+      }
+      usePlayerStore.setState({
+        waveformBins: payload.bins,
+        waveformIsPartial: true,
+        waveformKnownUntilSec: Number.isFinite(payload.knownUntilSec) ? payload.knownUntilSec : 0,
+        waveformDurationSec: Number.isFinite(payload.durationSec) ? payload.durationSec : (current.duration || 0),
+      });
+    }),
+    listen<{ trackId?: string | null; gainDb: number; targetLufs: number; isPartial: boolean }>('analysis:loudness-partial', ({ payload }) => {
+      const current = usePlayerStore.getState().currentTrack;
+      if (!current || !payload) return;
+      const payloadTrackId = normalizeAnalysisTrackId(payload.trackId);
+      if (payloadTrackId && payloadTrackId !== current.id) return;
+      if (!Number.isFinite(payload.gainDb)) return;
+      if (stableLoudnessGainByTrackId[current.id]) return;
+      cachedLoudnessGainByTrackId[current.id] = payload.gainDb;
+      emitNormalizationDebug('partial-loudness:apply', {
+        trackId: current.id,
+        gainDb: payload.gainDb,
+        targetLufs: payload.targetLufs,
+      });
+      usePlayerStore.getState().updateReplayGainForCurrentTrack();
+    }),
+    listen<{ trackId: string; isPartial: boolean }>('analysis:waveform-updated', ({ payload }) => {
+      if (!payload?.trackId) return;
+      const payloadTrackId = normalizeAnalysisTrackId(payload.trackId);
+      if (!payloadTrackId) return;
+      const currentId = usePlayerStore.getState().currentTrack?.id;
+      if (currentId && payloadTrackId === currentId) {
+        void refreshWaveformForTrack(currentId);
+        void refreshLoudnessForTrack(currentId);
+        emitNormalizationDebug('backfill:applied', { trackId: currentId });
+        return;
+      }
+      // Backfill finished for another id (e.g. next in queue): refresh loudness cache only
+      // so `cachedLoudnessGainByTrackId` is ready before `audio_play` / gapless chain.
+      void refreshLoudnessForTrack(payloadTrackId, { syncPlayingEngine: false });
+      emitNormalizationDebug('backfill:applied', { trackId: payloadTrackId });
+    }),
+    listen<NormalizationStatePayload>('audio:normalization-state', ({ payload }) => {
+      if (!payload) return;
+      const engine =
+        payload.engine === 'loudness' || payload.engine === 'replaygain'
+          ? payload.engine
+          : 'off';
+      const nowDb = Number.isFinite(payload.currentGainDb as number) ? (payload.currentGainDb as number) : null;
+      const targetLufs = Number.isFinite(payload.targetLufs) ? payload.targetLufs : null;
+      const prev = usePlayerStore.getState();
+      // Avoid UI flicker from noisy duplicate emits and transient nulls.
+      if (
+        engine === prev.normalizationEngineLive
+        && normalizationAlmostEqual(nowDb, prev.normalizationNowDb)
+        && normalizationAlmostEqual(targetLufs, prev.normalizationTargetLufs, 0.02)
+      ) {
+        return;
+      }
+      if (engine === 'loudness' && nowDb == null && prev.normalizationNowDb != null) {
+        return;
+      }
+      const nowMs = Date.now();
+      if (nowMs - lastNormalizationUiUpdateAtMs < 120 && engine === prev.normalizationEngineLive) {
+        return;
+      }
+      lastNormalizationUiUpdateAtMs = nowMs;
+      emitNormalizationDebug('event:audio:normalization-state', {
+        trackId: usePlayerStore.getState().currentTrack?.id ?? null,
+        payload,
+      });
+      usePlayerStore.setState({
+        normalizationEngineLive: engine,
+        normalizationNowDb: nowDb,
+        normalizationTargetLufs: targetLufs,
+        normalizationDbgSource: 'event:audio:normalization-state',
+        normalizationDbgLastEventAt: Date.now(),
+      });
+    }),
     listen<string>('audio:preload-ready', ({ payload }) => {
       const tid = streamUrlTrackId(payload);
       if (import.meta.env.DEV) {
@@ -840,17 +1160,83 @@ export function initAudioListeners(): () => void {
   const { crossfadeEnabled, crossfadeSecs, gaplessEnabled, audioOutputDevice } = useAuthStore.getState();
   invoke('audio_set_crossfade', { enabled: crossfadeEnabled, secs: crossfadeSecs }).catch(() => {});
   invoke('audio_set_gapless', { enabled: gaplessEnabled }).catch(() => {});
+  const normCfg = useAuthStore.getState();
+  usePlayerStore.setState({
+    normalizationEngineLive: normCfg.normalizationEngine,
+    normalizationTargetLufs: normCfg.normalizationEngine === 'loudness' ? normCfg.loudnessTargetLufs : null,
+    normalizationNowDb: null,
+    normalizationDbgSource: 'init:set-normalization',
+  });
+  emitNormalizationDebug('init:set-normalization', {
+    engine: normCfg.normalizationEngine,
+    targetLufs: normCfg.loudnessTargetLufs,
+    currentTrackId: usePlayerStore.getState().currentTrack?.id ?? null,
+  });
+  invoke('audio_set_normalization', {
+    engine: normCfg.normalizationEngine,
+    targetLufs: normCfg.loudnessTargetLufs,
+  }).catch(() => {});
+  if (normCfg.normalizationEngine === 'loudness') {
+    const currentId = usePlayerStore.getState().currentTrack?.id;
+    if (currentId) {
+      void refreshLoudnessForTrack(currentId).finally(() => {
+        usePlayerStore.getState().updateReplayGainForCurrentTrack();
+      });
+    }
+  }
   if (audioOutputDevice) {
     invoke('audio_set_device', { deviceName: audioOutputDevice }).catch(() => {});
   }
 
   // Keep audio settings in sync whenever auth store changes.
+  let prevNormEngine = normCfg.normalizationEngine;
+  let prevNormTarget = normCfg.loudnessTargetLufs;
   const unsubAuth = useAuthStore.subscribe((state) => {
     invoke('audio_set_crossfade', {
       enabled: state.crossfadeEnabled,
       secs: state.crossfadeSecs,
     }).catch(() => {});
     invoke('audio_set_gapless', { enabled: state.gaplessEnabled }).catch(() => {});
+    const normChanged =
+      state.normalizationEngine !== prevNormEngine
+      || state.loudnessTargetLufs !== prevNormTarget;
+    if (!normChanged) return;
+    prevNormEngine = state.normalizationEngine;
+    prevNormTarget = state.loudnessTargetLufs;
+    usePlayerStore.setState({
+      normalizationEngineLive: state.normalizationEngine,
+      normalizationTargetLufs: state.normalizationEngine === 'loudness' ? state.loudnessTargetLufs : null,
+      normalizationNowDb: state.normalizationEngine === 'loudness'
+        ? usePlayerStore.getState().normalizationNowDb
+        : null,
+      normalizationDbgSource: 'auth:normalization-changed',
+    });
+    emitNormalizationDebug('auth:normalization-changed', {
+      engine: state.normalizationEngine,
+      targetLufs: state.loudnessTargetLufs,
+      currentTrackId: usePlayerStore.getState().currentTrack?.id ?? null,
+    });
+    invoke('audio_set_normalization', {
+      engine: state.normalizationEngine,
+      targetLufs: state.loudnessTargetLufs,
+    }).catch(() => {});
+    if (state.normalizationEngine === 'loudness') {
+      const currentId = usePlayerStore.getState().currentTrack?.id;
+      if (currentId) {
+        void refreshLoudnessForTrack(currentId).finally(() => {
+          usePlayerStore.getState().updateReplayGainForCurrentTrack();
+        });
+      }
+    } else {
+      usePlayerStore.getState().updateReplayGainForCurrentTrack();
+    }
+  });
+  const unsubAnalysisSync = onAnalysisStorageChanged(detail => {
+    const currentId = usePlayerStore.getState().currentTrack?.id;
+    if (!currentId) return;
+    if (detail.trackId && detail.trackId !== currentId) return;
+    void refreshWaveformForTrack(currentId);
+    void refreshLoudnessForTrack(currentId);
   });
 
   // ── MPRIS / OS media controls sync ───────────────────────────────────────
@@ -1012,6 +1398,7 @@ export function initAudioListeners(): () => void {
 
   return () => {
     unsubAuth();
+    unsubAnalysisSync();
     unsubMpris();
     unsubDiscordPlayer();
     unsubDiscordAuth();
@@ -1026,6 +1413,19 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       currentTrack: null,
+      waveformBins: null,
+      waveformIsPartial: false,
+      waveformKnownUntilSec: 0,
+      waveformDurationSec: 0,
+      normalizationNowDb: null,
+      normalizationTargetLufs: null,
+      normalizationEngineLive: 'off',
+      normalizationDbgSource: null,
+      normalizationDbgTrackId: null,
+      normalizationDbgCacheGainDb: null,
+      normalizationDbgCacheTargetLufs: null,
+      normalizationDbgCacheUpdatedAt: null,
+      normalizationDbgLastEventAt: null,
       currentRadio: null,
       currentPlaybackSource: null,
       enginePreloadedTrackId: null,
@@ -1152,6 +1552,13 @@ export const usePlayerStore = create<PlayerState>()(
           buffered: 0,
           currentTime: 0,
           currentRadio: null,
+          waveformBins: null,
+          waveformIsPartial: false,
+          waveformKnownUntilSec: 0,
+          waveformDurationSec: 0,
+          normalizationNowDb: null,
+          normalizationTargetLufs: null,
+          normalizationEngineLive: 'off',
           currentPlaybackSource: null,
           enginePreloadedTrackId: null,
           scheduledPauseAtMs: null,
@@ -1192,6 +1599,13 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           currentRadio: station,
           currentTrack: null,
+          waveformBins: null,
+          waveformIsPartial: false,
+          waveformKnownUntilSec: 0,
+          waveformDurationSec: 0,
+          normalizationNowDb: null,
+          normalizationTargetLufs: null,
+          normalizationEngineLive: 'off',
           currentPlaybackSource: null,
           queue: [],
           queueIndex: 0,
@@ -1271,6 +1685,11 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           currentTrack: track,
           currentRadio: null,
+          waveformBins: null,
+          waveformIsPartial: false,
+          waveformKnownUntilSec: 0,
+          waveformDurationSec: 0,
+          ...deriveNormalizationSnapshot(track, newQueue, idx >= 0 ? idx : 0),
           queue: newQueue,
           queueIndex: idx >= 0 ? idx : 0,
           progress: initialProgress,
@@ -1295,20 +1714,23 @@ export const usePlayerStore = create<PlayerState>()(
             authState.hotCacheDownloadDir || null,
           );
         }
+        void refreshWaveformForTrack(track.id);
+        void refreshLoudnessForTrack(track.id);
         setDeferHotCachePrefetch(true);
         const playIdx = idx >= 0 ? idx : 0;
         const nextNeighbour = playIdx + 1 < newQueue.length ? newQueue[playIdx + 1] : null;
         const replayGainDb = resolveReplayGainDb(
           track, prevTrack, nextNeighbour,
-          authState.replayGainEnabled, authState.replayGainMode,
+          isReplayGainActive(), authState.replayGainMode,
         );
-        const replayGainPeak = authState.replayGainEnabled ? (track.replayGainPeak ?? null) : null;
+        const replayGainPeak = isReplayGainActive() ? (track.replayGainPeak ?? null) : null;
         invoke('audio_play', {
           url,
           volume: state.volume,
           durationHint: track.duration,
           replayGainDb,
           replayGainPeak,
+          loudnessGainDb: cachedLoudnessGainByTrackId[track.id] ?? null,
           preGainDb: authState.replayGainPreGainDb,
           fallbackDb: authState.replayGainFallbackDb,
           manual,
@@ -1432,9 +1854,9 @@ export const usePlayerStore = create<PlayerState>()(
             const authStateCold = useAuthStore.getState();
             const replayGainDbCold = resolveReplayGainDb(
               trackToPlay, coldPrev, coldNext,
-              authStateCold.replayGainEnabled, authStateCold.replayGainMode,
+              isReplayGainActive(), authStateCold.replayGainMode,
             );
-            const replayGainPeakCold = authStateCold.replayGainEnabled ? (trackToPlay.replayGainPeak ?? null) : null;
+            const replayGainPeakCold = isReplayGainActive() ? (trackToPlay.replayGainPeak ?? null) : null;
             const coldServerId = useAuthStore.getState().activeServerId ?? '';
             setDeferHotCachePrefetch(true);
             const coldUrl = resolvePlaybackUrl(trackToPlay.id, coldServerId);
@@ -1445,6 +1867,7 @@ export const usePlayerStore = create<PlayerState>()(
               durationHint: trackToPlay.duration,
               replayGainDb: replayGainDbCold,
               replayGainPeak: replayGainPeakCold,
+              loudnessGainDb: cachedLoudnessGainByTrackId[trackToPlay.id] ?? null,
               preGainDb: authStateCold.replayGainPreGainDb,
               fallbackDb: authStateCold.replayGainFallbackDb,
               manual: false,
@@ -1466,9 +1889,9 @@ export const usePlayerStore = create<PlayerState>()(
              const authStateCold = useAuthStore.getState();
              const replayGainDbCold = resolveReplayGainDb(
                currentTrack, coldPrev, coldNext,
-               authStateCold.replayGainEnabled, authStateCold.replayGainMode,
+               isReplayGainActive(), authStateCold.replayGainMode,
              );
-             const replayGainPeakCold = authStateCold.replayGainEnabled ? (currentTrack.replayGainPeak ?? null) : null;
+             const replayGainPeakCold = isReplayGainActive() ? (currentTrack.replayGainPeak ?? null) : null;
              const coldServerId = useAuthStore.getState().activeServerId ?? '';
              setDeferHotCachePrefetch(true);
              const coldUrl = resolvePlaybackUrl(currentTrack.id, coldServerId);
@@ -1479,6 +1902,7 @@ export const usePlayerStore = create<PlayerState>()(
                durationHint: currentTrack.duration,
                replayGainDb: replayGainDbCold,
                replayGainPeak: replayGainPeakCold,
+               loudnessGainDb: cachedLoudnessGainByTrackId[currentTrack.id] ?? null,
                preGainDb: authStateCold.replayGainPreGainDb,
                fallbackDb: authStateCold.replayGainFallbackDb,
                manual: false,
@@ -1895,16 +2319,26 @@ export const usePlayerStore = create<PlayerState>()(
          const next = queueIndex + 1 < queue.length ? queue[queueIndex + 1] : null;
          const replayGainDb = resolveReplayGainDb(
            currentTrack, prev, next,
-           authState.replayGainEnabled, authState.replayGainMode,
+           isReplayGainActive(), authState.replayGainMode,
          );
-         const replayGainPeak = authState.replayGainEnabled
+         const replayGainPeak = isReplayGainActive()
            ? (currentTrack.replayGainPeak ?? null)
            : null;
          
-         invoke('audio_update_replay_gain', {
+        const normalization = deriveNormalizationSnapshot(currentTrack, queue, queueIndex);
+        set(prevState => ({
+          normalizationNowDb:
+            normalization.normalizationEngineLive === 'loudness'
+              ? prevState.normalizationNowDb
+              : normalization.normalizationNowDb,
+          normalizationTargetLufs: normalization.normalizationTargetLufs,
+          normalizationEngineLive: normalization.normalizationEngineLive,
+        }));
+        invoke('audio_update_replay_gain', {
            volume,
            replayGainDb,
            replayGainPeak,
+           loudnessGainDb: currentTrack ? (cachedLoudnessGainByTrackId[currentTrack.id] ?? null) : null,
            preGainDb: authState.replayGainPreGainDb,
            fallbackDb: authState.replayGainFallbackDb,
          }).catch(console.error);

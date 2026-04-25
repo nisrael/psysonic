@@ -1063,10 +1063,11 @@ fn set_hw_params_from_format(
             hw_params.set_buffer_size(v as alsa::pcm::Frames)?;
         }
         BufferSize::Default => {
-            // These values together represent a moderate latency and wakeup interval.
-            // Without them, we are at the mercy of the device
-            hw_params.set_period_time_near(25_000, alsa::ValueOr::Nearest)?;
-            hw_params.set_buffer_time_near(100_000, alsa::ValueOr::Nearest)?;
+            // Larger buffer than upstream cpal default: after Symphonia seeks or CPU
+            // spikes (analysis, demux) the mixer needs more margin before ALSA underruns.
+            // ~40 ms period, ~200 ms total buffer (device may round to nearest supported).
+            hw_params.set_period_time_near(40_000, alsa::ValueOr::Nearest)?;
+            hw_params.set_buffer_time_near(200_000, alsa::ValueOr::Nearest)?;
         }
     }
 

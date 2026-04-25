@@ -824,6 +824,7 @@ export default function WaveformSeek({ trackId }: Props) {
   const SEEK_COMMIT_PROGRESS_EPS = 0.02;
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const heightsRef   = useRef<Float32Array | null>(null);
+  const lastHeightsTrackIdRef = useRef<string | undefined>(undefined);
   const progressRef  = useRef(usePlayerStore.getState().progress);
   const bufferedRef  = useRef(usePlayerStore.getState().buffered);
   const isDragging   = useRef(false);
@@ -832,6 +833,10 @@ export default function WaveformSeek({ trackId }: Props) {
   const [hoverPct, setHoverPct] = useState<number | null>(null);
 
   const seek         = usePlayerStore(s => s.seek);
+  const waveformBins = usePlayerStore(s => s.waveformBins);
+  const waveformIsPartial = usePlayerStore(s => s.waveformIsPartial);
+  const waveformKnownUntilSec = usePlayerStore(s => s.waveformKnownUntilSec);
+  const waveformDurationSec = usePlayerStore(s => s.waveformDurationSec);
   const duration     = usePlayerStore(s => s.currentTrack?.duration ?? 0);
   const seekbarStyle = useAuthStore(s => s.seekbarStyle);
 
@@ -843,10 +848,44 @@ export default function WaveformSeek({ trackId }: Props) {
   useEffect(() => {
     if (!trackId) {
       heightsRef.current = null;
+      lastHeightsTrackIdRef.current = undefined;
+      return;
+    }
+    if (waveformBins && waveformBins.length > 0) {
+      const src = waveformBins;
+      const h = new Float32Array(BAR_COUNT);
+      const effectiveDur = waveformDurationSec > 0 ? waveformDurationSec : duration;
+      const knownFrac = waveformIsPartial && effectiveDur > 0
+        ? Math.max(0, Math.min(1, waveformKnownUntilSec / effectiveDur))
+        : 1;
+      const knownBars = Math.max(0, Math.min(BAR_COUNT, Math.floor(knownFrac * BAR_COUNT)));
+      for (let i = 0; i < BAR_COUNT; i++) {
+        if (i >= knownBars) {
+          h[i] = 0.08; // unknown tail baseline while partial waveform is still loading
+          continue;
+        }
+        const idx = Math.min(src.length - 1, Math.floor((i / BAR_COUNT) * src.length));
+        const v = src[idx];
+        h[i] = Math.max(0.08, Math.min(1, (Number(v) / 255)));
+      }
+      // Partial -> full handoff: blend with previous heights for a smoother
+      // visual transition and avoid a hard "jump" in the waveform shape.
+      if (lastHeightsTrackIdRef.current === trackId && heightsRef.current && heightsRef.current.length === BAR_COUNT) {
+        const prev = heightsRef.current;
+        const mixed = new Float32Array(BAR_COUNT);
+        for (let i = 0; i < BAR_COUNT; i++) {
+          mixed[i] = prev[i] * 0.45 + h[i] * 0.55;
+        }
+        heightsRef.current = mixed;
+      } else {
+        heightsRef.current = h;
+      }
+      lastHeightsTrackIdRef.current = trackId;
       return;
     }
     heightsRef.current = makeHeights(trackId);
-  }, [trackId]);
+    lastHeightsTrackIdRef.current = trackId;
+  }, [trackId, waveformBins, waveformIsPartial, waveformKnownUntilSec, waveformDurationSec, duration]);
 
   // Imperative subscription — no React re-renders from progress changes.
   // Static styles draw here; animated styles only update refs.

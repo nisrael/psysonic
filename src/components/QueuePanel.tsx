@@ -258,6 +258,9 @@ export default function QueuePanel() {
   const contextMenu = usePlayerStore(s => s.contextMenu);
 
   const playbackSource = usePlayerStore(s => s.currentPlaybackSource);
+  const normalizationNowDb = usePlayerStore(s => s.normalizationNowDb);
+  const normalizationTargetLufs = usePlayerStore(s => s.normalizationTargetLufs);
+  const normalizationEngineLive = usePlayerStore(s => s.normalizationEngineLive);
 
   const crossfadeEnabled = useAuthStore(s => s.crossfadeEnabled);
   const crossfadeSecs = useAuthStore(s => s.crossfadeSecs);
@@ -267,6 +270,8 @@ export default function QueuePanel() {
   const setCrossfadeSecs = useAuthStore(s => s.setCrossfadeSecs);
   const setGaplessEnabled = useAuthStore(s => s.setGaplessEnabled);
   const setInfiniteQueueEnabled = useAuthStore(s => s.setInfiniteQueueEnabled);
+  const normalizationEngine = useAuthStore(s => s.normalizationEngine);
+  const replayGainMode = useAuthStore(s => s.replayGainMode);
 
   const activeTab  = useLyricsStore(s => s.activeTab);
   const setTab     = useLyricsStore(s => s.setTab);
@@ -478,6 +483,14 @@ export default function QueuePanel() {
             const rgParts = formatQueueReplayGainParts(currentTrack, t);
             const baseLine = baseParts.join(' · ');
             const rgLine = rgParts.join(' · ');
+            const liveGainLabel = normalizationNowDb != null
+              ? `${normalizationNowDb >= 0 ? '+' : ''}${normalizationNowDb.toFixed(2)} dB`
+              : '—';
+            const targetLabel = normalizationEngineLive === 'loudness'
+              ? (normalizationTargetLufs != null ? `${normalizationTargetLufs} LUFS` : '-16 LUFS')
+              : normalizationEngineLive === 'replaygain'
+                ? `ReplayGain (${replayGainMode})`
+                : t('queue.normOff', { defaultValue: 'Off' });
             if (!baseLine && !rgLine && !playbackSource) return null;
             const showRgLine = expandReplayGain && !!rgLine;
             return (
@@ -520,6 +533,15 @@ export default function QueuePanel() {
                     <span className="queue-current-tech-rg">
                       <span className="queue-current-tech-rg-label">{t('queue.replayGain')}</span>
                       {' · '}{rgLine}
+                    </span>
+                  )}
+                  {(normalizationEngine === 'loudness' || normalizationEngineLive === 'loudness') && (
+                    <span className="queue-current-tech-rg">
+                      <span className="queue-current-tech-rg-label">{t('queue.normNow', { defaultValue: 'Now' })}</span>
+                      {' · '}{liveGainLabel}
+                      {' · '}
+                      <span className="queue-current-tech-rg-label">{t('queue.normTarget', { defaultValue: 'Target' })}</span>
+                      {' · '}{targetLabel}
                     </span>
                   )}
                 </div>
