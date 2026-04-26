@@ -750,7 +750,8 @@ export function drawSeekbar(
 ) {
   const anim = animState ?? makeAnimState();
   switch (style) {
-    case 'waveform':      drawWaveform(canvas, heights, progress, buffered); break;
+    case 'truewave':      drawWaveform(canvas, heights, progress, buffered); break;
+    case 'pseudowave':    drawWaveform(canvas, heights, progress, buffered); break;
     case 'linedot':       drawLineDot(canvas, progress, buffered); break;
     case 'bar':           drawBar(canvas, progress, buffered); break;
     case 'thick':         drawThick(canvas, progress, buffered); break;
@@ -782,7 +783,7 @@ export function SeekbarPreview({
     const canvas = canvasRef.current;
     if (!canvas) return;
     let heights: Float32Array | null = null;
-    if (style === 'waveform') {
+    if (style === 'truewave' || style === 'pseudowave') {
       heights = makeHeights('seekbar-preview-demo');
     }
     const animState = makeAnimState();
@@ -896,6 +897,17 @@ export default function WaveformSeek({ trackId }: Props) {
       heightsRef.current = null;
       return;
     }
+    // Pseudowave is the deterministic per-track-ID variant — no analysis needed,
+    // no morph animation, no flat-fallback. It just sits there looking like a
+    // waveform.
+    if (seekbarStyle === 'pseudowave') {
+      heightsRef.current = makeHeights(trackId);
+      const canvas = canvasRef.current;
+      if (canvas && !ANIMATED_STYLES.has(seekbarStyle)) {
+        drawSeekbar(canvas, seekbarStyle, heightsRef.current, progressRef.current, bufferedRef.current, animStateRef.current);
+      }
+      return;
+    }
     if (waveformBins && waveformBins.length > 0) {
       const h = binsToHeights(waveformBins);
       const prev = heightsRef.current;
@@ -959,7 +971,7 @@ export default function WaveformSeek({ trackId }: Props) {
     }
     // No analysis bins yet: render 500 flat bars immediately.
     heightsRef.current = makeFlatWaveHeights();
-  }, [trackId, waveformBins]);
+  }, [trackId, waveformBins, seekbarStyle]);
 
   // Imperative subscription — no React re-renders from progress changes.
   // Static styles draw here; animated styles only update refs.

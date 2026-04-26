@@ -3676,7 +3676,7 @@ export default function Settings() {
                 {t('settings.seekbarStyleDesc')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {(['waveform', 'linedot', 'bar', 'thick', 'segmented', 'neon', 'pulsewave', 'particletrail', 'liquidfill', 'retrotape'] as SeekbarStyle[]).map(style => (
+                {(['truewave', 'pseudowave', 'linedot', 'bar', 'thick', 'segmented', 'neon', 'pulsewave', 'particletrail', 'liquidfill', 'retrotape'] as SeekbarStyle[]).map(style => (
                   <SeekbarPreview
                     key={style}
                     style={style}
