@@ -18,7 +18,7 @@ export interface ServerProfile {
   password: string;
 }
 
-export type SeekbarStyle = 'waveform' | 'linedot' | 'bar' | 'thick' | 'segmented' | 'neon' | 'pulsewave' | 'particletrail' | 'liquidfill' | 'retrotape';
+export type SeekbarStyle = 'truewave' | 'pseudowave' | 'linedot' | 'bar' | 'thick' | 'segmented' | 'neon' | 'pulsewave' | 'particletrail' | 'liquidfill' | 'retrotape';
 export type LoggingMode = 'off' | 'normal' | 'debug';
 export type NormalizationEngine = 'off' | 'replaygain' | 'loudness';
 
@@ -388,7 +388,7 @@ export const useAuthStore = create<AuthState>()(
       fsPortraitDim: 28,
       showChangelogOnUpdate: true,
       lastSeenChangelogVersion: '',
-      seekbarStyle: 'waveform',
+      seekbarStyle: 'truewave',
       enableHiRes: false,
       audioOutputDevice: null,
       hotCacheEnabled: false,
@@ -729,6 +729,13 @@ export const useAuthStore = create<AuthState>()(
           } catch { /* ignore */ }
         }
 
+        // One-time: 'waveform' style was renamed to 'truewave' (with 'pseudowave'
+        // added as the deterministic legacy variant). Existing persisted value
+        // 'waveform' should land on the new bins-based default.
+        const seekbarStyleMigrated = (state.seekbarStyle as string) === 'waveform'
+          ? { seekbarStyle: 'truewave' as SeekbarStyle }
+          : {};
+
         const st = state as { loudnessTargetLufs?: unknown; loudnessPreAnalysisAttenuationDb?: unknown };
         const targetSan = sanitizeLoudnessLufsPreset(st.loudnessTargetLufs, -12);
         const preSan = clampLoudnessPreAnalysisAttenuationDb(st.loudnessPreAnalysisAttenuationDb);
@@ -745,6 +752,7 @@ export const useAuthStore = create<AuthState>()(
           ...conflictingLegacyState,
           ...lyricsSourcesMigrated,
           ...wheelSmoothOneTime,
+          ...seekbarStyleMigrated,
         });
       },
     }
